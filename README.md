@@ -4,10 +4,10 @@
 ##base
 提供一些常用的，独立的基础函数库，其中
 
-###org.dreamwork.compilation 包
+###- org.dreamwork.compilation 包
 提供运行期动态编译的API，允许java代码在运行期产生动态产生java代码，并编译
 
-###org.dreamwork.config 包
+###- org.dreamwork.config 包
 提供针对XML配置文件的解析API。
 解析器将在运行期监视配置文件，若有改动，将刷新配置项。
 XML配置文件的模式为：
@@ -23,38 +23,38 @@ XML配置文件的模式为：
 ```
 则可以用 module1.item1来索引，并返回 value1。
 
-###org.dreamwork.fs 包
-提供文件
+###- org.dreamwork.fs 包
+提供文件系统遍历工具包。
+递归遍历指定的目录，并创建文件索引；针对于每个文件和目录，将调用注册的 IFileHandler 处理器来处理。
+在遍历过程中，若目录发生变化，则仅对变化的文件或目录进行回调处理。
 
-#### 软件架构
-软件架构说明
+###- org.dreamwork.gson 包
+主要是一些针对dreamwork内部集合类开发的gson的插件
 
+###- org.dreamwork.i18n 包
+国际化语言环境支撑。
+通过适配器模式，屏蔽底层真正的资源绑定器之间的区别。
+默认实现了 JdkResourceAdapter 和 XMLResourceAdapter
 
-#### 安装教程
+###- org.dreamwork.misc 包
+提供了杂项工具，包括：
+Base64算法的java实现
+Zip算法压缩后进行Base64编码（及逆向过程）的工具类
+IP的3种表达方式之间的转换工具类
+关于MimeType的工具类
 
-1. xxxx
-2. xxxx
-3. xxxx
+###- org.dreamwork.telnet 包
+提供了基于
+RFC 318 (TELNET), 
+RFC 854 – RFC 861 (TELNET sub-options)
+RFC 1073 (TELNET Window Size)
+的TELNET协议栈的java实现
 
-#### 使用说明
+###- org.dreamwork.text 包
+提供了部分文本解析操作的基础API，如HTML
 
-1. xxxx
-2. xxxx
-3. xxxx
-
-#### 参与贡献
-
-1. Fork 本项目
-2. 新建 Feat_xxx 分支
-3. 提交代码
-4. 新建 Pull Request
-
-
-#### 码云特技
-
-1. 使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2. 码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3. 你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4. [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5. 码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6. 码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+###- org.dreamwork.util 包
+提供一些集合接口及实现类
+提供各种基于java.util. Comparable接口的排序算法
+提供一些基础的类型转换的工具类
+提供一些便捷的文件路径操作工具类
