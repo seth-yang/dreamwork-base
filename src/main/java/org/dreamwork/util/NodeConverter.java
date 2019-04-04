@@ -61,7 +61,7 @@ public class NodeConverter {
                 // ignore
             }
 
-            if (parameterType.isArray () || java.util.Collection.class.isAssignableFrom (parameterType)) { // 数组或集合
+            if (parameterType.isArray () || Collection.class.isAssignableFrom (parameterType)) { // 数组或集合
                 if (pi == null)
                     throw new UnsupportedOperationException ();
                 Class<?> target = pi.type ();
@@ -142,7 +142,7 @@ public class NodeConverter {
             }
 
 
-            java.util.Collection<String> propNames = ReferenceUtil.getPropertyNames (type);
+            Collection<String> propNames = ReferenceUtil.getPropertyNames (type);
             for (String name : propNames) {
                 Element e = doc.createElement (name);
 
@@ -168,12 +168,12 @@ public class NodeConverter {
                     e.appendChild (doc.createTextNode (converter.cast (v)));
                 } else if (target.isArray ()) {
                     int length = Array.getLength (v);
-                    java.util.Collection<Object> c = new ArrayList<Object> (length);
+                    Collection<Object> c = new ArrayList<Object> (length);
                     for (int i = 0; i < length; i++)
                         c.add (Array.get (v, i));
                     parseCollection (name, c, parent);
-                } else if (java.util.Collection.class.isAssignableFrom (target)) {
-                    parseCollection (name, (java.util.Collection<Object>) v, parent);
+                } else if (Collection.class.isAssignableFrom (target)) {
+                    parseCollection (name, (Collection<Object>) v, parent);
                 } else {
                     parent.appendChild (e);
                     parseObject (target, v, e);
@@ -185,7 +185,7 @@ public class NodeConverter {
     }
 
     @SuppressWarnings ("unchecked")
-    private static void parseCollection (String name, java.util.Collection<Object> c, Node parent) throws InvocationTargetException, IllegalAccessException, InstantiationException {
+    private static void parseCollection (String name, Collection<Object> c, Node parent) throws InvocationTargetException, IllegalAccessException, InstantiationException {
         Document doc = parent.getOwnerDocument ();
         for (Object o : c) {
             Class t = o.getClass ();

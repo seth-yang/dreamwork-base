@@ -72,6 +72,30 @@ public class Looper {
      * @see #destory(String) destory
      */
     public synchronized static void create (String name, int size) {
+        create (name, size, 1);
+/*
+        if (pool.containsKey (name)) {
+            throw new IllegalArgumentException ("the looper: " + name + " already exists!");
+        }
+
+        InternalLoop loop = new InternalLoop (name, size);
+        synchronized (pool) {
+            pool.put (name, loop);
+            namedExecutor.execute (loop);
+        }
+*/
+    }
+
+    /**
+     * 创建一个命名的线程队列.
+     * @param name 线程名
+     * @param size 同时可容纳任务的数量
+     * @param count 同时执行任务的线程数
+     * @see #runInLoop(String, Runnable) runInLoop
+     * @see #exists(String) exists
+     * @see #destory(String) destory
+     */
+    public synchronized static void create (String name, int size, int count) {
         if (pool.containsKey (name)) {
             throw new IllegalArgumentException ("the looper: " + name + " already exists!");
         }
@@ -116,7 +140,11 @@ public class Looper {
         }
         synchronized (pool) {
             InternalLoop looper = pool.get (name);
-            looper.queue.offer (runner);
+            try {
+                looper.queue.put (runner);
+            } catch (InterruptedException e) {
+                e.printStackTrace ();
+            }
         }
     }
 
@@ -373,10 +401,18 @@ public class Looper {
         private boolean running = true;
         private long timeout;
         private TimeUnit unit;
+        private ExecutorService service;
+        private ThreadGroup group;
 
         private InternalLoop (String name, int size) {
+            this (name, size, 1);
+        }
+
+        private InternalLoop (String name, int size, int count) {
             this.name = name;
+            group = new ThreadGroup (name);
             queue = new ArrayBlockingQueue<Object> (size);
+            service = Executors.newFixedThreadPool (count, r->new Thread (r) {});
         }
 
         public InternalLoop timeout (int timeout, TimeUnit unit) {

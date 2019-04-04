@@ -886,7 +886,7 @@ public abstract class AbstractDatabase implements IDatabase {
                     Object t = Enum.valueOf ((Class<? extends Enum>) c, v);
                     field.set (o, t);
                 }
-            } else if (java.util.Date.class.isAssignableFrom (c)) {
+            } else if (Date.class.isAssignableFrom (c)) {
                 int sqlType = rsmd.getColumnType (i);
                 switch (sqlType) {
                     case Types.TIMESTAMP :

@@ -22,8 +22,8 @@ public class DateTranslator {
 
     private static final Logger logger = Logger.getLogger (DateTranslator.class);
 
-    public static class UtilDateTranslator implements JsonSerializer<java.util.Date>, JsonDeserializer<java.util.Date> {
-        public java.util.Date deserialize (JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
+    public static class UtilDateTranslator implements JsonSerializer<Date>, JsonDeserializer<Date> {
+        public Date deserialize (JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
             String expression = json.getAsString ();
             try {
                 return df.parse (expression);
@@ -33,7 +33,7 @@ public class DateTranslator {
             }
         }
 
-        public JsonElement serialize (java.util.Date src, Type type, JsonSerializationContext context) {
+        public JsonElement serialize (Date src, Type type, JsonSerializationContext context) {
             return new JsonPrimitive (df.format (src));
         }
     }
@@ -42,7 +42,7 @@ public class DateTranslator {
         public java.sql.Date deserialize (JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             String expression = json.getAsString ();
             try {
-                java.util.Date date = df.parse (expression);
+                Date date = df.parse (expression);
                 return new java.sql.Date (date.getTime ());
             } catch (ParseException ex) {
                 logger.warn (ex.getMessage (), ex);
@@ -59,7 +59,7 @@ public class DateTranslator {
         public Timestamp deserialize (JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             String expression = json.getAsString ();
             try {
-                java.util.Date date = tf.parse (expression);
+                Date date = tf.parse (expression);
                 return new Timestamp (date.getTime ());
             } catch (ParseException ex) {
                 logger.warn (ex.getMessage (), ex);
@@ -72,7 +72,7 @@ public class DateTranslator {
         }
     }
 
-    public static class LongDateTranslator implements JsonSerializer<java.util.Date>, JsonDeserializer<java.util.Date> {
+    public static class LongDateTranslator implements JsonSerializer<Date>, JsonDeserializer<Date> {
         @Override
         public Date deserialize (JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
             long value = jsonElement.getAsLong ();

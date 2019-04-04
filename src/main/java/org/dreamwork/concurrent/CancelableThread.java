@@ -13,7 +13,7 @@ import java.util.Set;
  * Created by seth on 16-1-14
  *
  * @since 2.1.0
- * @see org.dreamwork.concurrent.ICancelable
+ * @see ICancelable
  */
 public abstract class CancelableThread extends Thread implements ICancelable {
     volatile protected boolean running = false;

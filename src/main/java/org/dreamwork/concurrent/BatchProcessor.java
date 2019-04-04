@@ -109,6 +109,8 @@ public abstract class BatchProcessor<T> implements Runnable {
                         if (logger.isTraceEnabled ()) {
                             logger.warn (ex.getMessage (), ex);
                         }
+
+                        break;
                     }
                 }
             }

@@ -71,7 +71,7 @@ public class ReferenceUtil {
         return getMethod (type, name, "method");
     }
 
-    public static java.util.Collection<Field> getFields (Class type) {
+    public static Collection<Field> getFields (Class type) {
         cachetype (type);
         WeakHashMap<String, WeakHashMap<String, AccessibleObject>> classMap = map.get (type);
         WeakHashMap<String, AccessibleObject> fields = classMap.get ("field");

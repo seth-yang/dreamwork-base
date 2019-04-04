@@ -52,7 +52,7 @@ public class ReflectUtil {
         Class<?> type = o.getClass ();
         if (type == java.sql.Timestamp.class) {
             return stf.format (o);
-        } else if (java.util.Date.class.isAssignableFrom (type)) {
+        } else if (Date.class.isAssignableFrom (type)) {
             return sdf.format (o);
         }
 

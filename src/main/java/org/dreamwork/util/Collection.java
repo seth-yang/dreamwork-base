@@ -12,23 +12,21 @@ public class Collection<T> extends HashMap<String, T> implements ICollection<T> 
     private List<String> indexes;
 
     public Collection () {
-        indexes = new ArrayList<String> ();
+        indexes = new ArrayList<> ();
     }
 
     public Collection (int cap) {
         super (cap);
-        indexes = new ArrayList<String> (cap);
+        indexes = new ArrayList<> (cap);
     }
 
-    @SuppressWarnings ("unchecked")
     public Collection (SortedMap<String, T> map) {
         this (map.size ());
         SortedMap<String, T> sm = map;
         for (int i = 0; i < map.size (); i ++) {
-            String key = sm.firstKey ().toUpperCase ();
-            indexes.add (key);
-            this.put (key, sm.get (key));
-
+            String key = sm.firstKey (), KEY = key.toUpperCase ();
+            indexes.add (KEY);
+            this.put (KEY, sm.get (key));
             sm = sm.tailMap (key);
         }
     }
@@ -38,7 +36,7 @@ public class Collection<T> extends HashMap<String, T> implements ICollection<T> 
     }
 
     public String getKey (int index) {
-        return index >= indexes.size () && index < 0 ? null : indexes.get (index);
+        return index >= indexes.size () || index < 0 ? null : indexes.get (index);
     }
 
     public T get (int index) {
@@ -52,9 +50,8 @@ public class Collection<T> extends HashMap<String, T> implements ICollection<T> 
         return super.get (key.toUpperCase ());
     }
 
-    @Deprecated
     public synchronized Iterator<T> iter () {
-        List<T> list = new ArrayList<T> (count ());
+        List<T> list = new ArrayList<> (count ());
         for (int i = 0; i < count (); i ++) {
             list.add (this.get (i));
         }
