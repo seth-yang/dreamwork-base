@@ -23,5 +23,5 @@ public interface IFileHandler {
      * <p>当 FolderWalker 遍历到一个目录时，将调用这个方法进行对目录的处理
      * @param dir 待处理的目录
      */
-    void processDir (FSMonitor monitor, File dir);
+    void processDir  (FSMonitor monitor, File dir);
 }

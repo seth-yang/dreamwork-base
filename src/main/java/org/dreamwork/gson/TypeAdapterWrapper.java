@@ -11,7 +11,7 @@ public class TypeAdapterWrapper {
     AdapterType adapterType;
     Object adapter;
 
-    enum AdapterType {
+    public enum AdapterType {
         Normal, Hierarchy
     }
 

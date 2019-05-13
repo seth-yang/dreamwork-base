@@ -39,8 +39,8 @@ public class JSConverter {
 
         if (value instanceof Map)
             return castMap ((Map<Object, Object>) value);
-        if (value instanceof Collection)
-            return castCollection ((Collection<Object>) value);
+        if (value instanceof java.util.Collection)
+            return castCollection ((java.util.Collection<Object>) value);
         if (value instanceof IDataCollection)
             return castDataCollection ((IDataCollection<Object>) value);
         if (type.isArray ()) {
@@ -91,7 +91,7 @@ public class JSConverter {
     @SuppressWarnings ("unchecked")
     private String castNormalObject (Class type, Object o) throws InvocationTargetException, IllegalAccessException, InstantiationException {
         StringBuilder builder = new StringBuilder ();
-        Collection<String> propNames = ReferenceUtil.getPropertyNames (type);
+        java.util.Collection<String> propNames = ReferenceUtil.getPropertyNames (type);
         for (String name : propNames) {
             if (builder.length () > 0) builder.append (',');
             Object v = ReferenceUtil.get (o, name);

@@ -58,7 +58,7 @@ public class TerminalIO {
      *         <li>DELETE,BACKSPACE,TABULATOR,ESCAPE,COLORINIT,LOGOUTREQUEST
      *         <li>UP,DOWN,LEFT,RIGHT
      *         </ul>
-     * @throws IOException any io exception
+     * @throws java.io.IOException any io exception
      */
     public synchronized int read() throws IOException {
         int i = m_TelnetIO.read();
@@ -508,7 +508,7 @@ public class TerminalIO {
      * then the vt100 is the terminal of selection automatically.
      *
      * @param terminalName String that represents common terminal name
-     * @throws IOException any ioexception
+     * @throws java.io.IOException any ioexception
      */
     public void setTerminal( String terminalName) throws IOException {
 

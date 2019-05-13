@@ -60,7 +60,7 @@ public class BASE64Zipper {
      *
      * @param src 源字节数组
      * @return 压缩后的字节数据
-     * @throws IOException io exception
+     * @throws java.io.IOException io exception
      */
     public byte[] zip (byte[] src) throws IOException {
         ZipEntry entry = new ZipEntry ("test");

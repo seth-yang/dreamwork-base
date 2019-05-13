@@ -42,7 +42,7 @@ public interface IDatabase {
 
     <T> List<T> list (Class<T> type, String sql);
     <T> List<T> list (Class<T> type, String sql, Object... args);
-    <T> List<T> list (Class<T> type, int pageNo, int pageSize, String sql, Object... args);
+    <T> List<T> list(Class<T> type, int pageNo, int pageSize, String sql, Object... args);
 
     int executeUpdate (String sql);
     int executeUpdate (String sql, Object... args);

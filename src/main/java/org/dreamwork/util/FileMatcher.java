@@ -60,7 +60,7 @@ public class FileMatcher<T> {
 
     @SuppressWarnings ("unchecked")
     public java.util.Collection<T> getMatcheFiles () throws IOException {
-        if (!basedir.exists ()) return new HashSet<T> ();
+        if (!basedir.exists ()) return new java.util.HashSet<T> ();
         File[] files;
         if (filter == null) files = basedir.listFiles ();
         else files = basedir.listFiles (filter);
