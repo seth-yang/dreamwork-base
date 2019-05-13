@@ -25,6 +25,7 @@
 
     <build>
         <!--<sourceDirectory>src</sourceDirectory>-->
+<!--
         <resources>
             <resource>
                 <directory>${project.build.sourceDirectory}</directory>
@@ -36,6 +37,7 @@
                 </includes>
             </resource>
         </resources>
+-->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
