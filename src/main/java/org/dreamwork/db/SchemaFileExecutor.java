@@ -1,6 +1,7 @@
 package org.dreamwork.db;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.sql.Statement;
  * Created by game on 2017/4/19
  */
 public class SchemaFileExecutor {
-    private static final Logger logger = Logger.getLogger (SchemaFileExecutor.class);
+    private static final Logger logger = LoggerFactory.getLogger (SchemaFileExecutor.class);
 
     public static void importSchema (IDatabase db, Path schemaFile) throws SQLException, IOException {
         try (BufferedReader reader = Files.newBufferedReader (schemaFile, Charset.forName ("utf-8"))) {
@@ -33,8 +34,8 @@ public class SchemaFileExecutor {
                         String sql = builder.deleteCharAt (builder.length () - 1).toString ();
 
                         Statement stmt = conn.createStatement ();
-                        if (logger.isDebugEnabled ())
-                            logger.debug ("executing sql: " + sql);
+                        if (logger.isTraceEnabled ())
+                            logger.trace ("executing sql: " + sql);
                         stmt.execute (sql);
                         stmt.close ();
                         builder.setLength (0);

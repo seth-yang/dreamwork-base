@@ -1,6 +1,7 @@
 package org.dreamwork.network;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +15,7 @@ import static org.dreamwork.network.TunnelPool.*;
  */
 public class Tunnel {
     private static long globalId = 0;
-    private static Logger logger = Logger.getLogger (Tunnel.class);
+    private static Logger logger = LoggerFactory.getLogger (Tunnel.class);
 
     private long id;
     String name;
@@ -144,8 +145,8 @@ public class Tunnel {
         }
 
         void dispose () {
-            if (logger.isDebugEnabled ()) {
-                logger.debug (name + " disposing...");
+            if (logger.isTraceEnabled ()) {
+                logger.trace (name + " disposing...");
             }
             running = false;
             if (in != null) try {

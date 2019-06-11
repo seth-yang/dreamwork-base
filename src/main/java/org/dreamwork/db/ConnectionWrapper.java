@@ -1,7 +1,8 @@
 package org.dreamwork.db;
 
-import org.apache.log4j.Logger;
 import org.dreamwork.concurrent.Looper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.Map;
@@ -256,5 +257,5 @@ public class ConnectionWrapper implements Connection, Runnable {
         }
     }
 
-    private static final Logger logger = Logger.getLogger (ConnectionWrapper.class);
+    private static final Logger logger = LoggerFactory.getLogger (ConnectionWrapper.class);
 }

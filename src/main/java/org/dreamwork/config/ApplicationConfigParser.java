@@ -1,8 +1,9 @@
 package org.dreamwork.config;
 
-import org.apache.log4j.Logger;
 import org.dreamwork.util.DefaultConverter;
 import org.dreamwork.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -44,7 +45,7 @@ public class ApplicationConfigParser implements FileChangeListener {
     private WeakHashMap<String, Object> indices = new WeakHashMap<String, Object> ();
 
     private static final DocumentBuilder builder;
-    private static Logger logger = Logger.getLogger (ApplicationConfigParser.class);
+    private static Logger logger = LoggerFactory.getLogger (ApplicationConfigParser.class);
     private static final Object locker = new Object ();
     private static final Pattern p = Pattern.compile ("[\\./]");
     private static final Pattern TOKEN = Pattern.compile ("\\$\\{(.*?)\\}");

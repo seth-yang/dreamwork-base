@@ -1,6 +1,7 @@
 package org.dreamwork.fs;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.List;
@@ -18,7 +19,7 @@ public class FSWatcher implements Runnable {
     private FSMonitor monitor;
 
     private static final Object locker = new Object ();
-    private static final Logger logger = Logger.getLogger (FSWatcher.class);
+    private static final Logger logger = LoggerFactory.getLogger (FSWatcher.class);
 
     public FSWatcher (File basedir) throws IOException {
         monitor = new FSMonitor (basedir);
@@ -90,8 +91,8 @@ public class FSWatcher implements Runnable {
     }
 
     public void watch () {
-        if (logger.isDebugEnabled ())
-            logger.debug ("Trying to start watcher...");
+        if (logger.isTraceEnabled ())
+            logger.trace ("Trying to start watcher...");
         synchronized (locker) {
             running = true;
         }
@@ -99,8 +100,8 @@ public class FSWatcher implements Runnable {
     }
 
     public void shutdown () {
-        if (logger.isDebugEnabled ())
-            logger.debug ("Trying to shutdown watcher...");
+        if (logger.isTraceEnabled ())
+            logger.trace ("Trying to shutdown watcher...");
         synchronized (locker) {
             running = false;
         }

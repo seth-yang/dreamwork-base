@@ -24,20 +24,6 @@
     </distributionManagement>
 
     <build>
-        <!--<sourceDirectory>src</sourceDirectory>-->
-<!--
-        <resources>
-            <resource>
-                <directory>${project.build.sourceDirectory}</directory>
-                <includes>
-                    <include>**/*.java</include>
-                    <include>**/*.png</include>
-                    <include>**/*.xml</include>
-                    <include>**/*.properties</include>
-                </includes>
-            </resource>
-        </resources>
--->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -62,11 +48,13 @@
     </properties>
 
     <dependencies>
+<!--
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
+-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

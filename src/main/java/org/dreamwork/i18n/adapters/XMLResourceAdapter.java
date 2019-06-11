@@ -1,9 +1,10 @@
 package org.dreamwork.i18n.adapters;
 
-import org.apache.log4j.Logger;
 import org.dreamwork.i18n.*;
 import org.dreamwork.util.FileInfo;
 import org.dreamwork.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -28,7 +29,7 @@ import java.util.Set;
 public class XMLResourceAdapter extends AbstractResourceAdapter {
     private static DocumentBuilder builder;
 
-    private static final Logger logger = Logger.getLogger (XMLResourceAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger (XMLResourceAdapter.class);
     private AbstractResourceManager manager;
     private Set<XMLResourceAdapter> importedAdapters;
     private Locale defaultLocale;
@@ -38,8 +39,8 @@ public class XMLResourceAdapter extends AbstractResourceAdapter {
         this.defaultLocale = defaultLocale;
         initDocumentBuilder ();
         for (URL url : resources) {
-            if (logger.isDebugEnabled ())
-                logger.debug ("Trying to load resources from " + url);
+            if (logger.isTraceEnabled ())
+                logger.trace ("Trying to load resources from {}", url);
             Element root = parse (url);
 
             NodeList list = root.getElementsByTagName ("import");

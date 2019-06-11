@@ -1,6 +1,7 @@
 package org.dreamwork.concurrent.broadcast;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -16,7 +17,7 @@ import java.util.concurrent.ExecutorService;
  * Created by seth.yang on 2018/2/9
  */
 public class LocalBroadcaster implements Runnable, ILocalBroadcastService, LocalBroadcasterMBean {
-    private final Logger logger = Logger.getLogger (LocalBroadcaster.class);
+    private final Logger logger = LoggerFactory.getLogger (LocalBroadcaster.class);
     private final Map<String, List<ILocalBroadcastReceiver>> handlers = new HashMap<> ();
     private final Map<String, LocalBroadcastWorker> workers = new HashMap<> ();
     private final BlockingQueue<MessageWrapper> queue = new ArrayBlockingQueue<> (16);

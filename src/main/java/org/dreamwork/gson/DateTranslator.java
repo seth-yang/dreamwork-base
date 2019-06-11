@@ -1,7 +1,8 @@
 package org.dreamwork.gson;
 
 import com.google.gson.*;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
@@ -20,7 +21,7 @@ public class DateTranslator {
     private static final DateFormat df = new SimpleDateFormat ("yyyy-MM-dd");
     private static final DateFormat tf = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss");
 
-    private static final Logger logger = Logger.getLogger (DateTranslator.class);
+    private static final Logger logger = LoggerFactory.getLogger (DateTranslator.class);
 
     public static class UtilDateTranslator implements JsonSerializer<java.util.Date>, JsonDeserializer<java.util.Date> {
         public java.util.Date deserialize (JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {

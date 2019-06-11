@@ -1,6 +1,7 @@
 package org.dreamwork.config;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.util.List;
  * Time: 下午3:28
  */
 public class FileMonitor extends Thread {
-    private static final Logger logger = Logger.getLogger (FileMonitor.class);
+    private static final Logger logger = LoggerFactory.getLogger (FileMonitor.class);
     private static final long INTERVAL = 20000; // 5 minutes
 
     private final List<FileChangeListener> listeners = new ArrayList<FileChangeListener> ();

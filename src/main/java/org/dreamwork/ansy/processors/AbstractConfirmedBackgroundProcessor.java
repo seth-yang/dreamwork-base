@@ -1,6 +1,7 @@
 package org.dreamwork.ansy.processors;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,7 +13,7 @@ public abstract class AbstractConfirmedBackgroundProcessor extends Thread implem
     protected long waitingTime;
     protected boolean canceled = true, stopped = false;
     protected final Object locker = new Object ();
-    public static final Logger logger = Logger.getLogger (AbstractConfirmedBackgroundProcessor.class);
+    public static final Logger logger = LoggerFactory.getLogger (AbstractConfirmedBackgroundProcessor.class);
 
     protected abstract void doRollback ();
     protected abstract void doCommit ();
@@ -25,11 +26,13 @@ public abstract class AbstractConfirmedBackgroundProcessor extends Thread implem
     public void run () {
         try {
             synchronized (locker) {
-                logger.debug ("waiting for " + waitingTime + " ms ...");
+                if (logger.isTraceEnabled ())
+                    logger.trace ("waiting for {} ms ...", waitingTime);
                 locker.wait (waitingTime);
             }
 
-            logger.debug ("current operation: " + (canceled ? "rollback" : "commit"));
+            if (logger.isTraceEnabled ())
+                logger.trace ("current operation: {}", (canceled ? "rollback" : "commit"));
             if (canceled)
                 doRollback ();
             else

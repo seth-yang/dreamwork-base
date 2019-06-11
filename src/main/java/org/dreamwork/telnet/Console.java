@@ -1,9 +1,10 @@
 package org.dreamwork.telnet;
 
-import org.apache.log4j.Logger;
 import org.dreamwork.telnet.command.Command;
 import org.dreamwork.telnet.command.CommandParser;
 import org.dreamwork.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +21,7 @@ public class Console extends TerminalIO {
     private static final int MAX_HISTORY_SIZE  = 255;
     private static final int DEFAULT_BUFF_SIZE = 1024;
 
-    private static final Logger logger = Logger.getLogger (Console.class);
+    private static final Logger logger = LoggerFactory.getLogger (Console.class);
 
     private char[] buff;
     private int pos, history_index = 0, cursor = 0;

@@ -1,6 +1,7 @@
 package org.dreamwork.i18n;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -14,11 +15,11 @@ import java.util.*;
 public abstract class AbstractResourceAdapter implements IResourceAdapter {
     private final Object locker = new Object ();
 
-    protected final Map<Locale, IResourceBundle> softCache = new HashMap<Locale, IResourceBundle> ();
+    protected final Map<Locale, IResourceBundle> softCache = new HashMap<> ();
     protected String resourceName;
     protected IResourceBundle defaultResourceBundle;
 
-    private static final Logger logger = Logger.getLogger (AbstractResourceAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger (AbstractResourceAdapter.class);
 
     public void loadResources (String baseName, Locale defaultLocale) throws MissingResourceException {
         this.resourceName = baseName;
@@ -50,18 +51,18 @@ public abstract class AbstractResourceAdapter implements IResourceAdapter {
 
         String value = res.getString (name, null);
         if (value == null) { // 在对应的区域语言中未找到对应的资源，寻找最接近的语言
-            if (logger.isDebugEnabled ())
-                logger.debug ("Can't find resource [" + name + "] in locale [" + locale.getDisplayName () + "], trying to find a closet one.");
+            if (logger.isTraceEnabled ())
+                logger.trace ("Can't find resource [" + name + "] in locale [" + locale.getDisplayName () + "], trying to find a closet one.");
             for (Locale l : softCache.keySet ()) {
                 if (l.equals (locale)) continue;
 
                 if (l.getLanguage ().equals (locale.getLanguage ())) {
-                    if (logger.isDebugEnabled ())
-                        logger.debug ("Trying find resource in locale [" + l.getDisplayName () + "]");
+                    if (logger.isTraceEnabled ())
+                        logger.trace ("Trying find resource in locale [" + l.getDisplayName () + "]");
                     IResourceBundle bundle = softCache.get (l);
                     if (bundle.isResourcePresent (name)) {
-                        if (logger.isDebugEnabled ())
-                            logger.debug ("Resource [" + name + "] found in locale [" + l.getDisplayName () + "]");
+                        if (logger.isTraceEnabled ())
+                            logger.trace ("Resource [" + name + "] found in locale [" + l.getDisplayName () + "]");
                         value = bundle.getString (name, null);
                         break;
                     }
@@ -70,8 +71,8 @@ public abstract class AbstractResourceAdapter implements IResourceAdapter {
         }
 
         if (value == null) {
-            if (logger.isDebugEnabled ())
-                logger.debug ("Can't find resource in language [" + locale.getDisplayLanguage () + "], returning resource in default locale");
+            if (logger.isTraceEnabled ())
+                logger.trace ("Can't find resource in language [" + locale.getDisplayLanguage () + "], returning resource in default locale");
             return defaultResourceBundle.getString (name, defaultValue);
         }
         return value;
@@ -106,8 +107,8 @@ public abstract class AbstractResourceAdapter implements IResourceAdapter {
     protected IResourceBundle findResourceBundle (Locale locale) {
         IResourceBundle bundle = softCache.get (locale);
         if (bundle == null) {
-            if (logger.isDebugEnabled ())
-                logger.debug ("Can't match locale [" + locale + "], trying to match a closet one");
+            if (logger.isTraceEnabled ())
+                logger.trace ("Can't match locale [" + locale + "], trying to match a closet one");
             for (Locale l : softCache.keySet ()) {
                 if (l.getLanguage ().equals (locale.getLanguage ())) {
                     if (logger.isDebugEnabled ())
@@ -127,7 +128,7 @@ public abstract class AbstractResourceAdapter implements IResourceAdapter {
     protected abstract IResourceBundle loadResourceByLocale (Locale locale);
 
     public Collection<LocaleWarp> getSupportedLocales () {
-        SortedSet<LocaleWarp> set = new TreeSet<LocaleWarp> ();
+        SortedSet<LocaleWarp> set = new TreeSet<> ();
         for (Locale locale : softCache.keySet ())
             set.add (new LocaleWarp (locale));
         return set;

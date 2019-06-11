@@ -1,7 +1,8 @@
 package org.dreamwork.network;
 
-import org.apache.log4j.Logger;
 import org.dreamwork.concurrent.CancelableThread;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -9,7 +10,7 @@ import java.io.IOException;
  * Created by seth on 16-1-11
  */
 public abstract class Server extends CancelableThread implements IServer {
-    private static final Logger logger = Logger.getLogger (Server.class);
+    private static final Logger logger = LoggerFactory.getLogger (Server.class);
 
     protected int port;
 

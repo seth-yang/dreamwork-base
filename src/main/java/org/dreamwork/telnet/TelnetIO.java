@@ -1,6 +1,7 @@
 package org.dreamwork.telnet;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -12,7 +13,7 @@ import java.net.InetAddress;
  * Time: 下午4:03
  */
 public class TelnetIO {
-    private static Logger log = Logger.getLogger( TelnetIO.class);
+    private static Logger log = LoggerFactory.getLogger( TelnetIO.class);
 
     private ConnectionData m_ConnectionData; //holds all important information of the connection
     private DataOutputStream m_Out; //the byte oriented outputstream

@@ -1,6 +1,7 @@
 package org.dreamwork.concurrent;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class Looper {
     private static final Map<String, InternalLoop>     pool    = new HashMap<> ();
     private static final Map<Long, ScheduledFuture<?>> futures = new HashMap<> ();
-    private static final Logger logger = Logger.getLogger (Looper.class);
+    private static final Logger logger = LoggerFactory.getLogger (Looper.class);
     private static final ReentrantReadWriteLock locker         = new ReentrantReadWriteLock ();
 
     private static ExecutorService          executor  = Executors.newFixedThreadPool (16);
@@ -135,8 +136,8 @@ public class Looper {
             throw new IllegalArgumentException ("The looper: " + name + " does not exist!");
         }
 
-        if (logger.isDebugEnabled ()) {
-            logger.debug ("submitting a new job to loop [" + name + ']');
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("submitting a new job to loop [" + name + ']');
         }
         synchronized (pool) {
             InternalLoop looper = pool.get (name);
@@ -175,8 +176,8 @@ public class Looper {
         if (executor == null || executor.isShutdown () || executor.isTerminated ()) {
             executor = Executors.newFixedThreadPool (16);
         }
-        if (logger.isDebugEnabled ()) {
-            logger.debug ("submitting a new job to non-named loop...");
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("submitting a new job to non-named loop...");
         }
         InternalRunner ir = new InternalRunner (runner);
         InternalRunner.map.put (ir.index, executor.submit (ir));
@@ -264,8 +265,8 @@ public class Looper {
      * @param unit 时间单位
      */
     public static void waitForShutdown (int timeout, TimeUnit unit) {
-        if (logger.isDebugEnabled ()) {
-            logger.debug ("waiting for the all loops shutdown");
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("waiting for the all loops shutdown");
         }
 
         if (timeout < 0) {
@@ -340,8 +341,8 @@ public class Looper {
         ScheduleWorker worker = new ScheduleWorker (runner);
         worker.taskId = taskId;
         futures.put (taskId, scheduler.schedule (worker, delay, unit));
-        if (logger.isDebugEnabled ()) {
-            logger.debug ("task [" + taskId + "] scheduled executing in " + unit.toMillis (delay) + " ms.");
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("task [" + taskId + "] scheduled executing in " + unit.toMillis (delay) + " ms.");
         }
         return taskId;
     }
@@ -357,8 +358,8 @@ public class Looper {
             if (futures.containsKey (taskId)) {
                 futures.get (taskId).cancel (true);
                 futures.remove (taskId);
-                if (logger.isDebugEnabled ()) {
-                    logger.debug ("task [" + taskId + "] canceled.");
+                if (logger.isTraceEnabled ()) {
+                    logger.trace ("task [" + taskId + "] canceled.");
                 }
             }
         }
@@ -388,7 +389,8 @@ public class Looper {
             } finally {
                 map.remove (index);
                 count.decrementAndGet ();
-                logger.debug ("task done.");
+                if (logger.isTraceEnabled ())
+                    logger.trace ("task done.");
             }
         }
     }
@@ -424,8 +426,8 @@ public class Looper {
         @Override
         public void run () {
             Thread.currentThread ().setName (name);
-            if (logger.isDebugEnabled ())
-                logger.debug (">>>>>>> Internal Loop run <<<<<<<<<");
+            if (logger.isTraceEnabled ())
+                logger.trace (">>>>>>> Internal Loop run <<<<<<<<<");
             while (running) {
                 try {
                     Object o;
@@ -451,9 +453,9 @@ public class Looper {
 
             pool.remove (name);
 
-            if (logger.isDebugEnabled ()) {
-                logger.debug (name + " removed.");
-                logger.debug (">>>>>>> Internal Loop done <<<<<<<<<");
+            if (logger.isTraceEnabled ()) {
+                logger.trace (name + " removed.");
+                logger.trace (">>>>>>> Internal Loop done <<<<<<<<<");
             }
         }
 

@@ -1,6 +1,7 @@
 package org.dreamwork.fs.nio;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -22,7 +23,7 @@ public class FileMonitor implements Runnable {
     private ExecutorService wet     = Executors.newCachedThreadPool ();
     private List<IFileMonitorListener> listeners = new ArrayList<> ();
 
-    private static final Logger logger = Logger.getLogger (FileMonitor.class);
+    private static final Logger logger = LoggerFactory.getLogger (FileMonitor.class);
 
     public FileMonitor () throws IOException {
         monitor = FileSystems.getDefault ().newWatchService ();
@@ -72,8 +73,8 @@ public class FileMonitor implements Runnable {
 
     private void register (Path path) throws IOException {
         path = path.toAbsolutePath ();
-        if (logger.isDebugEnabled ())
-            logger.debug ("registering the path: " + path);
+        if (logger.isTraceEnabled ())
+            logger.trace ("registering the path: " + path);
         if (!paths.contains (path)) {
             paths.add (path);
 
@@ -92,12 +93,12 @@ public class FileMonitor implements Runnable {
         while (running) {
             WatchKey key;
             try {
-                if (logger.isDebugEnabled ())
-                    logger.debug ("waiting for new watch key.");
+                if (logger.isTraceEnabled ())
+                    logger.trace ("waiting for new watch key.");
                 key = monitor.take ();
-                if (logger.isDebugEnabled ()) {
-                    logger.debug ("got a watch key: " + key);
-                    logger.debug ("checking for the key whether valid or not");
+                if (logger.isTraceEnabled ()) {
+                    logger.trace ("got a watch key: " + key);
+                    logger.trace ("checking for the key whether valid or not");
                 }
                 if (!key.isValid ()) {
                     cache.remove (key);
@@ -109,8 +110,8 @@ public class FileMonitor implements Runnable {
                     continue;
                 }
 
-                if (logger.isDebugEnabled ())
-                    logger.debug ("processing the watch key");
+                if (logger.isTraceEnabled ())
+                    logger.trace ("processing the watch key");
                 for (WatchEvent<?> e : key.pollEvents ()) {
                     @SuppressWarnings ("unchecked")
                     WatchEvent<Path> event = (WatchEvent<Path>) e;
@@ -119,26 +120,27 @@ public class FileMonitor implements Runnable {
                     String name   = event.kind ().name ();
                     boolean isDir = Files.isDirectory (target, LinkOption.NOFOLLOW_LINKS);
 
-                    if (logger.isDebugEnabled ()) {
-                        logger.debug ("poll a watch event");
-                        logger.debug ("context = " + event.context ());
-                        logger.debug ("kind    = " + event.kind ().name ());
-                        logger.debug ("is dir  = " + isDir);
+                    if (logger.isTraceEnabled ()) {
+                        logger.trace ("poll a watch event");
+                        logger.trace ("context = " + event.context ());
+                        logger.trace ("kind    = " + event.kind ().name ());
+                        logger.trace ("is dir  = " + isDir);
                     }
 
                     if ("ENTRY_CREATE".equals (name) && isDir) {
                         try {
-                            logger.debug ("the new context is a directory, register it");
+                            if (logger.isTraceEnabled ())
+                                logger.trace ("the new context is a directory, register it");
                             register (target);
                         } catch (IOException e1) {
                             e1.printStackTrace ();
-                            System.err.println ("can't register monitor on " + target);
+                            logger.error ("can't register monitor on {}", target);
                         }
                     }
 
                     if (!("ENTRY_MODIFY".equals (name) && isDir)) {
-                        if (logger.isDebugEnabled ())
-                            logger.debug ("raising the watch events");
+                        if (logger.isTraceEnabled ())
+                            logger.trace ("raising the watch events");
                         // ignore dir's modify event
                         List<IFileMonitorListener> list = getListeners ();
                         for(IFileMonitorListener listener : list) {
@@ -148,8 +150,8 @@ public class FileMonitor implements Runnable {
                 }
 
                 if (!key.reset ()) {
-                    if (logger.isDebugEnabled ())
-                        logger.debug (key + " reset fail, remove it from cache");
+                    if (logger.isTraceEnabled ())
+                        logger.trace (key + " reset fail, remove it from cache");
                     cache.remove (key);
                 }
             } catch (InterruptedException ex) {

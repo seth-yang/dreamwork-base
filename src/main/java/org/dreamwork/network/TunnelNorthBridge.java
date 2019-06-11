@@ -1,8 +1,8 @@
 package org.dreamwork.network;
 
-
-import org.apache.log4j.Logger;
 import org.dreamwork.secure.SecureContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +27,7 @@ import java.security.spec.InvalidKeySpecException;
  *</pre>
  */
 public abstract class TunnelNorthBridge extends SecureContextServer {
-    private static final Logger logger = Logger.getLogger (TunnelNorthBridge.class);
+    private static final Logger logger = LoggerFactory.getLogger (TunnelNorthBridge.class);
 
     public TunnelNorthBridge (String name, SecureContext context, Key kek) throws InvalidKeySpecException, NoSuchAlgorithmException {
         super (name, context, kek);
@@ -68,8 +68,8 @@ public abstract class TunnelNorthBridge extends SecureContextServer {
                         String uuid = new String (packet.data, "utf-8");
                         if (isValidTunnelRequest (uuid)) {
                             int count = TunnelPool.count (uuid);
-                            if (logger.isDebugEnabled ()) {
-                                logger.debug ("There's " + count + " waiting tunnel");
+                            if (logger.isTraceEnabled ()) {
+                                logger.trace ("There's " + count + " waiting tunnel");
                             }
                             write (out, count);
                         }

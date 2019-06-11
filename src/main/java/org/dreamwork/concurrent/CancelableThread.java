@@ -1,6 +1,7 @@
 package org.dreamwork.concurrent;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,7 +18,7 @@ import java.util.Set;
  */
 public abstract class CancelableThread extends Thread implements ICancelable {
     volatile protected boolean running = false;
-    private static final Logger logger = Logger.getLogger (CancelableThread.class);
+    private static final Logger logger = LoggerFactory.getLogger (CancelableThread.class);
 
     private static final Set<CancelableThread> references = new HashSet<CancelableThread> ();
 
@@ -48,7 +49,7 @@ public abstract class CancelableThread extends Thread implements ICancelable {
      * </p>
      */
     public static void dispose () {
-        if (references != null && !references.isEmpty ()) {
+        if (!references.isEmpty ()) {
             for (CancelableThread ct : references) {
                 if (!ct.isCanceled ())
                     ct.cancel (true);
@@ -99,9 +100,9 @@ public abstract class CancelableThread extends Thread implements ICancelable {
      */
     @Override
     public void cancel (boolean block) {
-        if (logger.isDebugEnabled ()) {
-            logger.debug ("trying to stop " + getName () + "...");
-            logger.debug ("invoking the before cancel...");
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("trying to stop " + getName () + "...");
+            logger.trace ("invoking the before cancel...");
         }
         try {
             beforeCancel ();
@@ -116,8 +117,7 @@ public abstract class CancelableThread extends Thread implements ICancelable {
                 e.printStackTrace ();
             }
         synchronized (references) {
-            if (references.contains (this))
-                references.remove (this);
+            references.remove (this);
         }
         logger.info ("Server [" + getName () + "] stopped.");
     }
@@ -144,8 +144,8 @@ public abstract class CancelableThread extends Thread implements ICancelable {
      */
     @Override
     public void run () {
-        if (logger.isDebugEnabled ())
-            logger.debug ("Starting thread[" + getName () + "]");
+        if (logger.isTraceEnabled ())
+            logger.trace ("Starting thread[" + getName () + "]");
         while (running) {
             try {
                 doWork ();
@@ -156,7 +156,7 @@ public abstract class CancelableThread extends Thread implements ICancelable {
                 logger.warn (ex.getMessage (), ex);
             }
         }
-        if (logger.isDebugEnabled ())
-            logger.debug ("Thread[" + getName () + "] stopped.");
+        if (logger.isTraceEnabled ())
+            logger.trace ("Thread[" + getName () + "] stopped.");
     }
 }

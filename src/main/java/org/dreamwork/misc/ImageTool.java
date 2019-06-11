@@ -1,8 +1,9 @@
 package org.dreamwork.misc;
 
-import org.apache.log4j.Logger;
 import org.dreamwork.util.FileInfo;
 import org.dreamwork.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -20,12 +21,12 @@ import java.util.Iterator;
  * Created by seth.yang on 2017/4/17
  */
 public class ImageTool {
-    private static final Logger logger = Logger.getLogger (ImageTool.class);
+    private static final Logger logger = LoggerFactory.getLogger (ImageTool.class);
     public static final Color TRANSPARENT = new Color (0xff, 0xff, 0xff, 0);
 
     public static Dimension getImageSize (Path image) throws IOException {
         long now = 0;
-        if (logger.isDebugEnabled ()) {
+        if (logger.isTraceEnabled ()) {
             now = System.currentTimeMillis ();
         }
         File file = image.toFile ();
@@ -49,9 +50,9 @@ public class ImageTool {
             int index  = reader.getMinIndex ();
             int width  = reader.getWidth (index);
             int height = reader.getHeight (index);
-            if (logger.isDebugEnabled ()) {
+            if (logger.isTraceEnabled ()) {
                 long offset = System.currentTimeMillis () - now;
-                System.out.println (image + " " + offset);
+                logger.trace (image + " " + offset);
             }
             return new Dimension (width, height);
         }

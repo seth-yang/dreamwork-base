@@ -1,13 +1,15 @@
 package org.dreamwork.network;
 
-import org.apache.log4j.Logger;
 import org.dreamwork.secure.SecureContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -20,7 +22,7 @@ import java.util.concurrent.Executors;
  * Created by seth.yang on 2016/5/19
  */
 public class TunnelServer extends SecureContextServer {
-    private static final Logger logger = Logger.getLogger (TunnelServer.class);
+    private static final Logger logger = LoggerFactory.getLogger (TunnelServer.class);
     private static final ExecutorService service = Executors.newCachedThreadPool ();
 
     private long waitTimeout = 120000L, // default to 2 minutes
@@ -100,10 +102,10 @@ public class TunnelServer extends SecureContextServer {
     0    |1     2     |3
     0x41 |body-length |tunnel-name in utf-8
  */
-    private void requestTunnel (Socket socket, DataPacket packet) throws IOException {
-        String name = new String (packet.data, "utf-8");
-        if (logger.isDebugEnabled ()) {
-            logger.debug ("requesting a tunnel to " + name);
+    private void requestTunnel (Socket socket, DataPacket packet) {
+        String name = new String (packet.data, StandardCharsets.UTF_8);
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("requesting a tunnel to " + name);
         }
         Tunnel tunnel = new Tunnel (name, waitTimeout, timeout, packet.encrypted);
         tunnel.waiting (socket);

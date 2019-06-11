@@ -1,7 +1,8 @@
 package org.dreamwork.fs.nio;
 
-import org.apache.log4j.Logger;
 import org.dreamwork.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class FileWalker<T extends FileIndex> implements IFileMonitorListener {
     private Set<String> categories = new HashSet<> ();
     private List<IFileWalkListener<T>> listeners = new ArrayList<> ();
 
-    private static final Logger logger = Logger.getLogger (FileWalker.class);
+    private static final Logger logger = LoggerFactory.getLogger (FileWalker.class);
 
     public FileWalker (IFileIndexAdapter<T> adapter) throws IOException {
         this.adapter = adapter;
@@ -85,12 +86,12 @@ public class FileWalker<T extends FileIndex> implements IFileMonitorListener {
 
     @Override
     public void onCreate (Path path) throws IOException {
-        if (logger.isDebugEnabled ()) {
-            logger.debug (path + " is create.");
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("{} is create.", path);
         }
         if (Files.isRegularFile (path) && adapter.accept (path, null)) {
-            if (logger.isDebugEnabled ()) {
-                logger.debug ("creating the index of " + path);
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("creating the index of {}", path);
             }
             String category = null;
             for (String c : categories) {
@@ -112,8 +113,8 @@ public class FileWalker<T extends FileIndex> implements IFileMonitorListener {
 
     @Override
     public void onDelete (Path path) throws IOException {
-        if (logger.isDebugEnabled ()) {
-            logger.debug ("the path " + path + " deleted.");
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("the path {} deleted.", path);
         }
         if (adapter.accept (path, null)) {
             String category = findCategory (path);
@@ -131,8 +132,8 @@ public class FileWalker<T extends FileIndex> implements IFileMonitorListener {
 
     @Override
     public void onModify (Path path) throws IOException {
-        if (logger.isDebugEnabled ()) {
-            logger.debug ("the path " + path + " modified");
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("the path {} modified", path);
         }
         if (adapter.accept (path, null)) {
             String category = findCategory (path);
