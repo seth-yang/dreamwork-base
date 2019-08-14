@@ -4,7 +4,7 @@
 
     <groupId>org.dreamwork</groupId>
     <artifactId>dreamwork-base</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <packaging>bundle</packaging>
     <description><![CDATA[
         剔除对log4j的依赖
@@ -50,6 +50,40 @@
                     <skipTests>true</skipTests>
                 </configuration>
             </plugin>
+<!--
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <aggregate>true</aggregate>
+                    <charset>UTF-8</charset>
+                    <docencoding>UTF-8</docencoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -71,7 +105,7 @@
                             org.dreamwork.db,
                             org.dreamwork.fs, org.dreamwork.nio,
                             org.dreamwork.i18n, org.dreamwork.i18n.adapters, org.dreamwork.i18n.manager,
-                            org.dreamwork.misc, org.dreamwork.network,
+                            org.dreamwork.misc, org.dreamwork.network, org.dreamwork.network.udp,
                             org.dreamwork.persistence, org.dreamwork.secure,
                             org.dreamwork.telnet, org.dreamwork.telnet.command,
                             org.dreamwork.text, org.dreamwork.text.sql,
