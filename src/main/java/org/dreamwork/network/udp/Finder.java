@@ -22,7 +22,7 @@ public class Finder {
         void found (InetAddress address);
     }
 
-    private int port, buffSize;
+    private int port, buffSize = BUFF_SIZE;
     private DatagramSocket  client;
     private ExecutorService executor;
     private IFinderListener listener;
