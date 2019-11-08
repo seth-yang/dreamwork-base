@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class ConnectionData {
 //    private InetAddress m_IP; //the connection's IP Address Object
-    private Map m_Environment; //the environment
+    private Map<String, String> m_Environment; //the environment
 
     //Members
 //    private String m_HostName; //cache for the hostname
@@ -38,7 +38,7 @@ public class ConnectionData {
         m_TerminalGeometry[ 0] = 80; //width
         m_TerminalGeometry[ 1] = 25; //height
         m_NegotiatedTerminalType = "default";
-        m_Environment = new HashMap ( 20);
+        m_Environment = new HashMap<> ( 20);
         //this will stamp the first activity for validity :)
         activity();
     }//ConnectionData
@@ -277,7 +277,7 @@ public class ConnectionData {
      *
      * @return a <tt>HashMap</tt> instance.
      */
-    public Map getEnvironment() {
+    public Map<String, String> getEnvironment() {
         return m_Environment;
     }//getEnvironment
 

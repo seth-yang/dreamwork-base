@@ -23,26 +23,30 @@ public class TerminalIO {
     private boolean m_ForceBold; //flag for forcing bold output
     private boolean m_LineWrapping;
 
-    public TerminalIO( InputStream in, OutputStream out, ConnectionData connectionData) {
+    TerminalIO (InputStream in, OutputStream out, ConnectionData data, boolean ssh) {
         m_AcousticSignalling = true;
         m_Autoflush = true;
 
         try {
             //create a new telnet io
-            m_TelnetIO = new TelnetIO( in, out, connectionData);
-            m_ConnectionData = connectionData;
+            m_TelnetIO = new TelnetIO( in, out, data, ssh);
+            m_ConnectionData = data;
         }
         catch( Exception ex) {
             //handle, at least log
         }
 
         //set default terminal
-        try {
+        if (!ssh) try {
             setDefaultTerminal();
         } catch( Exception ex) {
 //            log.error( "TerminalIO()", ex);
             throw new RuntimeException();
         }
+    }
+
+    TerminalIO( InputStream in, OutputStream out, ConnectionData data) {
+        this (in, out, data, false);
     }//constructor
 
     /* ***********************************************************************

@@ -17,16 +17,6 @@ public class Env extends Command {
         super ("env", null, "show environment");
     }
 
-    @Override
-    public void parse (String line) {
-
-    }
-
-    @Override
-    public boolean isOptionPresent (String name) {
-        return false;
-    }
-
     /**
      * 执行命令
      *
@@ -72,26 +62,5 @@ public class Env extends Command {
                 }
             }
         }
-    }
-
-    /**
-     * 根据输入的文本猜测可能合法的后续输入.
-     * <ul>
-     * <li>如果猜测无结果，返回 null</li>
-     * <li>如果能够确定匹配后续输入，返回一条确切记录</li>
-     * <li>如果能够猜测出多条可能的输入，返回一个列表</li>
-     * </ul>
-     *
-     * @param text 输入的文本
-     * @return 可能合法的后续输入.
-     */
-    @Override
-    public List<String> guess (String text) {
-        return null;
-    }
-
-    @Override
-    public void showHelp (Console console) throws IOException {
-
     }
 }

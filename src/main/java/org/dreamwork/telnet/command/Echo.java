@@ -4,7 +4,6 @@ import org.dreamwork.telnet.Console;
 import org.dreamwork.util.StringUtil;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,22 +11,11 @@ import java.util.regex.Pattern;
  * Created by seth.yang on 2018/9/30
  */
 public class Echo extends Command {
-    private String pattern;
     private static final Pattern P1 = Pattern.compile ("^\\$([a-zA-Z_][a-zA-Z_0-9]*)$");
     private static final Pattern P2 = Pattern.compile ("^\\$\\{(.*?)}$");
 
     public Echo () {
         super ("echo", null, "shows something");
-    }
-
-    @Override
-    public void parse (String line) {
-        this.pattern = line;
-    }
-
-    @Override
-    public boolean isOptionPresent (String name) {
-        return false;
     }
 
     /**
@@ -38,19 +26,19 @@ public class Echo extends Command {
      */
     @Override
     public void perform (Console console) throws IOException {
-        if (StringUtil.isEmpty (pattern)) {
+        if (StringUtil.isEmpty (content)) {
             return;
         }
 
-        pattern = pattern.trim ();
-        Matcher m = P2.matcher (pattern);
+        content = content.trim ();
+        Matcher m = P2.matcher (content);
         String name = null;
         if (m.matches ()) {
             name  = m.group (1);
         }
 
         if (name == null) {
-            m = P1.matcher (pattern);
+            m = P1.matcher (content);
             if (m.matches ()) {
                 name = m.group (1);
             }
@@ -68,7 +56,7 @@ public class Echo extends Command {
         }
 
         char[] buff = new char[1024];
-        char[] data = pattern.toCharArray ();
+        char[] data = content.toCharArray ();
         int pos     = 0;
         for (int i = 0; i < data.length; i ++) {
             char ch = data [i];
@@ -129,26 +117,5 @@ public class Echo extends Command {
         }
 
         console.println (new String (buff, 0, pos));
-    }
-
-    /**
-     * 根据输入的文本猜测可能合法的后续输入.
-     * <ul>
-     * <li>如果猜测无结果，返回 null</li>
-     * <li>如果能够确定匹配后续输入，返回一条确切记录</li>
-     * <li>如果能够猜测出多条可能的输入，返回一个列表</li>
-     * </ul>
-     *
-     * @param text 输入的文本
-     * @return 可能合法的后续输入.
-     */
-    @Override
-    public List<String> guess (String text) {
-        return null;
-    }
-
-    @Override
-    public void showHelp (Console console) {
-
     }
 }

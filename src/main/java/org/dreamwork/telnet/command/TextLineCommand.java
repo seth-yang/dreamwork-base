@@ -9,9 +9,4 @@ public abstract class TextLineCommand extends Command {
     public TextLineCommand (String name, String alias, String desc) {
         super (name, alias, desc);
     }
-
-    @Override
-    public boolean isOptionPresent (String name) {
-        return false;
-    }
 }

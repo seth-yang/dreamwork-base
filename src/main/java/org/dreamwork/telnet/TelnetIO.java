@@ -29,20 +29,27 @@ public class TelnetIO {
     private boolean m_Initializing;
     private boolean m_CRFlag;
 
+    private boolean ssh = false;
+
+    public TelnetIO( InputStream in, OutputStream out, ConnectionData data, boolean ssh) {
+        m_IACHandler = new IACHandler();
+
+        this.m_In = new DataInputStream( in);
+        this.m_Out = new DataOutputStream( out);
+        this.m_ConnectionData = data;
+        m_CRFlag = false;
+
+        this.ssh = ssh;
+        initTelnetCommunication();
+    }
+
     /**
      * Creates a TelnetIO object for the given connection.<br>
      * Input- and OutputStreams are properly set and the primary telnet
      * protocol initialization is carried out by the inner IACHandler class.<BR>
      */
-    public TelnetIO( InputStream in, OutputStream out, ConnectionData connectionData) {
-        m_IACHandler = new IACHandler();
-
-        this.m_In = new DataInputStream( in);
-        this.m_Out = new DataOutputStream( out);
-        this.m_ConnectionData = connectionData;
-        m_CRFlag = false;
-
-        initTelnetCommunication();
+    public TelnetIO( InputStream in, OutputStream out, ConnectionData data) {
+        this (in, out, data, false);
     }//constructor
 
     //  public void initIO() throws IOException {
@@ -201,7 +208,7 @@ public class TelnetIO {
         //if (c == 255) {
         m_NOIAC = false;
         while( (c == 255) && ( !m_NOIAC)) {
-            /**
+            /*
              * Read next, and invoke
              * the IACHandler he is taking care of the rest. Or at least he should :)
              */
@@ -302,7 +309,8 @@ public class TelnetIO {
      */
     private int stripCRSeq( int input) throws IOException {
         if( input == 13) {
-            rawread();
+            if (!ssh)
+                rawread();
             return 10;
         }
         return input;
@@ -501,22 +509,26 @@ public class TelnetIO {
         private boolean WAIT_WILL_REPLY_TTYPE = false;
 
         public void doCharacterModeInit() throws IOException {
-            sendCommand( WILL, ECHO, true);
-            sendCommand( DONT, ECHO, true); //necessary for some clients
-            sendCommand( DO, NAWS, true);
-            sendCommand( WILL, SUPGA, true);
-            sendCommand( DO, SUPGA, true);
-            sendCommand( DO, TTYPE, true);
-            sendCommand( DO, NEWENV, true); //environment variables
+            if (!ssh) {
+                sendCommand (WILL, ECHO, true);
+                sendCommand (DONT, ECHO, true); //necessary for some clients
+                sendCommand (DO, NAWS, true);
+                sendCommand (WILL, SUPGA, true);
+                sendCommand (DO, SUPGA, true);
+                sendCommand (DO, TTYPE, true);
+                sendCommand (DO, NEWENV, true); //environment variables
+            }
         }//doCharacterModeInit
 
         public void doLineModeInit() throws IOException {
-            sendCommand( DO, NAWS, true);
-            sendCommand( WILL, SUPGA, true);
-            sendCommand( DO, SUPGA, true);
-            sendCommand( DO, TTYPE, true);
-            sendCommand( DO, LINEMODE, true);
-            sendCommand( DO, NEWENV, true);
+            if (!ssh) {
+                sendCommand (DO, NAWS, true);
+                sendCommand (WILL, SUPGA, true);
+                sendCommand (DO, SUPGA, true);
+                sendCommand (DO, TTYPE, true);
+                sendCommand (DO, LINEMODE, true);
+                sendCommand (DO, NEWENV, true);
+            }
         }//doLineModeInit
 
         /**
@@ -994,7 +1006,7 @@ public class TelnetIO {
                                 case NE_VAR_OK:
                                     //add variable
                                     log.debug( "readNEVariables()::NE_VAR_OK:VAR=" + str + " VAL=" + sbuf.toString());
-                                    TelnetIO.this.m_ConnectionData.getEnvironment().put( str, sbuf.toString());
+                                    m_ConnectionData.getEnvironment().put( str, sbuf.toString());
                                     sbuf.delete( 0, sbuf.length());
                                     break;
                             }

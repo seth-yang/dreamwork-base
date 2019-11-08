@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by seth.yang on 2018/9/20
@@ -22,6 +24,7 @@ public class Console extends TerminalIO {
     private static final int DEFAULT_BUFF_SIZE = 1024;
 
     private static final Logger logger = LoggerFactory.getLogger (Console.class);
+    private static final Pattern PATTERN = Pattern.compile ("^\\s*[a-zA-Z]([a-zA-Z\\-_$.]+)?\\s+(.*?)$");
 
     private char[] buff;
     private int pos, history_index = 0, cursor = 0;
@@ -33,12 +36,20 @@ public class Console extends TerminalIO {
 
     private List<String> history = new ArrayList<> (MAX_HISTORY_SIZE);
 
+    public Console (InputStream in, OutputStream out, ConnectionData data, boolean ssh) {
+        this (in, out, data, ssh, DEFAULT_BUFF_SIZE);
+    }
+
     public Console (InputStream in, OutputStream out, ConnectionData data) {
         this (in, out, data, DEFAULT_BUFF_SIZE);
     }
 
     public Console (InputStream in, OutputStream out, ConnectionData data, int buffSize) {
-        super (in, out, data);
+        this (in, out, data, false, buffSize);
+    }
+
+    public Console (InputStream in, OutputStream out, ConnectionData data, boolean ssh, int buffSize) {
+        super (in, out, data, ssh);
         if (buffSize > 0) {
             buff = new char[buffSize];
         }
@@ -151,10 +162,24 @@ public class Console extends TerminalIO {
                             if (logger.isTraceEnabled ())
                                 logger.trace ("command = " + command.name);
 
+                            Matcher m = PATTERN.matcher (line);
+                            if (m.matches ()) {
+                                String content = m.group (2);
+                                command.setContent (content);
+                                if (command.isOptionSupported ()) {
+                                    command.parse (content);
+                                }
+                            }
+/*
                             int idx = line.indexOf (' ');
                             if (idx > 0) {
-                                command.parse (line.substring (idx + 1).trim ());
+                                String content = line.substring (idx + 1).trim ();
+                                command.setContent (content);
+                                if (command.isOptionSupported ()) {
+                                    command.parse (content);
+                                }
                             }
+*/
                             command.perform (this);
                         } else {
                             errorln ("Invalid Command: " + line);
@@ -184,21 +209,6 @@ public class Console extends TerminalIO {
                             pos --;
                             // move client cursor left (pos - cursor) times.
                             moveCursor (LEFT, pos - cursor);
-/*
-                            cursor --;
-                            System.arraycopy (buff, cursor + 1, buff, cursor, pos - cursor);
-                            pos --;
-
-                            String tmp = new String (buff, 0, pos);
-                            int delta = pos - cursor;
-
-                            while (cursor-- > 0) {
-                                super.backspace ();
-                            }
-                            fillBuff (tmp);
-                            moveCursor (LEFT, delta);
-                            cursor = pos - delta;
-*/
                         }
                     }
                     break;
@@ -242,6 +252,12 @@ public class Console extends TerminalIO {
 
             if (ch != TABULATOR) {
                 tab_mode = false;
+            }
+
+            try {
+                Thread.sleep (1);
+            } catch (InterruptedException e) {
+                e.printStackTrace ();
             }
         }
 

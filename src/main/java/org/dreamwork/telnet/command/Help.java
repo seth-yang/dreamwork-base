@@ -83,8 +83,8 @@ public class Help extends Command {
     }
 
     @Override
-    public void parse (String line) {
-        target = commandParser.getByName (line);
+    public void setContent (String content) {
+        target = commandParser.getByName (content);
         if (target == null) {
             target = commandParser.getByAlias (alias);
         }
@@ -92,11 +92,6 @@ public class Help extends Command {
         if (target == this) {
             target = null;
         }
-    }
-
-    @Override
-    public boolean isOptionPresent (String name) {
-        return false;
     }
 
     public void showHelp (Console console) throws IOException {

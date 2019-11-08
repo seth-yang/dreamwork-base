@@ -4,7 +4,6 @@ import org.dreamwork.telnet.Console;
 import org.dreamwork.util.StringUtil;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,29 +13,24 @@ import java.util.regex.Pattern;
 public class Set extends Command {
     private String name, value;
 
-    private static final Pattern P = Pattern.compile ("^(set )?(.*?)=(.*?)$");
+    private static final Pattern P = Pattern.compile ("^(set\\s+)?(.*?)=(.*?)$");
     // set name=val
     public Set () {
         super ("set", null, "setting console env");
     }
 
     @Override
-    public void parse (String line) {
-        if (StringUtil.isEmpty (line)) {
+    public void setContent (String content) {
+        if (StringUtil.isEmpty (content)) {
             return;
         }
 
-        line = line.trim ();
-        Matcher m = P.matcher (line);
+        content = content.trim ();
+        Matcher m = P.matcher (content);
         if (m.matches ()) {
             name = m.group (2);
             value = m.group (3);
         }
-    }
-
-    @Override
-    public boolean isOptionPresent (String name) {
-        return false;
     }
 
     /**
@@ -49,22 +43,6 @@ public class Set extends Command {
         if (!StringUtil.isEmpty (name) && !StringUtil.isEmpty (value)) {
             console.setEnv (name, value);
         }
-    }
-
-    /**
-     * 根据输入的文本猜测可能合法的后续输入.
-     * <ul>
-     * <li>如果猜测无结果，返回 null</li>
-     * <li>如果能够确定匹配后续输入，返回一条确切记录</li>
-     * <li>如果能够猜测出多条可能的输入，返回一个列表</li>
-     * </ul>
-     *
-     * @param text 输入的文本
-     * @return 可能合法的后续输入.
-     */
-    @Override
-    public List<String> guess (String text) {
-        return null;
     }
 
     @Override

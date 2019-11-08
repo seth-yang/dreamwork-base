@@ -2,14 +2,10 @@ package org.dreamwork.persistence.test;
 
 import org.dreamwork.telnet.*;
 import org.dreamwork.telnet.command.Command;
-import org.dreamwork.telnet.command.Exit;
-import org.dreamwork.telnet.command.Help;
-import org.dreamwork.telnet.command.Quit;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,16 +18,6 @@ public class ConsoleTest {
             super (name, alias, desc);
         }
 
-        @Override
-        public void parse (String line) {
-
-        }
-
-        @Override
-        public boolean isOptionPresent (String name) {
-            return false;
-        }
-
         /**
          * 执行命令
          *
@@ -41,26 +27,6 @@ public class ConsoleTest {
         @Override
         public void perform (Console console) throws IOException {
             console.println (name);
-        }
-
-        /**
-         * 根据输入的文本猜测可能合法的后续输入.
-         * <ul>
-         * <li>如果猜测无结果，返回 null</li>
-         * <li>如果能够确定匹配后续输入，返回一条确切记录</li>
-         * <li>如果能够猜测出多条可能的输入，返回一个列表</li>
-         * </ul>
-         *
-         * @param text 输入的文本
-         * @return 可能合法的后续输入.
-         */
-        @Override
-        public List<String> guess (String text) {
-            return null;
-        }
-
-        @Override
-        public void showHelp (Console console) {
         }
     }
 

@@ -172,9 +172,9 @@ public class CreateCommand extends TextLineCommand {
     }
 
     @Override
-    public void parse (String line) {
+    public void setContent (String content) {
         parser.command = this;
-        parser.parse (line);
+        parser.parse (content);
     }
 
     /**

@@ -4,15 +4,12 @@ import org.dreamwork.telnet.command.*;
 import org.dreamwork.util.StringUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
  * Created by seth.yang on 2018/9/20
  */
 public class SimpleCommandParser extends CommandParser {
-    public SimpleCommandParser () {}
-
     public SimpleCommandParser (boolean includeBaseCommands) {
         if (includeBaseCommands) {
             registerCommand (BASE_COMMANDS);
@@ -94,7 +91,7 @@ public class SimpleCommandParser extends CommandParser {
             }
         }
 
-        Collections.sort (list, C);
+        list.sort (C);
         return list;
     }
 
