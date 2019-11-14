@@ -1,5 +1,6 @@
 package org.dreamwork.cli.text;
 
+import org.dreamwork.config.KeyValuePair;
 import org.dreamwork.util.StringUtil;
 
 import java.io.BufferedReader;
@@ -68,6 +69,36 @@ public class TextFormater {
             array [pos ++] = option;
         }
         return array;
+    }
+
+    @SuppressWarnings ("unchecked")
+    public static<T> KeyValuePair<T> parseValue (Class<T> type, String expression) {
+        if (!expression.startsWith ("--")) {
+            return null;
+        }
+
+        expression = expression.substring (2);
+        int pos = expression.indexOf ('=');
+        if (pos <= 0) {
+            return null;
+        }
+
+        Object value;
+        String name = expression.substring (0, pos);
+        String s_value = expression.substring (pos + 1);
+
+        if (type == int.class || type == Integer.class) {
+            try {
+                value = Integer.parseInt (s_value);
+            } catch (Exception ex) {
+                throw new IllegalArgumentException ("invalid number format: " + s_value);
+            }
+        } else if (type == String.class) {
+            value = s_value;
+        } else {
+            throw new IllegalArgumentException ("unknown type: " + type.getName ());
+        }
+        return new KeyValuePair<> (name, (T) value);
     }
 
     private static final class OptionParser {

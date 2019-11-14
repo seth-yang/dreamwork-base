@@ -99,6 +99,7 @@ public class SimpleCommandParser extends CommandParser {
             new Exit (), new Quit (),
             new Env (),
             new Set (), new Unset (),
-            new Echo (), new Clear ()
+            new Echo (), new Clear (),
+            new History ()
     };
 }

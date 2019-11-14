@@ -1,5 +1,6 @@
 package org.dreamwork.telnet;
 
+import org.dreamwork.cli.text.TextFormater;
 import org.dreamwork.telnet.command.Command;
 import org.dreamwork.telnet.command.CommandParser;
 import org.dreamwork.util.StringUtil;
@@ -9,10 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -98,6 +96,10 @@ public class Console extends TerminalIO {
         return (T) attr.get (key);
     }
 
+    public List<String> getHistory () {
+        return new ArrayList<> (history);
+    }
+
     public void home () throws IOException {
         homeCursor ();
         if (isAutoflushing ()) {
@@ -167,7 +169,7 @@ public class Console extends TerminalIO {
                                 String content = m.group (2);
                                 command.setContent (content);
                                 if (command.isOptionSupported ()) {
-                                    command.parse (content);
+                                    command.parse (TextFormater.parse (content));
                                 }
                             }
 /*
