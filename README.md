@@ -14,13 +14,15 @@ XML配置文件的模式为：
 根元素可以为任意名称，其中realtime属性标识了是否要实时监视文件修改。
 <section>元素描述其name属性标识的元素将使用自定义的节点解析器来解析。节点解析器类名由parser属性决定。
 在应用程序中，可以使用类似XPath的方式来索引配置文件中的配置项。如：
-```
-<application version=”1.0” runtime=”true”>
+
+```xml
+<application version="1.0" runtime="true">
 <module1>
     <item1>value1</item1>
 </module1>
 </application>
 ```
+
 则可以用 module1.item1来索引，并返回 value1。
 
 ###- org.dreamwork.fs 包

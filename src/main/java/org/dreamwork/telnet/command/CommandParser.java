@@ -11,12 +11,7 @@ public abstract class CommandParser {
     protected Map<String, Command> mappedByName  = new HashMap<> ();
     protected Map<String, Command> mappedByAlias = new HashMap<> ();
 
-    protected static final Comparator<Command> C = new Comparator<Command> () {
-        @Override
-        public int compare (Command o1, Command o2) {
-            return o1.name.compareTo (o2.name);
-        }
-    };
+    protected static final Comparator<Command> C = Comparator.comparing (o -> o.name);
 
     /**
      * 将文本解析成合法的 Command 对象

@@ -1,13 +1,15 @@
 package org.dreamwork.cli;
 
 import com.google.gson.Gson;
+import org.dreamwork.cli.text.TextFormater;
 import org.dreamwork.gson.GsonHelper;
 import org.dreamwork.util.StringUtil;
 
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.*;
+
+import static org.dreamwork.cli.text.Alignment.Left;
 
 /**
  * Created by seth.yang on 2017/7/10
@@ -57,16 +59,17 @@ public class ArgumentParser {
                 longOption = "--" + longOption;
             }
             String m = arg.required ? "<*>" : "";
-            out.print (printFix (m, column_width[0], -1));
-            out.print (printFix (shortOption, column_width[1], -1));
-            out.print (printFix (longOption, column_width[2], -1));
-            out.print (printFix (arg.description, column_width[3], -1));
+
+            out.print (TextFormater.fill (m, ' ', column_width[0], Left));
+            out.print (TextFormater.fill (shortOption, ' ', column_width[1], Left));
+            out.print (TextFormater.fill (longOption, ' ', column_width[2], Left));
+            out.print (TextFormater.fill (arg.description, ' ', column_width[3], Left));
             out.println ();
             if (arg.values != null) for (ArgumentValue av : arg.values) {
-                out.print (printFix (null, column_width[0], -1));
-                out.print (printFix (null, column_width[1], -1));
-                out.print (printFix (null, column_width[2], -1));
-                out.print (printFix ("  " + av.value + " - " + av.desc, column_width[3], -1));
+                out.print (TextFormater.fill (" ", ' ', column_width[0], Left));
+                out.print (TextFormater.fill (" ", ' ', column_width[1], Left));
+                out.print (TextFormater.fill (" ", ' ', column_width[2], Left));
+                out.print (TextFormater.fill ("  " + av.value + " - " + av.desc, ' ', column_width[3], Left));
                 out.println ();
             }
         }
@@ -246,6 +249,7 @@ public class ArgumentParser {
         return null;
     }
 
+/*
     public static String printFix (String text, int length, int align) {
         if (StringUtil.isEmpty (text)) {
 //            String ret = "";
@@ -292,6 +296,7 @@ public class ArgumentParser {
         }
         return left_padding + text + right_padding;
     }
+*/
 
     private void checkValue (Argument arg, String argName) {
         if (arg.values != null) {

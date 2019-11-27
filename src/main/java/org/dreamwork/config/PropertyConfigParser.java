@@ -21,9 +21,9 @@ public class PropertyConfigParser implements IXMLConfigParser {
         if (section.hasAttribute ("name")) {
             String attrName = section.getAttribute ("name").trim ();
             if (section.hasAttribute ("value")) {
-                return new KeyValuePair<String> (attrName, section.getAttribute ("value").trim ());
+                return new KeyValuePair<> (attrName, section.getAttribute ("value").trim ());
             } else {
-                return new KeyValuePair<String> (attrName, section.getTextContent ().trim ());
+                return new KeyValuePair<> (attrName, section.getTextContent ().trim ());
             }
         }
         throw new ConfigParseException ("Attribute 'name' of element 'property' must be specified!");

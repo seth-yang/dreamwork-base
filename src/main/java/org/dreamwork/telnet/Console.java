@@ -1,5 +1,6 @@
 package org.dreamwork.telnet;
 
+import org.dreamwork.cli.ICommandLine;
 import org.dreamwork.cli.text.TextFormater;
 import org.dreamwork.telnet.command.Command;
 import org.dreamwork.telnet.command.CommandParser;
@@ -17,7 +18,7 @@ import java.util.regex.Pattern;
 /**
  * Created by seth.yang on 2018/9/20
  */
-public class Console extends TerminalIO {
+public class Console extends TerminalIO implements ICommandLine {
     private static final int MAX_HISTORY_SIZE  = 255;
     private static final int DEFAULT_BUFF_SIZE = 1024;
 
@@ -81,6 +82,18 @@ public class Console extends TerminalIO {
 
     public String getEnv (String key) {
         return env.get (key);
+    }
+
+    public void registerCommand (Command... commands) {
+        if (commandParser != null) {
+            commandParser.registerCommand (commands);
+        } else {
+            throw new NullPointerException ();
+        }
+    }
+
+    public CommandParser getCommandParser () {
+        return commandParser;
     }
 
     public Map<String, String> getEnvironment () {
@@ -379,5 +392,91 @@ public class Console extends TerminalIO {
     private void showPrompt () throws IOException {
         write (prompt);
         write ("> ");
+    }
+
+    @Override
+    public void write (byte[] buff, int offset, int size) throws IOException {
+        if (buff == null)
+            throw new NullPointerException ();
+        if (offset < 0 || (offset + size > buff.length))
+            throw new ArrayIndexOutOfBoundsException ();
+
+        for (int i = offset; i < offset + size; i ++) {
+            write (buff [i]);
+        }
+    }
+
+    @Override
+    public void print (String message) throws IOException {
+        write (message);
+    }
+
+    @Override
+    public void print (int value) throws IOException {
+        write (String.valueOf (value));
+    }
+
+    @Override
+    public int read (byte[] buff, int offset, int size) throws IOException {
+        if (buff == null)
+            throw new NullPointerException ();
+        if (offset < 0 || (offset + size > buff.length))
+            throw new ArrayIndexOutOfBoundsException ();
+
+        int index = 0;
+        while (index < size) {
+            int ch = read ();
+            if (ch == -1)
+                return index > 0 ? index : -1;
+            buff[index ++] = (byte) ch;
+        }
+        return -1;
+    }
+
+    @Override
+    public String readLine () throws IOException {
+        return readInput (false);
+    }
+
+    public String readPassword () throws IOException {
+        return readPassword ("Please input password");
+    }
+
+    public String readPassword (String prompt) throws IOException {
+        for (int i = 0; i < 3; i ++) {
+            write (prompt + ": ");
+            String p1 = readInput (true);
+            write (prompt + " again: ");
+            String p2 = readInput (true);
+
+            if (!Objects.equals (p1, p2)) {
+                errorln ("password not matched.");
+                println ();
+            } else {
+                return p1;
+            }
+        }
+
+        return null;
+    }
+
+    public Boolean option (String prompt, boolean defaultValue) throws IOException {
+        String expression = defaultValue ? "[Y/n]: " : "[y/N]: ";
+        for (int i = 0; i < 3; i ++) {
+            write (prompt);
+            write (" ");
+            write (expression);
+
+            String answer = readInput (false);
+            if (StringUtil.isEmpty (answer)) {
+                return defaultValue;
+            } else if ("y".equalsIgnoreCase (answer) || "yes".equalsIgnoreCase (answer)) {
+                return true;
+            } else if ("n".equalsIgnoreCase (answer) || "no".equalsIgnoreCase (answer)) {
+                return false;
+            }
+        }
+
+        return null;
     }
 }

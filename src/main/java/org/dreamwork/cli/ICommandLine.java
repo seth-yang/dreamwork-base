@@ -1,6 +1,8 @@
 package org.dreamwork.cli;
 
 import org.dreamwork.util.StringUtil;
+
+import java.io.IOException;
 import java.util.List;
 
 import static org.dreamwork.cli.CommandLineHelper.*;
@@ -11,54 +13,54 @@ import static org.dreamwork.cli.CommandLineHelper.*;
 public interface ICommandLine {
     String CRLF = "\r\n";
 
-    void error (String message) ;
-    void write (byte[] buff, int offset, int size) ;
-    void print (String message) ;
-    void print (int value) ;
-    int read () ;
-    int read (byte[] buff, int offset, int size) ;
-    String readLine () ;
+    void error (String message) throws IOException;
+    void write (byte[] buff, int offset, int size) throws IOException;
+    void print (String message) throws IOException;
+    void print (int value) throws IOException;
+    int read () throws IOException;
+    int read (byte[] buff, int offset, int size) throws IOException;
+    String readLine () throws IOException;
 
-    default void write (byte[] buff)  {
+    default void write (byte[] buff) throws IOException  {
         write (buff, 0, buff.length);
     }
 
-    default void print (Object message)  {
+    default void print (Object message) throws IOException {
         if (message == null) {
             print ("<null>");
         } else {
             print (message.toString ());
         }
     }
-    default void println ()  {
+    default void println () throws IOException {
         print (CRLF);
     }
-    default void println (String message)  {
+    default void println (String message) throws IOException {
         print (message);
         print (CRLF);
     }
-    default void println (int value)  {
+    default void println (int value) throws IOException {
         print (value);
         print (CRLF);
     }
-    default void println (Object message)  {
+    default void println (Object message) throws IOException {
         print (message);
         print (CRLF);
     }
-    default void printf (String pattern, Object... args)  {
+    default void printf (String pattern, Object... args) throws IOException {
         print (String.format (pattern, args));
     }
 
-    default int read (byte[] buff)  {
+    default int read (byte[] buff) throws IOException {
         return read (buff, 0, buff.length);
     }
 
-    default String readString (String prompt)  {
+    default String readString (String prompt) throws IOException {
         print (prompt);
         print (": ");
         return readLine ();
     }
-    default String readString (String prompt, boolean canEmpty)  {
+    default String readString (String prompt, boolean canEmpty) throws IOException {
         while (true) {
             String line = readString (prompt);
             if (canEmpty || !StringUtil.isEmpty (line)) {
@@ -67,11 +69,11 @@ public interface ICommandLine {
             error ("Can't be empty");
         }
     }
-    default String readString (String prompt, String defaultValue)  {
+    default String readString (String prompt, String defaultValue) throws IOException {
         String line = readString (prompt + "[" + defaultValue + "]");
         return StringUtil.isEmpty (line) ? defaultValue : line.trim ();
     }
-    default String readString (String promp, IValueGenerator<String> g) {
+    default String readString (String promp, IValueGenerator<String> g) throws IOException {
         if (g == null) {
             return readString (promp);
         }
@@ -79,7 +81,7 @@ public interface ICommandLine {
         String line = readString (promp + "[random]");
         return StringUtil.isEmpty (line) ? g.generate (null) : line;
     }
-    default String readString (String prompt, List<String> options)  {
+    default String readString (String prompt, List<String> options) throws IOException {
         if (options == null || options.isEmpty ()) {
             return readString (prompt);
         }
@@ -90,7 +92,7 @@ public interface ICommandLine {
         );
         return options.get (index);
     }
-    default String readString (String prompt, IValueGenerator<Integer> g, List<String> options) {
+    default String readString (String prompt, IValueGenerator<Integer> g, List<String> options) throws IOException {
         if (g == null) {
             return readString (prompt, options);
         }
@@ -119,7 +121,7 @@ public interface ICommandLine {
             }
         }
     }
-    default String readString (String prompt, String defaultValue, List<String> options)  {
+    default String readString (String prompt, String defaultValue, List<String> options) throws IOException {
         if (options == null || options.isEmpty ()) {
             return readString (prompt, defaultValue);
         }
@@ -135,7 +137,7 @@ public interface ICommandLine {
         );
         return options.get (index);
     }
-    default String readString (String prompt, IValidator<String> validator)  {
+    default String readString (String prompt, IValidator<String> validator) throws IOException {
         if (validator == null) {
             return readString (prompt);
         }
@@ -146,7 +148,7 @@ public interface ICommandLine {
         } while (!validator.validate (text));
         return text;
     }
-    default String readString (String prompt, IComplexValidator<String> validator, String... messages) {
+    default String readString (String prompt, IComplexValidator<String> validator, String... messages) throws IOException {
         if (validator == null) {
             return readString (prompt);
         }
@@ -160,7 +162,7 @@ public interface ICommandLine {
             }
         }
     }
-    default String readString (String prompt, String defaultValue, IValidator<String> validator)  {
+    default String readString (String prompt, String defaultValue, IValidator<String> validator) throws IOException {
         if (validator == null) {
             return readString (prompt, defaultValue);
         }
@@ -174,7 +176,7 @@ public interface ICommandLine {
         } while (!validator.validate (text));
         return text.trim ();
     }
-    default String readString (String prompt, String defaultValue, IComplexValidator<String> validator, String... messages) {
+    default String readString (String prompt, String defaultValue, IComplexValidator<String> validator, String... messages) throws IOException {
         if (validator == null) {
             return readString (prompt, defaultValue);
         }
@@ -193,7 +195,7 @@ public interface ICommandLine {
         }
     }
 
-    default int readInt ()  {
+    default int readInt () throws IOException {
         while (true) {
             try {
                 String line = readLine ();
@@ -203,7 +205,7 @@ public interface ICommandLine {
             }
         }
     }
-    default int readInt (String prompt)  {
+    default int readInt (String prompt) throws IOException {
         while (true) {
             String line = null;
             try {
@@ -214,7 +216,7 @@ public interface ICommandLine {
             }
         }
     }
-    default int readInt (String prompt, int defaultValue)  {
+    default int readInt (String prompt, int defaultValue) throws IOException {
         while (true) {
             try {
                 String line = readString (prompt + "[" + defaultValue + "]");
@@ -227,7 +229,7 @@ public interface ICommandLine {
             }
         }
     }
-    default int readInt (String prompt, IValidator<Integer> validator)  {
+    default int readInt (String prompt, IValidator<Integer> validator) throws IOException {
         if (validator == null) {
             return readInt (prompt);
         }
@@ -247,7 +249,7 @@ public interface ICommandLine {
             }
         }
     }
-    default int readInt (String prompt, IValueGenerator<Integer> g) {
+    default int readInt (String prompt, IValueGenerator<Integer> g) throws IOException {
         if (g == null) {
             return readInt (prompt);
         }
@@ -267,7 +269,7 @@ public interface ICommandLine {
         }
     }
 
-    default int readInt (String prompt, IComplexValidator<Integer> validator, String... messages) {
+    default int readInt (String prompt, IComplexValidator<Integer> validator, String... messages) throws IOException {
         if (validator == null) {
             return readInt (prompt);
         }
@@ -288,7 +290,7 @@ public interface ICommandLine {
         }
     }
 
-    default int readInt (String prompt, int defaultValue, IValidator<Integer> validator)  {
+    default int readInt (String prompt, int defaultValue, IValidator<Integer> validator) throws IOException {
         if (validator == null) {
             return readInt (prompt, defaultValue);
         }
@@ -313,7 +315,7 @@ public interface ICommandLine {
             }
         }
     }
-    default int readInt (String prompt, int defaultValue, IComplexValidator<Integer> validator, String... messages)  {
+    default int readInt (String prompt, int defaultValue, IComplexValidator<Integer> validator, String... messages) throws IOException {
         if (validator == null) {
             return readInt (prompt, defaultValue);
         }
@@ -342,7 +344,7 @@ public interface ICommandLine {
         }
     }
 
-    default long readLong ()  {
+    default long readLong () throws IOException {
         while (true) {
             try {
                 String line = readLine ();
@@ -352,7 +354,7 @@ public interface ICommandLine {
             }
         }
     }
-    default long readLong (String prompt)  {
+    default long readLong (String prompt) throws IOException {
         while (true) {
             String line = null;
             try {
@@ -363,7 +365,7 @@ public interface ICommandLine {
             }
         }
     }
-    default long readLong (String prompt, long defaultValue)  {
+    default long readLong (String prompt, long defaultValue) throws IOException {
         while (true) {
             try {
                 String line = readString (prompt + "[" + defaultValue + "]");
@@ -376,7 +378,7 @@ public interface ICommandLine {
             }
         }
     }
-    default long readLong (String prompt, IValueGenerator<Long> g) {
+    default long readLong (String prompt, IValueGenerator<Long> g) throws IOException {
         if (g == null) {
             return readLong (prompt);
         }
@@ -395,7 +397,7 @@ public interface ICommandLine {
             }
         }
     }
-    default long readLong (String prompt, IValidator<Long> validator)  {
+    default long readLong (String prompt, IValidator<Long> validator) throws IOException {
         if (validator == null) {
             return readLong (prompt);
         }
@@ -415,7 +417,7 @@ public interface ICommandLine {
             }
         }
     }
-    default long readLong (String prompt, IComplexValidator<Long> validator, String... messages)  {
+    default long readLong (String prompt, IComplexValidator<Long> validator, String... messages) throws IOException {
         if (validator == null) {
             return readLong (prompt);
         }
@@ -438,7 +440,7 @@ public interface ICommandLine {
             }
         }
     }
-    default long readLong (String prompt, long defaultValue, IValidator<Long> validator)  {
+    default long readLong (String prompt, long defaultValue, IValidator<Long> validator) throws IOException {
         if (validator == null) {
             return readLong (prompt, defaultValue);
         }
@@ -463,7 +465,7 @@ public interface ICommandLine {
             }
         }
     }
-    default long readLong (String prompt, long defaultValue, IComplexValidator<Long> validator, String... messages)  {
+    default long readLong (String prompt, long defaultValue, IComplexValidator<Long> validator, String... messages) throws IOException {
         if (validator == null) {
             return readLong (prompt, defaultValue);
         }
@@ -492,15 +494,15 @@ public interface ICommandLine {
         }
     }
 
-    default float readFloat ()  {
+    default float readFloat () throws IOException {
         String line = readLine ();
         return Float.parseFloat (line);
     }
-    default float readFloat (String prompt)  {
+    default float readFloat (String prompt) throws IOException {
         String line = readString (prompt);
         return Float.parseFloat (line);
     }
-    default float readFloat (String prompt, float defaultValue) {
+    default float readFloat (String prompt, float defaultValue) throws IOException {
         while (true) {
             String text = readString (prompt + "[" + defaultValue + "]");
             if (StringUtil.isEmpty (text)) {
@@ -516,7 +518,7 @@ public interface ICommandLine {
             }
         }
     }
-    default float readFloat (String prompt, IValueGenerator<Float> g) {
+    default float readFloat (String prompt, IValueGenerator<Float> g) throws IOException {
         if (g == null) {
             return readFloat (prompt);
         }
@@ -535,7 +537,7 @@ public interface ICommandLine {
             }
         }
     }
-    default float readFloat (String prompt, IValidator<Float> validator)  {
+    default float readFloat (String prompt, IValidator<Float> validator) throws IOException {
         if (validator == null) {
             return readFloat (prompt);
         }
@@ -552,7 +554,7 @@ public interface ICommandLine {
             }
         }
     }
-    default float readFloat (String prompt, IComplexValidator<Float> validator, String... messages)  {
+    default float readFloat (String prompt, IComplexValidator<Float> validator, String... messages) throws IOException {
         if (validator == null) {
             return readFloat (prompt);
         }
@@ -569,7 +571,7 @@ public interface ICommandLine {
             }
         }
     }
-    default float readFloat (String prompt, float defaultValue, IValidator<Float> validator)  {
+    default float readFloat (String prompt, float defaultValue, IValidator<Float> validator) throws IOException {
         if (validator == null) {
             return readFloat (prompt, defaultValue);
         }
@@ -586,7 +588,7 @@ public interface ICommandLine {
             }
         }
     }
-    default float readFloat (String prompt, float defaultValue, IComplexValidator<Float> validator, String... messages)  {
+    default float readFloat (String prompt, float defaultValue, IComplexValidator<Float> validator, String... messages) throws IOException {
         if (validator == null) {
             return readFloat (prompt, defaultValue);
         }
@@ -604,7 +606,7 @@ public interface ICommandLine {
         }
     }
 
-    default double readDouble ()  {
+    default double readDouble () throws IOException {
         while (true) {
             try {
                 String line = readLine ();
@@ -614,7 +616,7 @@ public interface ICommandLine {
             }
         }
     }
-    default double readDouble (String prompt)  {
+    default double readDouble (String prompt) throws IOException {
         while (true) {
             try {
                 String line = readString (prompt);
@@ -624,7 +626,7 @@ public interface ICommandLine {
             }
         }
     }
-    default double readDouble (String prompt, double defaultValue)  {
+    default double readDouble (String prompt, double defaultValue) throws IOException {
         while (true) {
             String text = readString (prompt + "[" + defaultValue + "]");
             if (StringUtil.isEmpty (text)) {
@@ -640,7 +642,7 @@ public interface ICommandLine {
             }
         }
     }
-    default double readDouble (String prompt, IValueGenerator<Double> g) {
+    default double readDouble (String prompt, IValueGenerator<Double> g) throws IOException {
         if (g == null) {
             return readDouble (prompt);
         }
@@ -659,7 +661,7 @@ public interface ICommandLine {
             }
         }
     }
-    default double readDouble (String prompt, IValidator<Double> validator)  {
+    default double readDouble (String prompt, IValidator<Double> validator) throws IOException {
         if (validator == null) {
             return readDouble (prompt);
         }
@@ -676,7 +678,7 @@ public interface ICommandLine {
             }
         }
     }
-    default double readDouble (String prompt, IComplexValidator<Double> validator, String... messages)  {
+    default double readDouble (String prompt, IComplexValidator<Double> validator, String... messages) throws IOException {
         if (validator == null) {
             return readDouble (prompt);
         }
@@ -693,7 +695,7 @@ public interface ICommandLine {
             }
         }
     }
-    default double readDouble (String prompt, double defaultValue, IValidator<Double> validator)  {
+    default double readDouble (String prompt, double defaultValue, IValidator<Double> validator) throws IOException {
         if (validator == null) {
             return readDouble (prompt, defaultValue);
         }
@@ -710,7 +712,7 @@ public interface ICommandLine {
             }
         }
     }
-    default double readDouble (String prompt, double defaultValue, IComplexValidator<Double> validator, String... messages)  {
+    default double readDouble (String prompt, double defaultValue, IComplexValidator<Double> validator, String... messages) throws IOException {
         if (validator == null) {
             return readDouble (prompt, defaultValue);
         }
@@ -727,10 +729,10 @@ public interface ICommandLine {
         }
     }
 
-    default boolean readBoolean ()  {
+    default boolean readBoolean () throws IOException {
         return readBoolean (null);
     }
-    default boolean readBoolean (String prompt)  {
+    default boolean readBoolean (String prompt) throws IOException {
         while (true) {
             if (!StringUtil.isEmpty (prompt)) {
                 print (prompt + ": ");
@@ -746,7 +748,7 @@ public interface ICommandLine {
             error ("Invalid boolean!");
         }
     }
-    default boolean readBoolean (String prompt, boolean defaultValue)  {
+    default boolean readBoolean (String prompt, boolean defaultValue) throws IOException {
         while (true) {
             String line = readString (prompt + "[" + defaultValue + "]");
             if (StringUtil.isEmpty (line)) {
