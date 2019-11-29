@@ -55,14 +55,26 @@ public class Console extends TerminalIO implements ICommandLine {
         pos = 0;
     }
 
+    /**
+     * 设置一个命令解析器
+     * @param parser 命令解析器
+     */
     public void setCommandParser (CommandParser parser) {
         this.commandParser = parser;
     }
 
+    /**
+     * 设置一个命令提示符
+     * @param prompt 命令提示符
+     */
     public void setPrompt (String prompt) {
         this.prompt = prompt;
     }
 
+    /**
+     * 设置控制台缓冲区大小
+     * @param size 缓冲区大小
+     */
     public void setBuffSize (int size) {
         if (size > 0) {
             if (logger.isTraceEnabled ()) {
@@ -73,6 +85,11 @@ public class Console extends TerminalIO implements ICommandLine {
         }
     }
 
+    /**
+     * 设置环境变量
+     * @param key  变量名
+     * @param name 变量值
+     */
     public void setEnv (String key, String name) {
         if (StringUtil.isEmpty (name)) {
             env.remove (key);
@@ -80,10 +97,21 @@ public class Console extends TerminalIO implements ICommandLine {
             env.put (key, name);
     }
 
+    /**
+     * 获取环境变量
+     * @param key 环境变量名
+     * @return 环境变量名
+     */
     public String getEnv (String key) {
         return env.get (key);
     }
 
+    /**
+     * <p>注册一组命令</p>
+     * 这个方法代理 {@link CommandParser#registerCommand(Command...)}
+     * @param commands 注册到控制台的命令
+     * @see CommandParser
+     */
     public void registerCommand (Command... commands) {
         if (commandParser != null) {
             commandParser.registerCommand (commands);
@@ -92,27 +120,55 @@ public class Console extends TerminalIO implements ICommandLine {
         }
     }
 
+    /**
+     * 获取命令解析器
+     * @return 命令解析器
+     */
     public CommandParser getCommandParser () {
         return commandParser;
     }
 
+    /**
+     * 获取当前环境变量的副本
+     * @return 环境变量
+     */
     public Map<String, String> getEnvironment () {
         return new HashMap<> (env);
     }
 
+    /**
+     * 设置一个属性值
+     * @param key   键值
+     * @param value 属性值
+     * @param <T>   类型
+     */
     public<T> void setAttribute (String key, T value) {
         attr.put (key, value);
     }
 
+    /**
+     * 获取一个属性值
+     * @param key 键值
+     * @param <T> 值类型
+     * @return 属性值
+     */
     @SuppressWarnings ("unchecked")
     public<T> T getAttribute (String key) {
         return (T) attr.get (key);
     }
 
+    /**
+     * 获取记录的历史命令列表
+     * @return 命令列表
+     */
     public List<String> getHistory () {
         return new ArrayList<> (history);
     }
 
+    /**
+     * 将光标定位到左上角
+     * @throws IOException io exception
+     */
     public void home () throws IOException {
         homeCursor ();
         if (isAutoflushing ()) {
@@ -120,6 +176,10 @@ public class Console extends TerminalIO implements ICommandLine {
         }
     }
 
+    /**
+     * 清除控制台屏幕
+     * @throws IOException io exception
+     */
     public void clear () throws IOException {
         eraseScreen ();
         homeCursor ();
@@ -128,6 +188,13 @@ public class Console extends TerminalIO implements ICommandLine {
         }
     }
 
+    /**
+     * <p>主循环</p>
+     *
+     * 通常，需要在一个独立的线程中调用控制台的主循环，以避免阻塞主线程。
+     *
+     * @throws IOException io exception
+     */
     public void loop () throws IOException {
         if (commandParser == null) {
             throw new IllegalStateException ("command parser is not present");
@@ -357,6 +424,10 @@ public class Console extends TerminalIO implements ICommandLine {
         }
     }
 
+    /**
+     * 当敲击键盘 Backspace 或 Delete 键时的处理程序
+     * @throws IOException
+     */
     public void backspace () throws IOException {
         super.backspace ();
         if (pos == cursor) {
@@ -365,7 +436,7 @@ public class Console extends TerminalIO implements ICommandLine {
         pos --;
     }
 
-    public void clearBuffer () throws IOException {
+    private void clearBuffer () throws IOException {
         while (pos > 0) {
             backspace ();
         }
@@ -438,10 +509,21 @@ public class Console extends TerminalIO implements ICommandLine {
         return readInput (false);
     }
 
+    /**
+     * 等待用户输入密码，但不校验
+     * @return 用户输入的密码
+     * @throws IOException io exception
+     */
     public String readPassword () throws IOException {
         return readPassword ("Please input password");
     }
 
+    /**
+     * 给定提示符后等待用户输入密码，并校验。
+     * @param prompt 提示符
+     * @return 用户输入的密码
+     * @throws IOException io exception
+     */
     public String readPassword (String prompt) throws IOException {
         for (int i = 0; i < 3; i ++) {
             write (prompt + ": ");
@@ -460,6 +542,13 @@ public class Console extends TerminalIO implements ICommandLine {
         return null;
     }
 
+    /**
+     * 给定提示符后提问，并等待用户输入回答
+     * @param prompt       提示符
+     * @param defaultValue 默认选项。当用户无输入直接回车时将返回该默认值
+     * @return 用户输入的答案
+     * @throws IOException io exception
+     */
     public Boolean option (String prompt, boolean defaultValue) throws IOException {
         String expression = defaultValue ? "[Y/n]: " : "[y/N]: ";
         for (int i = 0; i < 3; i ++) {

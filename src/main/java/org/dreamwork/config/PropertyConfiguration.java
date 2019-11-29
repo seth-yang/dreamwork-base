@@ -1,10 +1,12 @@
 package org.dreamwork.config;
 
+import org.dreamwork.cli.text.Alignment;
+import org.dreamwork.cli.text.TextFormater;
 import org.dreamwork.util.StringUtil;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PropertyConfiguration implements IConfiguration {
     private Properties props;
@@ -58,6 +60,28 @@ public class PropertyConfiguration implements IConfiguration {
             if (params.length > 0) {
                 for (KeyValuePair<?> p : params) {
                     value = value.replace ("${" + p.getName () + "}", String.valueOf (p.getValue ()));
+                }
+            }
+
+            if (value.contains ("${")) {
+                Pattern p = Pattern.compile ("\\$\\{(.*?)}");
+                Matcher m = p.matcher (value);
+                Properties sp = System.getProperties ();
+                Map<String, String> env = System.getenv ();
+                while (m.find ()) {
+                    String g = m.group (1);
+                    String r = null;
+                    if (contains (g)) {
+                        r = getString (g);
+                    } else if (sp.containsKey (g)) {
+                        r = sp.getProperty (g);
+                    } else if (env.containsKey (g)) {
+                        r = env.get (g);
+                    }
+
+                    if (r != null) {
+                        value = value.replace ("${" + g + "}", r);
+                    }
                 }
             }
         }
@@ -140,5 +164,53 @@ public class PropertyConfiguration implements IConfiguration {
         } catch (Exception ex) {
             return defaultValue;
         }
+    }
+
+    public void prettyShow () {
+        System.out.println ("=============== PropertyConfiguration =============");
+        String[][] values = new String[props.size ()][2];
+        List<String> list = new ArrayList<> (props.stringPropertyNames ());
+        list.sort (String::compareTo);
+        int width = 0, max = 120;
+        for (int i = 0; i < list.size (); i ++) {
+            String key   = list.get (i);
+            values[i][0] = key;
+            values[i][1] = getString (key);
+
+            if (width < key.length ()) {
+                width = key.length ();
+            }
+        }
+
+        char[] line = new char[max], empty = new char[width + 2];
+        for (int i = 0; i < empty.length; i ++) {
+            empty [i] = ' ';
+        }
+        for (String[] p : values) {
+            System.out.print (TextFormater.fill (p[0], ' ', width, Alignment.Right));
+            System.out.print ("  ");
+            String value = p[1];
+            if (value.length () > max) {
+                char[] buff = value.toCharArray ();
+                int pos = 0, count = 0;
+                while (count < buff.length) {
+                    line[pos ++] = buff [count ++];
+                    if (pos >= max) {
+                        System.out.println (new String (line, 0, pos));
+                        pos = 0;
+
+                        if (count < buff.length) {
+                            System.out.print (empty);
+                        }
+                    }
+                }
+                if (pos != 0) {
+                    System.out.println (new String (line, 0, pos));
+                }
+            } else {
+                System.out.println (value);
+            }
+        }
+        System.out.println ("===================================================");
     }
 }

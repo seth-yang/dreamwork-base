@@ -1,7 +1,5 @@
 package org.dreamwork.cli;
 
-import org.slf4j.Logger;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -100,8 +98,14 @@ public class CommandLineHelper {
             props.load (in);
 
             System.out.println ("### setting log level to " + logLevel + " ###");
-            if ("trace".equalsIgnoreCase (logLevel)) {
+            if (!"trace".equalsIgnoreCase (logLevel) && !"debug".equalsIgnoreCase (logLevel)) {
+                props.setProperty ("log4j.rootLogger", logLevel + ", stdout, FILE");
+            } else {
                 props.setProperty ("log4j.rootLogger", "INFO, stdout, FILE");
+            }
+            if ("trace".equalsIgnoreCase (logLevel)) {
+//                props.setProperty ("log4j.rootLogger", "INFO, stdout, FILE");
+                props.setProperty ("log4j.appender.stdout.Threshold", logLevel);
                 props.setProperty ("log4j.appender.FILE.File", logFile);
                 props.setProperty ("log4j.appender.FILE.Threshold", logLevel);
                 if (packages.length > 0) {
@@ -110,7 +114,7 @@ public class CommandLineHelper {
                     }
                 }
             } else {
-                props.setProperty ("log4j.rootLogger", logLevel + ", stdout, FILE");
+//                props.setProperty ("log4j.rootLogger", logLevel + ", stdout, FILE");
                 props.setProperty ("log4j.appender.FILE.File", logFile);
                 props.setProperty ("log4j.appender.FILE.Threshold", logLevel);
             }
@@ -118,15 +122,10 @@ public class CommandLineHelper {
         }
     }
 
-    public static Properties parseConfig (String configFile, Logger logger) throws IOException {
-        if (logger.isTraceEnabled ()) {
-            logger.trace ("parsing config file ...");
-        }
-
+    public static Properties parseConfig (String configFile) throws IOException {
+        System.out.println ("parsing config file ...");
         configFile = configFile.trim ();
-        if (logger.isTraceEnabled ()) {
-            logger.trace ("config file: {}", configFile);
-        }
+        System.out.println ("found config file: " + configFile);
         File file;
         if (configFile.startsWith ("file:/") || configFile.startsWith ("/")) {
             file = new File (configFile);
@@ -144,14 +143,12 @@ public class CommandLineHelper {
             props.load (in);
         }
 
-        if (logger.isTraceEnabled ()) {
-            prettyPrint (props, logger);
-        }
+        prettyTrace (props);
         return props;
     }
 
-    private static void prettyPrint (Properties props, Logger logger) {
-        logger.trace ("### global configuration ###");
+    private static void prettyTrace (Properties props) {
+        System.out.println ("### global configuration ###");
         int length = 0;
         List<String> list = new ArrayList<> ();
         for (String key : props.stringPropertyNames ()) {
@@ -170,8 +167,8 @@ public class CommandLineHelper {
                 }
             }
             builder.append (" : ").append (props.getProperty (key));
-            logger.trace (builder.toString ());
+            System.out.println (builder);
         }
-        logger.trace ("############################");
+        System.out.println ("############################");
     }
 }
