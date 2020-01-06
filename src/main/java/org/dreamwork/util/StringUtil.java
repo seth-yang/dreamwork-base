@@ -151,4 +151,51 @@ public class StringUtil {
         }
         return idx;
     }
+
+    public static String camelEncode (String word) {
+        return camelEncode (word, '_');
+    }
+
+    public static String camelEncode (String word, char delimiter) {
+        char[] src = word.toCharArray (), buff = new char[word.length ()];
+        int pos = 0;
+        for (int i = 0; i < src.length; i ++) {
+            char ch = src[i];
+            if (ch == delimiter) {
+                ch = src [++ i];
+                ch = Character.toUpperCase (ch);
+            } else {
+                ch = Character.toLowerCase (ch);
+            }
+            buff [pos ++] = ch;
+        }
+        return new String (buff, 0, pos);
+    }
+
+    public static String camelDecode (String word) {
+        return camelDecode (word, '_');
+    }
+
+    public static String camelDecode (String word, char delimiter) {
+        char[] buff = new char[word.length () + 32], src = word.toCharArray ();
+        int pos = 0;
+        for (char ch : src) {
+            if (Character.isUpperCase (ch)) {
+                ch = Character.toLowerCase (ch);
+                if (pos != 0) {
+                    buff [pos ++] = delimiter;
+                }
+            }
+            buff [pos ++] = ch;
+        }
+        return new String (buff, 0, pos);
+    }
+
+    public static void main (String[] args) {
+        String name = "hello_world";
+        System.out.println (name = camelEncode (name));
+        System.out.println (name = camelDecode (name, '-'));
+        System.out.println (name = camelEncode (name, '-'));
+        System.out.println (camelDecode (name, '.'));
+    }
 }
