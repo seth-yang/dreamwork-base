@@ -10,7 +10,7 @@ import java.util.List;
  * Created by seth.yang on 2017/7/10
  */
 public class Argument implements Comparable<Argument> {
-    public String shortOption, longOption, description, value, defaultValue;
+    public String shortOption, longOption, description, value, defaultValue, propKey;
     public boolean required, requireValue;
     public ArgumentValue[] values;
 

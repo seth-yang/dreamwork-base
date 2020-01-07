@@ -211,6 +211,10 @@ public class ArgumentParser {
         return findByShortOption (parsedArguments, String.valueOf (option)) != null;
     }
 
+    public Collection<Argument> getAllArguments () {
+        return new HashSet<> (defs);
+    }
+
     private void init () {
         Argument arg = findByLongOption (defs, "help");
         if (arg == null) {
