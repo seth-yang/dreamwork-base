@@ -230,6 +230,9 @@ public interface ICommandLine {
         }
     }
     default int readInt (String prompt, IValidator<Integer> validator) throws IOException {
+        return readInt (prompt, null, validator);
+    }
+    default int readInt (String prompt, String errorMessage, IValidator<Integer> validator) throws IOException {
         if (validator == null) {
             return readInt (prompt);
         }
@@ -246,6 +249,10 @@ public interface ICommandLine {
             }
             if (validator.validate (value)) {
                 return value;
+            } else if (!StringUtil.isEmpty (errorMessage)) {
+                error (errorMessage);
+            } else {
+                error ("the number: " + value + " is not acceptable");
             }
         }
     }
@@ -398,6 +405,9 @@ public interface ICommandLine {
         }
     }
     default long readLong (String prompt, IValidator<Long> validator) throws IOException {
+        return readLong (prompt, null, validator);
+    }
+    default long readLong (String prompt, String errorMessage, IValidator<Long> validator) throws IOException {
         if (validator == null) {
             return readLong (prompt);
         }
@@ -414,6 +424,10 @@ public interface ICommandLine {
             }
             if (validator.validate (value)) {
                 return value;
+            } else if (!StringUtil.isEmpty (errorMessage)) {
+                error (errorMessage);
+            } else {
+                error ("the number: " + value + " is not acceptable");
             }
         }
     }
@@ -740,7 +754,7 @@ public interface ICommandLine {
             String line = readLine ();
             if (!StringUtil.isEmpty (line)) {
                 try {
-                    return Boolean.valueOf (line.trim ());
+                    return Boolean.parseBoolean (line.trim ());
                 } catch (Exception ex) {
                     error ("Invalid boolean!");
                 }
@@ -750,7 +764,8 @@ public interface ICommandLine {
     }
     default boolean readBoolean (String prompt, boolean defaultValue) throws IOException {
         while (true) {
-            String line = readString (prompt + "[" + defaultValue + "]");
+            String expression = defaultValue ? " [Y/n]" : " [y/N]";
+            String line = readString (prompt + expression);
             if (StringUtil.isEmpty (line)) {
                 return defaultValue;
             }

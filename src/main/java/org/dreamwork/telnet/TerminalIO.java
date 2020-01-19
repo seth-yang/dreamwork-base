@@ -120,6 +120,7 @@ public class TerminalIO {
     public synchronized void error (String str) throws IOException {
         setForegroundColor (RED);
         write (str);
+        write (CRLF);
         setForegroundColor (COLORINIT);
     }
 
