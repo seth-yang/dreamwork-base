@@ -386,32 +386,27 @@ public class Console extends TerminalIO implements ICommandLine {
                         fillBuff (text);
                     } else {
                         List<String> result = cmd.guess (tmp);
-                        if (result != null && result.size () > 0) {
-                            if (result.size () == 1) {
+
+                        if (result != null) {
+                            if (result.isEmpty ()) {
+                                // 如果猜测无结果，但当前输入有无效，希望控制台修正为命令本身
+                                clearBuffer ();
+                                fillBuff (cmd.name + ' ');
+                            } else if (result.size () == 1) {
+                                // 如果能够确定匹配后续输入，返回一条确切记录
                                 clearBuffer ();
                                 fillBuff (cmd.name + " " + result.get (0));
                             } else {
+                                // 如果能够猜测出多条可能的输入，返回一个列表
                                 println ();
-
                                 showList (result);
-/*
-                                int i = 0;
-                                for (String text : result) {
-                                    if (i++ > 0) {
-                                        println ();
-                                    }
-                                    write ("  ");
-                                    write (text);
-                                }
-*/
                                 println ();
                                 clearBuffer ();
                                 showPrompt ();
                                 fillBuff (tmp);
                             }
-                        } else { // match single command, show it.
-                            clearBuffer ();
-                            fillBuff (cmd.name + ' ');
+                        } else if (logger.isTraceEnabled ()) {
+                            logger.trace ("result is null, it means change nothing");
                         }
                     }
                     tab_mode = false;
@@ -424,17 +419,7 @@ public class Console extends TerminalIO implements ICommandLine {
                         for (Command cmd : list) {
                             result.add (cmd.name);
                         }
-
                         showList (result);
-/*
-                        int i = 0;
-                        for (Command cmd : list) {
-                            if (i++ > 0) {
-                                this.write ("\t\t");
-                            }
-                            write (cmd.name);
-                        }
-*/
                         println ();
                         showPrompt ();
                         fillBuff (tmp);
@@ -448,9 +433,11 @@ public class Console extends TerminalIO implements ICommandLine {
     }
 
     private void showList (List<String> result) throws IOException {
-        int columns = getColumns ();
-        int cells = Math.min (result.size (), 10);
-        int width = (columns - (cells - 1) * 4) / cells;
+        int columns = getColumns (),
+            cells   = Math.min (result.size (), 10),
+            width   = (columns - (cells - 1) * 4) / cells,
+            c       = 0,
+            p       = 0;
         outer : while (cells > 1) {
             width = (columns - (cells - 1) * 4) / cells;
 
@@ -463,7 +450,6 @@ public class Console extends TerminalIO implements ICommandLine {
 
             break;
         }
-        int c = 0, p = 0;
         String text;
 
         if (logger.isTraceEnabled ()) {
