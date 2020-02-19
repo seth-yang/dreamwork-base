@@ -43,7 +43,7 @@ public abstract class CommandParser {
         }
 
         List<Command> list = new ArrayList<> (c);
-        Collections.sort (list, C);
+        list.sort (C);
         return list;
     }
 

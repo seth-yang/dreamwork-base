@@ -1,6 +1,7 @@
 package org.dreamwork.telnet;
 
 import org.dreamwork.cli.ICommandLine;
+import org.dreamwork.cli.text.Alignment;
 import org.dreamwork.cli.text.TextFormater;
 import org.dreamwork.telnet.command.Command;
 import org.dreamwork.telnet.command.CommandParser;
@@ -374,37 +375,58 @@ public class Console extends TerminalIO implements ICommandLine {
                     // goal. show the command guess
                     Command cmd = list.get (0);
 
-                    String target = cmd.name.length () > tmp.length () ? cmd.name : tmp;
-
-                    List<String> result = cmd.guess (target);
-                    if (result != null && result.size () > 0) {
-                        if (result.size () == 1) {
-                            clearBuffer ();
-                            fillBuff (cmd.name + " " + result.get (0));
-                        } else {
-                            println ();
-                            int i = 0;
-                            for (String text : result) {
-                                if (i ++ > 0) {
-                                    println ();
-                                }
-                                write ("  ");
-                                write (text);
-                            }
-                            println ();
-                            clearBuffer ();
-                            showPrompt ();
-                            fillBuff (tmp);
-                        }
-                    } else { // match single command, show it.
+                    boolean fullyType = cmd.name.length () <= tmp.length ();
+                    if (!fullyType) {
+                        // 命令本身未输全，先补满命令
                         clearBuffer ();
-                        fillBuff (cmd.name + ' ');
+                        String text = cmd.name;
+                        if (cmd.isOptionSupported ()) {
+                            text += " ";
+                        }
+                        fillBuff (text);
+                    } else {
+                        List<String> result = cmd.guess (tmp);
+                        if (result != null && result.size () > 0) {
+                            if (result.size () == 1) {
+                                clearBuffer ();
+                                fillBuff (cmd.name + " " + result.get (0));
+                            } else {
+                                println ();
+
+                                showList (result);
+/*
+                                int i = 0;
+                                for (String text : result) {
+                                    if (i++ > 0) {
+                                        println ();
+                                    }
+                                    write ("  ");
+                                    write (text);
+                                }
+*/
+                                println ();
+                                clearBuffer ();
+                                showPrompt ();
+                                fillBuff (tmp);
+                            }
+                        } else { // match single command, show it.
+                            clearBuffer ();
+                            fillBuff (cmd.name + ' ');
+                        }
                     }
                     tab_mode = false;
                 } else {
                     if (tab_mode) {
                         println ();
                         clearBuffer ();
+
+                        List<String> result = new ArrayList<> (list.size ());
+                        for (Command cmd : list) {
+                            result.add (cmd.name);
+                        }
+
+                        showList (result);
+/*
                         int i = 0;
                         for (Command cmd : list) {
                             if (i++ > 0) {
@@ -412,6 +434,7 @@ public class Console extends TerminalIO implements ICommandLine {
                             }
                             write (cmd.name);
                         }
+*/
                         println ();
                         showPrompt ();
                         fillBuff (tmp);
@@ -420,6 +443,42 @@ public class Console extends TerminalIO implements ICommandLine {
                         tab_mode = true;
                     }
                 }
+            }
+        }
+    }
+
+    private void showList (List<String> result) throws IOException {
+        int columns = getColumns ();
+        int cells = Math.min (result.size (), 10);
+        int width = (columns - (cells - 1) * 4) / cells;
+        outer : while (cells > 1) {
+            width = (columns - (cells - 1) * 4) / cells;
+
+            for (String text : result) {
+                if (text.length () > width) {
+                    cells --;
+                    continue outer;
+                }
+            }
+
+            break;
+        }
+        int c = 0, p = 0;
+        String text;
+
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("cells = {}, width = {}", cells, width);
+        }
+
+        while (p < result.size ()) {
+            text = result.get (p ++);
+            write (TextFormater.fill (text, ' ', width, Alignment.Left));
+            c ++;
+            if (c == cells) {
+                println ();
+                c = 0;
+            } else {
+                write ("    ");
             }
         }
     }
