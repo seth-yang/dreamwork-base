@@ -42,7 +42,13 @@ public class PropertyConfiguration implements IConfiguration {
 
     @Override
     public String getString (String key, Object... params) {
-        String value = props.getProperty (key);
+        String value = System.getProperty (key);
+        if (null == value) {
+            value = props.getProperty (key);
+        }
+        if (null == value) {
+            value = System.getenv (key);
+        }
         if (!StringUtil.isEmpty (value)) {
             value = value.trim ();
             if (params.length > 0 && value.contains ("%")) {
@@ -54,7 +60,14 @@ public class PropertyConfiguration implements IConfiguration {
 
     @Override
     public String getString (String key, KeyValuePair<?>... params) {
-        String value = props.getProperty (key);
+        String value = System.getProperty (key);
+        if (null == value) {
+            value = props.getProperty (key);
+        }
+        if (null == value) {
+            value = System.getenv (key);
+        }
+
         if (!StringUtil.isEmpty (value)) {
             value = value.trim ();
             if (params.length > 0) {

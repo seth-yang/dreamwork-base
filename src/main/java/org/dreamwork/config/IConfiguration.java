@@ -5,6 +5,13 @@ public interface IConfiguration {
      * <p>获取指定参数</p>
      *
      * 当提供了 <code>params</code> 时， <code>key</code> 对应的格式化字符串必须符合 {@link java.lang.String#format(String, Object...)} 的规范
+     * <p>获取值的顺序为
+     * <ol>
+     *     <li>System.getProperty (String)</li>
+     *     <li>当前配置配置文件</li>
+     *     <li>System.getEnv (String)</li>
+     * </ol>
+     * </p>
      * @param key    参数名
      * @param params 可能的参数值
      * @return 字符串类型的参数值
