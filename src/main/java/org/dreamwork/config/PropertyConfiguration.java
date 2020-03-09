@@ -28,6 +28,18 @@ public class PropertyConfiguration implements IConfiguration {
         return props != null && props.containsKey (key);
     }
 
+    private String rawProperty (String key) {
+        String value = System.getProperty (key);
+        if (null == value) {
+            value = props.getProperty (key);
+        }
+        if (null == value) {
+            value = System.getenv (key);
+        }
+
+        return value;
+    }
+
     public void setRawProperty (String key, String value) {
         if (value != null) {
             props.setProperty (key, value);
@@ -42,13 +54,7 @@ public class PropertyConfiguration implements IConfiguration {
 
     @Override
     public String getString (String key, Object... params) {
-        String value = System.getProperty (key);
-        if (null == value) {
-            value = props.getProperty (key);
-        }
-        if (null == value) {
-            value = System.getenv (key);
-        }
+        String value = rawProperty (key);
         if (!StringUtil.isEmpty (value)) {
             value = value.trim ();
             if (params.length > 0 && value.contains ("%")) {
@@ -60,13 +66,7 @@ public class PropertyConfiguration implements IConfiguration {
 
     @Override
     public String getString (String key, KeyValuePair<?>... params) {
-        String value = System.getProperty (key);
-        if (null == value) {
-            value = props.getProperty (key);
-        }
-        if (null == value) {
-            value = System.getenv (key);
-        }
+        String value = rawProperty (key);
 
         if (!StringUtil.isEmpty (value)) {
             value = value.trim ();
@@ -106,9 +106,10 @@ public class PropertyConfiguration implements IConfiguration {
     public int getInt (String key, int defaultValue) {
         Integer i = checkDefaultValue (key, int_cache, defaultValue);
         if (i == null) {
-            String value = props.getProperty (key).trim ();
+            String value = rawProperty (key);
+//            String value = props.getProperty (key).trim ();
             try {
-                int i_value = Integer.parseInt (value);
+                int i_value = Integer.parseInt (value.trim ());
                 int_cache.put (key, i_value);
                 return i_value;
             } catch (Exception ex) {
@@ -137,9 +138,10 @@ public class PropertyConfiguration implements IConfiguration {
         if (L != null) {
             return L;
         }
-        String value = props.getProperty (key).trim ();
+        String value = rawProperty (key);
+//        String value = props.getProperty (key).trim ();
         try {
-            long l_value = Long.parseLong (value);
+            long l_value = Long.parseLong (value.trim ());
             long_cache.put (key, l_value);
             return l_value;
         } catch (Exception ex) {
@@ -153,9 +155,10 @@ public class PropertyConfiguration implements IConfiguration {
         if (d != null) {
             return d;
         }
-        String value = props.getProperty (key).trim ();
+        String value = rawProperty (key);
+//        String value = props.getProperty (key).trim ();
         try {
-            double d_value = Double.parseDouble (value);
+            double d_value = Double.parseDouble (value.trim ());
             double_cache.put (key, d_value);
             return d_value;
         } catch (Exception ex) {
@@ -169,9 +172,10 @@ public class PropertyConfiguration implements IConfiguration {
         if (b != null) {
             return b;
         }
-        String value = props.getProperty (key).trim ();
+        String value = rawProperty (key);
+//        String value = props.getProperty (key).trim ();
         try {
-            boolean b_value = Boolean.valueOf (value);
+            boolean b_value = Boolean.valueOf (value.trim ());
             bool_cache.put (key, b_value);
             return b_value;
         } catch (Exception ex) {
