@@ -100,10 +100,18 @@ public class ArgumentParser {
                 }
                 Argument arg = findByLongOption (defs, argName);
                 if (arg != null) {
-                    if (arg.requireValue && pos < 0) {
-                        throw new IllegalArgumentException ("option --" + argName + " needs value");
+                    if (pos < 0) {
+                        if (arg.requireValue) {
+                            throw new IllegalArgumentException ("option --" + argName + " needs value");
+                        } else {
+                            // the argument does not require a value.
+                            // in this case, it just care about the argument is present or not
+                            // true if the argument is present, otherwise false
+                            arg.value = "true";
+                        }
+                    } else {
+                        arg.value = p.substring (pos + 1);
                     }
-                    arg.value = p.substring (pos + 1);
                     checkValue (arg, argName);
 /*
                     if (arg.values != null) {
