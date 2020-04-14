@@ -120,6 +120,8 @@ public class Looper {
         if (pool.containsKey (name)) {
             InternalLoop loop = pool.get (name);
             loop.cancel ();
+
+            pool.remove (name);
         }
     }
 
@@ -315,6 +317,9 @@ public class Looper {
             scheduler.shutdownNow ();
             namedExecutor.shutdownNow ();
         }
+
+        pool.clear ();
+        futures.clear ();
     }
 
     /**
