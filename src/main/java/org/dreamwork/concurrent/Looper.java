@@ -3,9 +3,11 @@ package org.dreamwork.concurrent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -33,12 +35,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * </p>
  * <p>
  * 以上3中方式添加的任务，都可被 <code>{@link #exit()}</code>、<code>{@link #waitForShutdown(int, TimeUnit)}</code>终止。
- * <code>{@link #waitForShutdown()}</code> 也 <strong>可能</strong> 它们，但这取决于 <code>任务</code> 的实现。
+ * <code>{@link #waitForShutdown()}</code> 也 <strong>可能</strong> 终止它们，但这取决于 <code>任务</code> 的实现。
  * </p>
  * <p>
  * <code>Pool</code> 在 <code>JVM</code> 即将退出时，将 <strong>尽力</strong> 销毁自己所持有的线程及线程池。
  * </p>
- * Created by game on 2016/3/26
+ * Created by seth.yang on 2016/3/26
  * @since 2.1.0
  */
 @SuppressWarnings ("all")
@@ -53,15 +55,8 @@ public class Looper {
     private static ScheduledExecutorService monitor   = new ScheduledThreadPoolExecutor (1);
     private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor (32);
 
-    private static final Runnable shutdownWorker = new Runnable () {
-        @Override
-        public void run () {
-            exit ();
-        }
-    };
-
     static {
-        Runtime.getRuntime ().addShutdownHook (new Thread (shutdownWorker));
+        Runtime.getRuntime ().addShutdownHook (new Thread (Looper::exit));
     }
 
     /**
@@ -101,7 +96,7 @@ public class Looper {
             throw new IllegalArgumentException ("the looper: " + name + " already exists!");
         }
 
-        InternalLoop loop = new InternalLoop (name, size);
+        InternalLoop loop = new InternalLoop (name, size, count);
         synchronized (pool) {
             pool.put (name, loop);
             namedExecutor.execute (loop);
@@ -167,7 +162,8 @@ public class Looper {
      */
     @Deprecated
     public static void runInOtherLoop (Runnable runner) {
-        executor.execute (runner);
+//        executor.execute (runner);
+        invokeLater (runner);
     }
 
     /**
@@ -277,6 +273,7 @@ public class Looper {
             scheduler.shutdown ();
             namedExecutor.shutdown ();
 
+/*
             while (!pool.isEmpty ()) {
                 for (InternalLoop loop : pool.values ()) {
                     if (loop.queue.isEmpty ()) {
@@ -289,6 +286,7 @@ public class Looper {
                     e.printStackTrace ();
                 }
             }
+*/
         } else {
             if (timeout > 0 && unit != null) {
                 synchronized (pool) {
@@ -410,6 +408,7 @@ public class Looper {
         private TimeUnit unit;
         private ExecutorService service;
         private ThreadGroup group;
+        private AtomicInteger counter = new AtomicInteger (1);
 
         private InternalLoop (String name, int size) {
             this (name, size, 1);
@@ -419,7 +418,14 @@ public class Looper {
             this.name = name;
             group = new ThreadGroup (name);
             queue = new ArrayBlockingQueue<Object> (size);
-            service = Executors.newFixedThreadPool (count, r->new Thread (r) {});
+
+            System.out.printf ("name = %s, count = %d, size = %d%n", name, count, size);
+
+            service = Executors.newFixedThreadPool (count, r -> {
+                String threadName = name + "." + counter.getAndIncrement ();
+                System.out.println ("thread-name = " + threadName);
+                return new Thread (group, r, threadName);
+            });
         }
 
         public InternalLoop timeout (int timeout, TimeUnit unit) {
@@ -444,11 +450,16 @@ public class Looper {
                     if (o == FINISH) {
                         break;
                     } else if (o instanceof Runnable) {
-                        try {
-                            ((Runnable) o).run ();
-                        } catch (Throwable t) {
-                            t.printStackTrace ();
-                        }
+                        service.execute ((Runnable) o);
+/*
+                        service.execute (() -> {
+                            try {
+                                ((Runnable) o).run ();
+                            } catch (Throwable t) {
+                                t.printStackTrace ();
+                            }
+                        });
+*/
                     }
                 } catch (InterruptedException ex) {
                     logger.warn ("i'm interrupted.");
@@ -457,6 +468,16 @@ public class Looper {
             }
 
             pool.remove (name);
+            service.shutdown ();
+            while (!service.isTerminated ()) {
+                try {
+                    Thread.sleep (1);
+                } catch (InterruptedException e) {
+                    //
+//                    e.printStackTrace ();
+                }
+            }
+            group.destroy ();
 
             if (logger.isTraceEnabled ()) {
                 logger.trace (name + " removed.");
@@ -490,5 +511,31 @@ public class Looper {
                 }
             }
         }
+    }
+
+    public static void main (String[] args) {
+        Looper.create ("test", 1, 2);
+        for (int i = 0; i < 3; i ++) {
+            final int index = i;
+            Looper.runInLoop ("test", () -> {
+                String name = Thread.currentThread ().getName ();
+                int time = (int) (Math.random () * 3 + 10) * 1000;
+                info (name, String.format ("[%s] waiting for %d sec....", "runner-" + index, time));
+                try {
+                    Thread.sleep (time);
+                } catch (InterruptedException e) {
+                    info (name, "interrupted");
+//                    e.printStackTrace ();
+                }
+                info (name, "done!");
+            });
+        }
+        Looper.destory ("test");
+        Looper.waitForShutdown ();
+    }
+
+    private static void info (String name, String message) {
+        SimpleDateFormat sdf = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss");
+        System.out.printf ("[%s][%s] - %s%n", name, sdf.format (System.currentTimeMillis ()), message);
     }
 }
