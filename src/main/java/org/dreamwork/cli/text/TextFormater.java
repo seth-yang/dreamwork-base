@@ -17,6 +17,9 @@ public class TextFormater {
     private static OptionParser parser;
 
     public static String fill (String content, char fill, int columns, Alignment align) {
+        if (content == null) {
+            content = "";
+        }
         if (content.length () >= columns) {
             return content.substring (0, columns);
         }
