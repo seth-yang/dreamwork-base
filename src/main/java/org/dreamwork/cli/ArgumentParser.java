@@ -158,8 +158,12 @@ public class ArgumentParser {
                                 checkValue (arg, arg.shortOption);
                                 list.add (arg);
                                 i++;
-                            } else if (arg.requireValue) {
-                                throw new IllegalArgumentException ("option -" + p + " needs value");
+                            } else {
+                                if (arg.requireValue) {
+                                    throw new IllegalArgumentException ("option -" + p + " needs value");
+                                } else {
+                                    list.add (arg);
+                                }
                             }
                         }
                     }
