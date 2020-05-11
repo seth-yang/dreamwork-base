@@ -369,7 +369,6 @@ public class Looper {
     }
 
     private static final AtomicLong counter = new AtomicLong (0);
-//    private static ScheduledFuture future;
 
     private static final class InternalRunner implements Runnable {
         private Runnable runner;
@@ -419,11 +418,15 @@ public class Looper {
             group = new ThreadGroup (name);
             queue = new ArrayBlockingQueue<Object> (size);
 
-            System.out.printf ("name = %s, count = %d, size = %d%n", name, count, size);
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("name = {}, count = {}, size = {}", name, count, size);
+            }
 
             service = Executors.newFixedThreadPool (count, r -> {
                 String threadName = name + "." + counter.getAndIncrement ();
-                System.out.println ("thread-name = " + threadName);
+                if (logger.isTraceEnabled ()) {
+                    logger.trace ("thread-name = {}", threadName);
+                }
                 return new Thread (group, r, threadName);
             });
         }
@@ -450,16 +453,13 @@ public class Looper {
                     if (o == FINISH) {
                         break;
                     } else if (o instanceof Runnable) {
-                        service.execute ((Runnable) o);
-/*
                         service.execute (() -> {
                             try {
                                 ((Runnable) o).run ();
                             } catch (Throwable t) {
-                                t.printStackTrace ();
+                                logger.warn (t.getMessage (), t);
                             }
                         });
-*/
                     }
                 } catch (InterruptedException ex) {
                     logger.warn ("i'm interrupted.");
@@ -525,7 +525,6 @@ public class Looper {
                     Thread.sleep (time);
                 } catch (InterruptedException e) {
                     info (name, "interrupted");
-//                    e.printStackTrace ();
                 }
                 info (name, "done!");
             });
