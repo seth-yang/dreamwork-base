@@ -16,6 +16,7 @@ import java.net.URL;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by seth.yang on 2017/4/19
@@ -47,6 +48,15 @@ public abstract class AbstractDatabase implements IDatabase {
         Connection conn = connect ();
         if (conn != null) {
             return new ConnectionWrapper (conn);
+        }
+
+        throw new NullPointerException ();
+    }
+
+    private Connection getConnection (int timeout, TimeUnit unit) throws SQLException {
+        Connection conn = connect ();
+        if (conn != null) {
+            return new ConnectionWrapper (conn, timeout, unit);
         }
 
         throw new NullPointerException ();
@@ -397,17 +407,21 @@ public abstract class AbstractDatabase implements IDatabase {
                 logger.debug ("\nexecuting sql: " + sql + "\n" +
                         "parameters   : [" + Arrays.toString (args) + "]");
             }
-            PreparedStatement pstmt = conn.prepareStatement (sql);
-            for (int i = 0; i < args.length; i ++) {
-                pstmt.setObject (i + 1, args [i]);
-            }
-            if (logger.isTraceEnabled ()) {
-                logger.trace ("executing prepared statement: {}", pstmt);
-            }
-            return pstmt.executeUpdate ();
+            return executeUpdate (conn, sql, args);
         } catch (SQLException ex) {
             throw new RuntimeException (ex);
         }
+    }
+
+    protected int executeUpdate (Connection conn, String sql, Object... args) throws SQLException {
+        PreparedStatement pstmt = conn.prepareStatement (sql);
+        for (int i = 0; i < args.length; i ++) {
+            pstmt.setObject (i + 1, args [i]);
+        }
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("executing prepared statement: {}", pstmt);
+        }
+        return pstmt.executeUpdate ();
     }
 
     @Override
@@ -426,8 +440,45 @@ public abstract class AbstractDatabase implements IDatabase {
         save (item, true);
     }
 
+    protected void doSave (Connection conn, Object item, boolean fetchPK) {
+        if (item == null) {
+            throw new NullPointerException ();
+        }
+
+        try {
+            Class<?> type = item.getClass ();
+            DatabaseSchema schema = ref.map (type);
+            Map<String, Metadata> mds = getMetadata (schema, conn);
+
+            PreparedStatement pstmt;
+            String sql = buildInsertSQL (type);
+            if (fetchPK) {
+                pstmt = conn.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS);
+            } else {
+                pstmt = conn.prepareStatement (sql);
+            }
+            setParameter (pstmt, item, mds);
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("executing prepared statement: {}", pstmt);
+            }
+            pstmt.executeUpdate ();
+
+            if (fetchPK) {
+                fetchPK (pstmt, schema, type, item);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException (ex);
+        }
+    }
+
     @Override
     public void save (Object item, boolean fetchPK) {
+        try (Connection conn = connect ()) {
+            doSave (conn, item, fetchPK);
+        } catch (Exception ex) {
+            throw new RuntimeException (ex);
+        }
+/*
         if (item == null) {
             throw new NullPointerException ();
         }
@@ -456,6 +507,7 @@ public abstract class AbstractDatabase implements IDatabase {
         } catch (Exception ex) {
             throw new RuntimeException (ex);
         }
+*/
     }
 
     /**
@@ -654,6 +706,16 @@ public abstract class AbstractDatabase implements IDatabase {
     }
 
     @Override
+    public ITransaction beginTransaction () throws SQLException {
+        return new SimpleTransactionImpl (getConnection ());
+    }
+
+    @Override
+    public ITransaction beginTransaction (int timeout, TimeUnit unit) throws SQLException {
+        return new SimpleTransactionImpl (getConnection (timeout, unit));
+    }
+
+    @Override
     public void update (Object... o) {
         if (o == null) {
             throw new NullPointerException ();
@@ -731,30 +793,34 @@ public abstract class AbstractDatabase implements IDatabase {
     @Override
     public void delete (Class<?> type, Serializable... pk) {
         try (Connection conn = connect ()) {
-            DatabaseSchema schema = ref.map (type);
-            String sql = "DELETE FROM " + schema.getTableName () + " WHERE " + schema.getPrimaryKeyName ();
-            if (pk.length > 1) {
-                sql += " IN (";
-                StringBuilder builder = new StringBuilder ();
-                for (int i = 0; i < pk.length; i ++) {
-                    if ( i > 0 ) builder.append (", ");
-                    builder.append ("?");
-                }
-                sql += builder + ")";
-            } else {
-                sql += " = ?";
-            }
-            PreparedStatement pstmt = conn.prepareStatement (sql);
-            for (int i = 0; i < pk.length; i ++) {
-                pstmt.setObject (i + 1, pk[i]);
-            }
-            if (logger.isTraceEnabled ()) {
-                logger.trace ("executing prepared statement: {}", pstmt);
-            }
-            pstmt.executeUpdate ();
+            delete (conn, type, pk);
         } catch (Exception ex) {
             throw new RuntimeException (ex);
         }
+    }
+
+    protected void delete (Connection conn, Class<?> type, Serializable... pk) throws SQLException {
+        DatabaseSchema schema = ref.map (type);
+        String sql = "DELETE FROM " + schema.getTableName () + " WHERE " + schema.getPrimaryKeyName ();
+        if (pk.length > 1) {
+            sql += " IN (";
+            StringBuilder builder = new StringBuilder ();
+            for (int i = 0; i < pk.length; i ++) {
+                if ( i > 0 ) builder.append (", ");
+                builder.append ("?");
+            }
+            sql += builder + ")";
+        } else {
+            sql += " = ?";
+        }
+        PreparedStatement pstmt = conn.prepareStatement (sql);
+        for (int i = 0; i < pk.length; i ++) {
+            pstmt.setObject (i + 1, pk[i]);
+        }
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("executing prepared statement: {}", pstmt);
+        }
+        pstmt.executeUpdate ();
     }
 
     @Override
@@ -899,7 +965,7 @@ public abstract class AbstractDatabase implements IDatabase {
             }
     }
 
-    private void setParameter (PreparedStatement pstmt, Object item, Map<String, Metadata> mds) throws SQLException, IllegalAccessException {
+    protected void setParameter (PreparedStatement pstmt, Object item, Map<String, Metadata> mds) throws SQLException, IllegalAccessException {
         int index = 1;
         Class<?> type = item.getClass ();
         DatabaseSchema schema = ref.map (type);
@@ -932,7 +998,7 @@ public abstract class AbstractDatabase implements IDatabase {
         return pstmt.executeQuery ();
     }
 
-    private String buildUpdateSql (DatabaseSchema schema) {
+    protected String buildUpdateSql (DatabaseSchema schema) {
         String[] fields = schema.getFields ();
         String pkName = schema.getPrimaryKeyName ();
         StringBuilder builder = new StringBuilder ();
@@ -954,7 +1020,7 @@ public abstract class AbstractDatabase implements IDatabase {
         }
     }
 
-    private void setParameters (PreparedStatement pstmt, DatabaseSchema schema, Object o, Class<?> type, Map<String, Metadata> mds) throws Exception {
+    protected void setParameters (PreparedStatement pstmt, DatabaseSchema schema, Object o, Class<?> type, Map<String, Metadata> mds) throws Exception {
         String pkName = schema.getPrimaryKeyName ();
         String[] fieldNames = schema.getFields ();
         List<String> ordered = new ArrayList<> (fieldNames.length);
@@ -982,7 +1048,7 @@ public abstract class AbstractDatabase implements IDatabase {
         }
     }
 
-    private Map<String, Metadata> getMetadata (DatabaseSchema schema, Connection conn) throws SQLException {
+    protected Map<String, Metadata> getMetadata (DatabaseSchema schema, Connection conn) throws SQLException {
         String sql = "SELECT " + join (schema.getFields (), ',') + " FROM " + schema.getTableName () + " WHERE 1 = 2";
         Statement stmt = conn.createStatement ();
         ResultSet rs = stmt.executeQuery (sql);
@@ -999,7 +1065,7 @@ public abstract class AbstractDatabase implements IDatabase {
         return map;
     }
 
-    private void fetchPK (PreparedStatement pstmt, DatabaseSchema schema, Class<?> type, Object item) throws Exception {
+    protected void fetchPK (PreparedStatement pstmt, DatabaseSchema schema, Class<?> type, Object item) throws Exception {
         ResultSet rs = pstmt.getGeneratedKeys ();
         if (rs.next ()) {
             String fieldName = schema.getPrimaryKeyName ();
@@ -1021,7 +1087,7 @@ public abstract class AbstractDatabase implements IDatabase {
         }
     }
 
-    private static final class Metadata {
+    protected static final class Metadata {
         int type;
         String name;
         boolean autoIncrement;
@@ -1038,7 +1104,7 @@ public abstract class AbstractDatabase implements IDatabase {
         return builder.toString ();
     }
 
-    private String buildInsertSQL (Class<?> type) {
+    protected String buildInsertSQL (Class<?> type) {
         if (INSERT_SQL_MAP.containsKey (type)) {
             return INSERT_SQL_MAP.get (type);
         }

@@ -18,8 +18,12 @@ public class ConnectionWrapper implements Connection, Runnable {
     private long taskId;
 
     ConnectionWrapper (Connection conn) {
+        this (conn, 300, TimeUnit.SECONDS);
+    }
+
+    ConnectionWrapper (Connection conn, int timeout, TimeUnit unit) {
         this.conn = conn;
-        taskId = Looper.schedule (this, 300, TimeUnit.SECONDS);
+        taskId = Looper.schedule (this, timeout, unit);
     }
 
     public long getTaskId () {
