@@ -454,10 +454,16 @@ public class Looper {
                         break;
                     } else if (o instanceof Runnable) {
                         service.execute (() -> {
+                            if (logger.isTraceEnabled ()) {
+                                logger.trace ("executing the runner...");
+                            }
                             try {
                                 ((Runnable) o).run ();
                             } catch (Throwable t) {
                                 logger.warn (t.getMessage (), t);
+                            }
+                            if (logger.isTraceEnabled ()) {
+                                logger.trace ("the job done.");
                             }
                         });
                     }
@@ -477,6 +483,7 @@ public class Looper {
 //                    e.printStackTrace ();
                 }
             }
+            group.list ();
             group.destroy ();
 
             if (logger.isTraceEnabled ()) {

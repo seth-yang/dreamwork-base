@@ -29,6 +29,21 @@ public interface IDatabase extends IUpdatable {
     boolean execute (URL url);
     boolean execute (InputStream in);
 
+    /**
+     * 执行并获取标量
+     * @param sql sql 语句
+     * @return 标量值
+     */
+    int executeScale (String sql);
+
+    /**
+     * 执行并获取标量
+     * @param sql  sql语句
+     * @param args sql语句的值
+     * @return 标量值
+     */
+    int executeScale (String sql, Object... args);
+
     <T> boolean exists (Class<T> type, Object pk);
     boolean exists (String sql, Object... args);
 

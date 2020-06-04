@@ -1,5 +1,7 @@
 package org.dreamwork.db;
 
+import org.dreamwork.concurrent.IManagedClosable;
+import org.dreamwork.concurrent.ManagedObjectMonitor;
 import org.dreamwork.persistence.DatabaseSchema;
 import org.dreamwork.persistence.ISchemaField;
 import org.dreamwork.persistence.ReflectUtil;
@@ -28,6 +30,19 @@ public abstract class AbstractDatabase implements IDatabase {
 
     protected static final Logger logger = LoggerFactory.getLogger (AbstractDatabase.class);
     private static final Map<Class<?>, String> INSERT_SQL_MAP = new HashMap<> ();
+    private static final ManagedObjectMonitor<ConnectionWrapper> monitor = new ManagedObjectMonitor<> ();
+    private static final Set<IManagedClosable> managedConnections = Collections.synchronizedSet (new HashSet<> ());
+
+    static {
+        monitor.setListener (imc -> {
+            logger.warn ("the connection is not close. it's very like memory leak.");
+            managedConnections.remove (imc);
+
+            if (managedConnections.isEmpty ()) {
+                monitor.stop ();
+            }
+        });
+    }
 
     protected abstract Connection connect () throws SQLException;
 
@@ -47,16 +62,30 @@ public abstract class AbstractDatabase implements IDatabase {
     public Connection getConnection () throws SQLException {
         Connection conn = connect ();
         if (conn != null) {
-            return new ConnectionWrapper (conn);
+            if (managedConnections.isEmpty ()) {
+                monitor.start ();
+            }
+
+            ConnectionWrapper wrapper = new ConnectionWrapper (conn);
+            monitor.add (wrapper);
+            managedConnections.add (wrapper);
+            return wrapper;
         }
 
         throw new NullPointerException ();
     }
 
-    private Connection getConnection (int timeout, TimeUnit unit) throws SQLException {
+    public Connection getConnection (int timeout, TimeUnit unit) throws SQLException {
         Connection conn = connect ();
         if (conn != null) {
-            return new ConnectionWrapper (conn, timeout, unit);
+            if (managedConnections.isEmpty ()) {
+                monitor.start ();
+            }
+
+            ConnectionWrapper wrapper = new ConnectionWrapper (conn, timeout, unit);
+            monitor.add (wrapper);
+            managedConnections.add (wrapper);
+            return wrapper;
         }
 
         throw new NullPointerException ();
@@ -112,6 +141,40 @@ public abstract class AbstractDatabase implements IDatabase {
             throw new RuntimeException (ex);
         }
         return true;
+    }
+
+    @Override
+    public int executeScale (String sql) {
+        try (Connection conn = connect ()) {
+            PreparedStatement pstmt = conn.prepareStatement (sql);
+            ResultSet rs = pstmt.executeQuery ();
+            if (rs.next ()) {
+                return rs.getInt (1);
+            }
+            return -1;
+        } catch (Exception ex) {
+            throw new RuntimeException (ex);
+        }
+    }
+
+    @Override
+    public int executeScale (String sql, Object... args) {
+        try (Connection conn = connect ()) {
+            PreparedStatement pstmt = conn.prepareStatement (sql);
+            for (int i = 0; i < args.length; i ++) {
+                pstmt.setObject (i + 1, args[i]);
+            }
+            if (logger.isTraceEnabled ()) {
+                logger.trace (pstmt.toString ());
+            }
+            ResultSet rs = pstmt.executeQuery ();
+            if (rs.next ()) {
+                return rs.getInt (1);
+            }
+            return -1;
+        } catch (SQLException ex) {
+            throw new RuntimeException (ex);
+        }
     }
 
     @Override
