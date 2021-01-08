@@ -1,12 +1,9 @@
 package org.dreamwork.db;
 
-//import org.dreamwork.concurrent.Looper;
-/*
+import org.dreamwork.concurrent.IManagedClosable;
+import org.dreamwork.concurrent.ManagedObjectMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-*/
-
-import org.dreamwork.concurrent.IManagedClosable;
 
 import java.sql.*;
 import java.util.Map;
@@ -17,7 +14,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by seth.yang on 2017/7/4
  */
-public class ConnectionWrapper implements Connection, IManagedClosable {
+public class ConnectionWrapper implements Connection, IManagedClosable<ConnectionWrapper> {
+    private static final Logger logger = LoggerFactory.getLogger (ConnectionWrapper.class);
     private final Connection conn;
 
     long timestamp;
@@ -193,7 +191,22 @@ public class ConnectionWrapper implements Connection, IManagedClosable {
     }
 
     public void close () throws SQLException {
-        conn.close ();
+        try {
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("trying close the real connection");
+            }
+            conn.close ();
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("the real connection closed.");
+            }
+        } finally {
+            if (monitor != null) {
+                if (logger.isTraceEnabled ()) {
+                    logger.trace ("remove the connection wrapper from the monitor");
+                }
+                monitor.remove (this);
+            }
+        }
     }
 
     public CallableStatement prepareCall (String sql) throws SQLException {
@@ -270,4 +283,11 @@ public class ConnectionWrapper implements Connection, IManagedClosable {
     public boolean isTimedOut () {
         return System.currentTimeMillis () - timestamp > timeout;
     }
+
+    @Override
+    public void setMonitor (ManagedObjectMonitor<ConnectionWrapper> monitor) {
+        this.monitor = monitor;
+    }
+
+    private ManagedObjectMonitor<ConnectionWrapper> monitor;
 }

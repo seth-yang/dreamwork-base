@@ -37,6 +37,7 @@ public abstract class AbstractDatabase implements IDatabase {
         monitor.setListener (imc -> {
             logger.warn ("the connection is not close. it's very like memory leak.");
             managedConnections.remove (imc);
+            monitor.remove ((ConnectionWrapper) imc);
 
             if (managedConnections.isEmpty ()) {
                 monitor.stop ();
@@ -69,6 +70,7 @@ public abstract class AbstractDatabase implements IDatabase {
             ConnectionWrapper wrapper = new ConnectionWrapper (conn);
             monitor.add (wrapper);
             managedConnections.add (wrapper);
+            wrapper.setMonitor (monitor);
             return wrapper;
         }
 
