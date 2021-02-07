@@ -4,7 +4,7 @@
 
     <groupId>org.dreamwork</groupId>
     <artifactId>dreamwork-base</artifactId>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
     <packaging>bundle</packaging>
     <description><![CDATA[
         剔除对log4j的依赖
@@ -132,7 +132,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.25</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
