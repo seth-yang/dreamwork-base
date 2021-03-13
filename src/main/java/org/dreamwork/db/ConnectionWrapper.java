@@ -290,4 +290,18 @@ public class ConnectionWrapper implements Connection, IManagedClosable<Connectio
     }
 
     private ManagedObjectMonitor<ConnectionWrapper> monitor;
+
+    @Override
+    public boolean equals (Object o) {
+        if (this == o) return true;
+        if (o == null || getClass () != o.getClass ()) return false;
+        ConnectionWrapper that = (ConnectionWrapper) o;
+
+        return conn != null && conn.equals (that.conn);
+    }
+
+    @Override
+    public int hashCode () {
+        return conn == null ? 0 : conn.hashCode ();
+    }
 }

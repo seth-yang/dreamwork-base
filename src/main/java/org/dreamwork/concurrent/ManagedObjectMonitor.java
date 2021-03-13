@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @param <T>
  */
-public class ManagedObjectMonitor<T extends IManagedClosable> {
+public class ManagedObjectMonitor<T extends IManagedClosable<?>> {
     private static final String     LOOP_NAME = "MO.Monitor";
     private static final AtomicLong COUNTER   = new AtomicLong (0);
 
@@ -45,6 +45,9 @@ public class ManagedObjectMonitor<T extends IManagedClosable> {
         locker.lock ();
         try {
             pool.remove (o);
+            if (listener != null) {
+                listener.onRemoved (o);
+            }
             c.signalAll ();
         } finally {
             locker.unlock ();
@@ -90,7 +93,7 @@ public class ManagedObjectMonitor<T extends IManagedClosable> {
 
                     if (running.get ()) {
                         List<T> copy = new ArrayList<> ();
-                        for (IManagedClosable imc : pool) {
+                        for (IManagedClosable<?> imc : pool) {
                             if (imc.isTimedOut ()) {
                                 copy.add ((T) imc);
                             }
@@ -105,7 +108,7 @@ public class ManagedObjectMonitor<T extends IManagedClosable> {
                                 logger.trace ("now pool contains: {}", pool);
                             }
 
-                            for (IManagedClosable imc : copy) {
+                            for (IManagedClosable<?> imc : copy) {
                                 if (logger.isTraceEnabled ()) {
                                     logger.trace ("{} is timed out, trying to close it", imc);
                                 }
@@ -164,6 +167,7 @@ public class ManagedObjectMonitor<T extends IManagedClosable> {
     }
 
     public interface Listener {
-        void onClosed (IManagedClosable imc);
+        void onClosed (IManagedClosable<?> imc);
+        void onRemoved (IManagedClosable<?> imc);
     }
 }

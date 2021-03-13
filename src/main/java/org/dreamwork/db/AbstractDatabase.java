@@ -31,16 +31,32 @@ public abstract class AbstractDatabase implements IDatabase {
     protected static final Logger logger = LoggerFactory.getLogger (AbstractDatabase.class);
     private static final Map<Class<?>, String> INSERT_SQL_MAP = new HashMap<> ();
     private static final ManagedObjectMonitor<ConnectionWrapper> monitor = new ManagedObjectMonitor<> ();
-    private static final Set<IManagedClosable> managedConnections = Collections.synchronizedSet (new HashSet<> ());
+    private static final Set<IManagedClosable<?>> managedConnections = Collections.synchronizedSet (new HashSet<> ());
 
     static {
-        monitor.setListener (imc -> {
-            logger.warn ("the connection is not close. it's very like memory leak.");
-            managedConnections.remove (imc);
-            monitor.remove ((ConnectionWrapper) imc);
+        monitor.setListener (new ManagedObjectMonitor.Listener () {
+            @Override
+            public void onClosed (IManagedClosable<?> imc) {
+                if (logger.isTraceEnabled ()) {
+                    logger.trace ("unclosed connection = {}", imc);
+                    try {
+                        logger.trace ("the close flag of database = {}", ((ConnectionWrapper) imc).isClosed ());
+                    } catch (Exception ex) {
+                        // ignore
+                    }
+                }
+                logger.warn ("the connection is not close. it's very like memory leak.");
+                managedConnections.remove (imc);
+                monitor.remove ((ConnectionWrapper) imc);
 
-            if (managedConnections.isEmpty ()) {
-                monitor.stop ();
+                if (managedConnections.isEmpty ()) {
+                    monitor.stop ();
+                }
+            }
+
+            @Override
+            public void onRemoved (IManagedClosable<?> imc) {
+                managedConnections.remove (imc);
             }
         });
     }
