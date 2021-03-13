@@ -49,9 +49,11 @@ public abstract class AbstractDatabase implements IDatabase {
                 managedConnections.remove (imc);
                 monitor.remove ((ConnectionWrapper) imc);
 
+/*
                 if (managedConnections.isEmpty ()) {
                     monitor.stop ();
                 }
+*/
             }
 
             @Override
@@ -59,6 +61,7 @@ public abstract class AbstractDatabase implements IDatabase {
                 managedConnections.remove (imc);
             }
         });
+        monitor.start ();
     }
 
     protected abstract Connection connect () throws SQLException;
@@ -79,9 +82,11 @@ public abstract class AbstractDatabase implements IDatabase {
     public Connection getConnection () throws SQLException {
         Connection conn = connect ();
         if (conn != null) {
+/*
             if (managedConnections.isEmpty ()) {
                 monitor.start ();
             }
+*/
 
             ConnectionWrapper wrapper = new ConnectionWrapper (conn);
             monitor.add (wrapper);
