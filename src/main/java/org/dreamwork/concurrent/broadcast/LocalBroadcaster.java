@@ -59,7 +59,7 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
     public LocalBroadcaster (ExecutorService executor) {
         this.executor = executor;
 
-        try {
+        if (System.getProperty ("disable-jmx") == null) try {
             MBeanServer server = ManagementFactory.getPlatformMBeanServer ();
             ObjectName name = new ObjectName (JMX_GROUP_NAME, "name", JMX_BEAN_NAME);
             server.registerMBean (this, name);
