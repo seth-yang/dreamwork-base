@@ -18,21 +18,25 @@ import java.util.Map;
 class SimpleTransactionImpl implements ITransaction {
     private final Connection conn;
     private final InternalDatabaseImpl db;
+    private final boolean autoCommit;
 
     SimpleTransactionImpl (Connection conn) throws SQLException {
         this.conn = conn;
         this.db   = new InternalDatabaseImpl (conn);
+        autoCommit = conn.getAutoCommit ();
         conn.setAutoCommit (false);
     }
 
     @Override
     public void commit () throws SQLException {
         conn.commit ();
+        conn.setAutoCommit (autoCommit);
     }
 
     @Override
     public void rollback () throws SQLException {
         conn.rollback ();
+        conn.setAutoCommit (autoCommit);
     }
 
     @Override
