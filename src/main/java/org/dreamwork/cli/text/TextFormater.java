@@ -66,12 +66,15 @@ public class TextFormater {
                 parser = new OptionParser ();
         }
         List<String> options = parser.parse (line);
+        return options.toArray (new String[0]);
+/*
         String[] array = new String[options.size ()];
         int pos = 0;
         for (String option : options) {
             array [pos ++] = option;
         }
         return array;
+*/
     }
 
     @SuppressWarnings ("unchecked")

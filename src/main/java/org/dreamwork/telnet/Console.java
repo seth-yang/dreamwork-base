@@ -31,10 +31,10 @@ public class Console extends TerminalIO implements ICommandLine {
     private String prompt = "console";
     private boolean running = true, tab_mode;
     private CommandParser commandParser;
-    private Map<String, String> env = new HashMap<> (System.getenv ());
-    private Map<String, Object> attr = new HashMap<> ();
+    private final Map<String, String> env = new HashMap<> (System.getenv ());
+    private final Map<String, Object> attr = new HashMap<> ();
 
-    private List<String> history = new ArrayList<> (MAX_HISTORY_SIZE);
+    private final List<String> history = new LinkedList<> ();
 
     public Console (InputStream in, OutputStream out, ConnectionData data, boolean ssh) {
         this (in, out, data, ssh, DEFAULT_BUFF_SIZE);
@@ -113,6 +113,7 @@ public class Console extends TerminalIO implements ICommandLine {
      * @param commands 注册到控制台的命令
      * @see CommandParser
      */
+    @SuppressWarnings ("unused")
     public void registerCommand (Command... commands) {
         if (commandParser != null) {
             commandParser.registerCommand (commands);
@@ -125,6 +126,7 @@ public class Console extends TerminalIO implements ICommandLine {
      * 获取命令解析器
      * @return 命令解析器
      */
+    @SuppressWarnings ("unused")
     public CommandParser getCommandParser () {
         return commandParser;
     }
@@ -196,6 +198,7 @@ public class Console extends TerminalIO implements ICommandLine {
      *
      * @throws IOException io exception
      */
+    @SuppressWarnings ("all")
     public void loop () throws IOException {
         if (commandParser == null) {
             throw new IllegalStateException ("command parser is not present");
@@ -253,16 +256,6 @@ public class Console extends TerminalIO implements ICommandLine {
                                     command.parse (TextFormater.parse (content));
                                 }
                             }
-/*
-                            int idx = line.indexOf (' ');
-                            if (idx > 0) {
-                                String content = line.substring (idx + 1).trim ();
-                                command.setContent (content);
-                                if (command.isOptionSupported ()) {
-                                    command.parse (content);
-                                }
-                            }
-*/
                             command.perform (this);
                         } else {
                             errorln ("Invalid Command: " + line);
@@ -471,7 +464,7 @@ public class Console extends TerminalIO implements ICommandLine {
 
     /**
      * 当敲击键盘 Backspace 或 Delete 键时的处理程序
-     * @throws IOException
+     * @throws IOException any io exception
      */
     public void backspace () throws IOException {
         super.backspace ();
@@ -559,6 +552,7 @@ public class Console extends TerminalIO implements ICommandLine {
      * @return 用户输入的密码
      * @throws IOException io exception
      */
+    @SuppressWarnings ("unused")
     public String readPassword () throws IOException {
         return readPassword ("Please input password");
     }

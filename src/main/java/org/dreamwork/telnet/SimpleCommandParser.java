@@ -35,10 +35,10 @@ public class SimpleCommandParser extends CommandParser {
         text = text.trim ();
         int pos = text.indexOf (' ');
 
-        String part, line = null;
+        String part/*, line = null*/;
         if (pos > 0) {
             part = text.substring (0, pos);
-            line = text.substring (pos + 1);
+//            line = text.substring (pos + 1);
         } else {
             part = text;
         }
@@ -49,12 +49,6 @@ public class SimpleCommandParser extends CommandParser {
         } else if (mappedByAlias.containsKey (part)){
             cmd = mappedByAlias.get (part);
         }
-
-/*
-        if (cmd != null && line != null) {
-            cmd.parse (line);
-        }
-*/
         return cmd;
     }
 

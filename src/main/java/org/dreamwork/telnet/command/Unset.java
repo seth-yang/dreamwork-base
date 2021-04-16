@@ -4,7 +4,6 @@ import org.dreamwork.telnet.Console;
 import org.dreamwork.util.StringUtil;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created by seth.yang on 2018/9/30
