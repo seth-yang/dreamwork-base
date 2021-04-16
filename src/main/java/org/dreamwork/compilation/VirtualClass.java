@@ -177,7 +177,7 @@ public class VirtualClass extends VirtualType<VirtualClass> {
         for (VirtualAnnotation va : annotations) {
             buff.append (va).append (CRLF);
         }
-        buff.append (Modifier.experssion [modifier]);
+        buff.append (Modifier.expression[modifier]);
         if (still) {
             buff.append (" static");
         }

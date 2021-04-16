@@ -12,5 +12,5 @@ public interface Modifier   {
     int PROTECTED = 2;
     int PRIVATE = 3;
 
-    String[] experssion = {"public", "", "protected", "private"};
+    String[] expression = {"public", "", "protected", "private"};
 }

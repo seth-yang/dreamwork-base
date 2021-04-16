@@ -75,7 +75,7 @@ public class VirtualMethod extends VirtualType<VirtualMethod> {
         for (VirtualAnnotation va : annotations) {
             buff.append ('\t').append (va).append (CRLF);
         }
-        buff.append ('\t').append (Modifier.experssion [modifier]);
+        buff.append ('\t').append (Modifier.expression[modifier]);
         if (still) {
             buff.append (" static");
         }

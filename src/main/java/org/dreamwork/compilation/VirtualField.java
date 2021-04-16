@@ -75,7 +75,7 @@ public class VirtualField extends VirtualType<VirtualField> {
                 builder.append ('\t').append (va).append (CRLF);
             }
         }
-        builder.append ('\t').append (Modifier.experssion [modifier]);
+        builder.append ('\t').append (Modifier.expression[modifier]);
         if (still) {
             builder.append (" static");
         }
