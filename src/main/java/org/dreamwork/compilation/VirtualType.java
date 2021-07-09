@@ -31,6 +31,7 @@ public abstract class VirtualType<T extends VirtualType> {
     /**
      * 设置参数名称
      * @param name 合法的 java 标识符
+     * @return this
      */
     public T setName (String name) {
         this.name = name;
@@ -50,6 +51,7 @@ public abstract class VirtualType<T extends VirtualType> {
      * 设置虚拟类的访问修饰符
      *
      * @param modifier 访问修饰符
+     * @return this
      */
     public T setModifier (int modifier) {
         this.modifier = modifier;

@@ -40,8 +40,8 @@ public interface IUpdatable {
      * 批量保存对象.
      *
      * <p>若 <code>fetchPK</code> 取值为 <code>true</code>时，将影响该功能的执行效率
-     * 特别地，当 <i>items.size() > 1000</i>时，效率下降严重，
-     * 当<i>items.size() > 10000</i>时，可能造成数据的长时间阻塞。</p>
+     * 特别地，当 <i>items.size() &gt; 1000</i>时，效率下降严重，
+     * 当<i>items.size() &gt; 10000</i>时，可能造成数据的长时间阻塞。</p>
      * <p>当数量巨大时，应避免<code>fetchPK</code>参数取值<code>true</code></p>
      * @param items   需保存的对象
      * @param fetchPK 是否获取数据库生成的主键.

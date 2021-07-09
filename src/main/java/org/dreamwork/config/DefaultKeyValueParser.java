@@ -14,7 +14,8 @@ import java.io.Serializable;
  */
 public class DefaultKeyValueParser implements IXMLConfigParser {
     /**
-     * 默认的键-值对解析器，可解析 <property name="" value="" />和<name>value</name>形式的节点
+     * 默认的键-值对解析器，可解析 &lt;property name="" value="" /&gt;和
+     * &lt;name&gt;value&lt;/name&gt;形式的节点
      *
      * @param section 节点
      * @return 解析后的对象

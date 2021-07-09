@@ -25,7 +25,7 @@ public class ColorHelper {
      * @param str    String to be colorized.
      * @param color  Constant defined color (see constants).
      * @param autoff boolean that toggles automatical appending of "attributes off"
-     *               sequence.<code>true<code> if "attributes off" should be appended, false
+     *               sequence.{@code true} if "attributes off" should be appended, false
      *               otherwise.
      * @return String with internal markup-sequences.
      */
@@ -55,7 +55,7 @@ public class ColorHelper {
      * @param str    String to be colorized.
      * @param color  Constant defined color (see constants).
      * @param autoff boolean that toggles automatical appending of "attributes off"
-     *               sequence.<code>true<code> if "attributes off" should be appended, false
+     *               sequence.{@code true} if "attributes off" should be appended, false
      *               otherwise.
      * @return String with internal markup-sequences.
      */
@@ -87,7 +87,7 @@ public class ColorHelper {
      * @param fgc    Constant defined color (see constants). Will be textcolor.
      * @param bgc    Constant defined color (see constants). Will be backgroundcolor.
      * @param autoff boolean that toggles automatical appending of "attributes off"
-     *               sequence.<code>true<code> if "attributes off" should be appended, false
+     *               sequence.{@code true} if "attributes off" should be appended, false
      *               otherwise.
      * @return String with internal markup-sequences.
      */

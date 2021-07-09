@@ -4,7 +4,7 @@
 
     <groupId>org.dreamwork</groupId>
     <artifactId>dreamwork-base</artifactId>
-    <version>3.1.1</version>
+    <version>3.1.2</version>
     <packaging>bundle</packaging>
     <description><![CDATA[
         剔除对log4j的依赖
@@ -59,7 +59,6 @@
                     </execution>
                 </executions>
             </plugin>
-<!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -79,7 +78,6 @@
                     </execution>
                 </executions>
             </plugin>
--->
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>

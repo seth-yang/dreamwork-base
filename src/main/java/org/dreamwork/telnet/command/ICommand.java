@@ -16,6 +16,7 @@ public interface ICommand {
 
     /**
      * 命令是否支持选项
+     * @return 如果支持选项 (命令参数) 返回 true，否则返回 false
      */
     default boolean isOptionSupported () {
         return false;

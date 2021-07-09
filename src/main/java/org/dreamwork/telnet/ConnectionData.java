@@ -249,7 +249,6 @@ public class ConnectionData {
      * Sets the terminal type that has been negotiated
      * between telnet client and telnet server, in form of
      * a String.<br>
-     * <p/>
      * <em>This method should not be called explicitly
      * by the application (i.e. the its here for the io subsystem).</em><br>
      *

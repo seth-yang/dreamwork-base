@@ -63,8 +63,8 @@ public class ApplicationConfigParser implements FileChangeListener {
      * 构造函数.
      * 使用一个输入流来构建解析器
      * @param in 输入流
-     * @throws IOException
-     * @throws SAXException
+     * @throws IOException io 异常
+     * @throws SAXException xml 异常
      */
     public ApplicationConfigParser (InputStream in) throws IOException, SAXException {
         try {
@@ -78,8 +78,8 @@ public class ApplicationConfigParser implements FileChangeListener {
      * 构造函数.
      * 使用一个输入流来构建解析器
      * @param url URL
-     * @throws IOException
-     * @throws SAXException
+     * @throws IOException  io异常
+     * @throws SAXException xml异常
      */
     public ApplicationConfigParser (URL url) throws IOException, SAXException {
         this (url.openStream ());
@@ -95,8 +95,8 @@ public class ApplicationConfigParser implements FileChangeListener {
      * 构造函数.
      * 使用一个文件来构建解析器
      * @param file 配置文件
-     * @throws IOException
-     * @throws SAXException
+     * @throws IOException io 异常
+     * @throws SAXException xml 异常
      */
     public ApplicationConfigParser (File file) throws IOException, SAXException {
         doc = builder.parse (file);
@@ -149,8 +149,8 @@ public class ApplicationConfigParser implements FileChangeListener {
      * 使用 XSD 文档对当前配置文件进行验证
      * @param xsd W3C Schema 文档
      * @return 验证结果，若符合 Schema 规范，返回 true, 否则 false
-     * @throws SAXException
-     * @throws IOException
+     * @throws SAXException xml 异常
+     * @throws IOException io 异常
      */
     public boolean validateByXSD (InputStream xsd) throws SAXException, IOException {
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -169,7 +169,7 @@ public class ApplicationConfigParser implements FileChangeListener {
      * 获取配置文件中的值
      * @param expression 表达式. 使用.分隔的路径表达式
      * @return 值
-     * @throws ConfigParseException
+     * @throws ConfigParseException 解析异常
      */
     public Object getValue (String expression) throws ConfigParseException{
         if (StringUtil.isEmpty (expression)) return null;

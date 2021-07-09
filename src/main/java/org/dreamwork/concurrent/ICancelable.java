@@ -1,7 +1,7 @@
 package org.dreamwork.concurrent;
 
 /**
- * <p/>
+ * 可取消的
  * Created by seth on 16-1-11
  * @since 2.1.0
  */
@@ -15,7 +15,7 @@ public interface ICancelable {
     /**
      * 取消
      * @param block 是否阻塞当前线程
-     * @throws InterruptedException
+     * @throws InterruptedException 可能的打断异常
      */
     void cancel (boolean block) throws InterruptedException;
 }

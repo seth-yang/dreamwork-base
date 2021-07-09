@@ -18,8 +18,8 @@ import java.util.concurrent.ExecutorService;
  */
 public class LocalBroadcaster implements Runnable, ILocalBroadcastService, LocalBroadcasterMBean {
     private final Logger logger = LoggerFactory.getLogger (LocalBroadcaster.class);
-    private final Map<String, List<ILocalBroadcastReceiver>> handlers = new HashMap<> ();
-    private final Map<String, LocalBroadcastWorker> workers = new HashMap<> ();
+    private final Map<String, List<ILocalBroadcastReceiver>> handlers = Collections.synchronizedMap (new HashMap<> ());
+    private final Map<String, LocalBroadcastWorker> workers = Collections.synchronizedMap (new HashMap<> ());
     private final BlockingQueue<MessageWrapper> queue = new ArrayBlockingQueue<> (16);
     private final LocalMessage QUIT = new LocalMessage ();
     private final ExecutorService executor;
@@ -71,16 +71,14 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
     @Override
     public void register (String category, ILocalBroadcastReceiver listener) {
         synchronized (handlers) {
-            List<ILocalBroadcastReceiver> list = handlers.get (category);
-            if (list == null) {
-                list = new ArrayList<> ();
-                handlers.put (category, list);
+            List<ILocalBroadcastReceiver> list = handlers.computeIfAbsent (category, key -> {
+                List<ILocalBroadcastReceiver> receivers = new ArrayList<> ();
 
                 LocalBroadcastWorker worker = new LocalBroadcastWorker (category + ".worker");
                 workers.put (category, worker);
                 executor.execute (worker);
-            }
-
+                return receivers;
+            });
             list.add (listener);
         }
     }
@@ -150,17 +148,25 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
     }
 
     private void dispatch (MessageWrapper wrapper) {
-        List<ILocalBroadcastReceiver> copy = null;
+        List<ILocalBroadcastReceiver> copy = new ArrayList<> ();
         synchronized (handlers) {
-            if (handlers.containsKey (wrapper.name)) {
-                copy = new ArrayList<> (handlers.get (wrapper.name));
+            for (Map.Entry<String, List<ILocalBroadcastReceiver>> entry : handlers.entrySet ()) {
+                String category = entry.getKey ();
+                if (wrapper.name.startsWith (category)) {
+                    List<ILocalBroadcastReceiver> receivers = entry.getValue ();
+                    for (ILocalBroadcastReceiver receiver : receivers) {
+                        if (!copy.contains (receiver)) {
+                            copy.add (receiver);
+                        }
+                    }
+                }
             }
         }
 
-        if (copy != null && copy.size () > 0) {
+        if (!copy.isEmpty ()) {
             LocalBroadcastWorker worker = workers.get (wrapper.name);
             for (ILocalBroadcastReceiver receiver : copy) {
-                worker.add (() -> receiver.received (wrapper.message));
+                worker.add (() -> receiver.received (wrapper.name, wrapper.message));
             }
         }
     }

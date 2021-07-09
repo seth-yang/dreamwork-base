@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 线程管理工具类.
- * <p/>
+ * <p>
  * 封装了常用的几种线程管理的方式：
  * <ol>
  *     <li>在同一个线程中，安顺序执行一系列任务</li>
@@ -213,7 +213,6 @@ public class Looper {
      * </pre>
      * 这种实现的任务，且被 {@link #invokeLater(Runnable) invokeLater} 提交，将不能被该方法终止。因为该方法是 <i>"等待所有任务完成”</i>；很显然，这个
      * 任务自己不会结束。
-     * </p>
      * <p>
      * 若您确实需要执行一个“永不终止”的任务，有希望在适当
      * 的时刻将其终止（典型的场景是一个全局的周期性的监视器，一旦启动，就不会关闭，直到上层容器的生命周期结束，比如 ServletContainer 甚至 JVM 退出)的情况，
@@ -239,7 +238,6 @@ public class Looper {
      *         }
      *     }
      * </pre>
-     * </p>
      * @see #waitForShutdown(int, TimeUnit)
      * @see #exit()
      */

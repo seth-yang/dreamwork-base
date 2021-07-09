@@ -23,6 +23,7 @@ public class VirtualParameter extends VirtualType<VirtualParameter> {
     /**
      * 设置参数类型
      * @param type 合法的 java 类型
+     * @return this
      */
     public VirtualParameter setType (String type) {
         this.type = type;

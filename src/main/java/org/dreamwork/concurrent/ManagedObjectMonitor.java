@@ -14,8 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 受管理可关闭对象的监视器.
- *
- * @param <T>
+ * @param <T> 受托管对象的类型
  */
 public class ManagedObjectMonitor<T extends IManagedClosable<?>> {
     private static final String     LOOP_NAME = "MO.Monitor";

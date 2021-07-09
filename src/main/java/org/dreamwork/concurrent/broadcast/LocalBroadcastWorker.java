@@ -10,8 +10,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Created by seth.yang on 2018/2/11
  */
 public class LocalBroadcastWorker implements Runnable {
-    private BlockingQueue<Object> queue = new LinkedBlockingQueue<> ();
-    private String name;
+    private final BlockingQueue<Object> queue = new LinkedBlockingQueue<> ();
+    private final String name;
 
     private final Object QUIT = new byte[0];
     private final Logger logger = LoggerFactory.getLogger (LocalBroadcastWorker.class);

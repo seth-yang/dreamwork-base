@@ -47,6 +47,10 @@ public class TelnetIO {
      * Creates a TelnetIO object for the given connection.<br>
      * Input- and OutputStreams are properly set and the primary telnet
      * protocol initialization is carried out by the inner IACHandler class.<BR>
+     *
+     * @param in   输入流
+     * @param out  输出流
+     * @param data 连接配置
      */
     public TelnetIO( InputStream in, OutputStream out, ConnectionData data) {
         this (in, out, data, false);
@@ -75,6 +79,7 @@ public class TelnetIO {
      * alone,but CRLF(\r\n), which is a rule of the telnet protocol.
      *
      * @param b Byte to be written.
+     * @throws IOException io 异常
      */
     public void write( byte b) throws IOException {
         //try {
@@ -103,6 +108,7 @@ public class TelnetIO {
      * Method to output an int.
      *
      * @param i Integer to be written.
+     * @throws IOException io 异常
      */
     public void write( int i) throws IOException {
         write( (byte) i);
@@ -112,6 +118,7 @@ public class TelnetIO {
      * Method to write an array of bytes.
      *
      * @param sequence byte[] to be written.
+     * @throws IOException io 异常
      */
     public void write( byte[] sequence) throws IOException {
         for (byte aSequence : sequence) {
@@ -123,6 +130,7 @@ public class TelnetIO {
      * Method to output an array of int' s.
      *
      * @param sequence int [] to write
+     * @throws IOException io 异常
      */
     public void write( int[] sequence) throws IOException {
         for (int aSequence : sequence) {
@@ -134,6 +142,7 @@ public class TelnetIO {
      * Method to write a char.
      *
      * @param ch char to be written.
+     * @throws IOException io 异常
      */
     public void write( char ch) throws IOException {
         write( (byte) ch);
@@ -143,6 +152,7 @@ public class TelnetIO {
      * Method to output a string.
      *
      * @param str String to be written.
+     * @throws IOException io 异常
      */
     public void write( String str) throws IOException {
         write( str.getBytes());
@@ -150,6 +160,7 @@ public class TelnetIO {
 
     /**
      * Method to flush all buffered output.
+     * @throws IOException io 异常
      */
     public void flush() throws IOException {
         //try {
@@ -201,6 +212,7 @@ public class TelnetIO {
      * Method to read a byte from the InputStream.
      * Invokes the IACHandler upon IAC (Byte=255).
      *
+     * @throws IOException io 异常
      * @return int read from stream.
      */
     public int read() throws IOException {
@@ -241,6 +253,7 @@ public class TelnetIO {
     /**
      * This method reads an unsigned 16bit Integer from the stream,
      * its here for getting the NAWS Data Values for height and width.
+     * @throws IOException io 异常
      */
     private int read16int() throws IOException {
 
@@ -267,6 +280,7 @@ public class TelnetIO {
      * Method to read a raw byte from the InputStream.<br>
      * Telnet protocol layer communication is filtered and processed here.
      *
+     * @throws IOException io 异常
      * @return int read from stream.
      */
     private int rawread() throws IOException {
@@ -306,6 +320,10 @@ public class TelnetIO {
      * Checks for the telnet protocol specified  CR followed by NULL or LF<BR>
      * Subsequently reads for the next byte and forwards
      * only a ENTER represented by LF internally.
+     *
+     * @param input 输入值
+     * @throws IOException io 异常
+     * @return 转换结果
      */
     private int stripCRSeq( int input) throws IOException {
         if( input == 13) {
@@ -362,8 +380,7 @@ public class TelnetIO {
     /**
      * Method that represents the answer to the
      * AreYouThere question of the telnet protocol specification
-     * <p/>
-     * Output of the String [HostAdress:Yes]
+     * <p>Output of the String [HostAdress:Yes]
      */
     private void IamHere() {
         try {
@@ -1536,8 +1553,8 @@ public class TelnetIO {
 
     /**
      * Telnet Option: Linemode
-     * <p/>
-     * The infamous line mode option.
+     *
+     * <p>The infamous line mode option.</p>
      */
     protected static final int LINEMODE = 34;
     protected static final int LM_MODE = 1;

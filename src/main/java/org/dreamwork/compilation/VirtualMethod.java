@@ -27,6 +27,7 @@ public class VirtualMethod extends VirtualType<VirtualMethod> {
     /**
      * 设置方法的返回类型
      * @param returnType 合法的 java 类型
+     * @return this
      */
     public VirtualMethod setReturnType (String returnType) {
         this.returnType = returnType;
@@ -36,6 +37,7 @@ public class VirtualMethod extends VirtualType<VirtualMethod> {
     /**
      * 向方法的参数列表中添加一个虚拟参数
      * @param param 虚拟参数
+     * @return this
      */
     public VirtualMethod addParameter (VirtualParameter param) {
         parameters.add (param);
@@ -45,6 +47,7 @@ public class VirtualMethod extends VirtualType<VirtualMethod> {
     /**
      * 向虚拟方法中添加一个合法的 java 语句
      * @param stmt 合法的 java 语句
+     * @return this
      */
     public VirtualMethod addStatement (CharSequence stmt) {
         statements.add (stmt);
@@ -58,6 +61,7 @@ public class VirtualMethod extends VirtualType<VirtualMethod> {
     /**
      * 向虚拟方法中声明异常列表中添加一个合法的 java 异常
      * @param ex 合法的 java 异常
+     * @return this
      */
     public VirtualMethod addException (String ex) {
         exceptions.add (ex);

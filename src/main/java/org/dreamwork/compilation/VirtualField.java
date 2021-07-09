@@ -22,6 +22,7 @@ public class VirtualField extends VirtualType<VirtualField> {
     /**
      * 设置字段类型
      * @param type 合法的 java 类型
+     * @return this
      */
     public VirtualField setType (String type) {
         this.type = type;

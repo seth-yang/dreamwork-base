@@ -8,16 +8,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
-/**
- * IDataCollection&lt;T&gt;:
-int getPageSize ();
-int getPageNo ();
-int getTotalRows ();
-int getTotalPages ();
-void setData (Collection<T> data);
-List<T> getData ();
- * {pageSize:10,pageNo:1,totalRows:18;data:[1,2,3]}
- */
 public class DataCollectionTranslator implements JsonSerializer<IDataCollection<?>>, JsonDeserializer<IDataCollection<?>> {
     @SuppressWarnings ("unchecked")
     public IDataCollection<?> deserialize (JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {

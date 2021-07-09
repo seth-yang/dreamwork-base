@@ -86,6 +86,8 @@ public class SecureUtil {
      * 使用 客户端 公钥来加密请求数据
      * @param buff mina 远程请求
      * @param kek 用于加密 AES 秘钥的公钥或私钥
+     * @return 加密后的结果
+     * @throws Exception 任何异常
      */
     public byte[] encrypt (byte[] buff, Key kek) throws Exception {
         Key key = g.generateKey ();
@@ -118,6 +120,8 @@ public class SecureUtil {
      * 使用 私钥 来解密客户端请求
      * @param buffer 远程请求
      * @param kek 用于解密 AES 秘钥的公钥或私钥
+     * @return 解密后的结果
+     * @throws Exception 任何异常
      */
     public byte[] decrypt (byte[] buffer, Key kek) throws Exception {
         ByteArrayInputStream bais = new ByteArrayInputStream (buffer);

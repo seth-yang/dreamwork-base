@@ -34,8 +34,9 @@ public abstract class RSAKeyFactory {
 
     /**
      * 创建新的工厂实例
+     * @param provider 算法提供程序
      * @return 秘钥工厂实例
-     * @throws Exception
+     * @throws Exception 任何错误
      */
     public static RSAKeyFactory newInstance (Provider provider) throws Exception {
         return findImplementation (provider);
@@ -43,8 +44,9 @@ public abstract class RSAKeyFactory {
 
     /**
      * 获取指定长度的私钥
+     * @param length 私钥长度
      * @return  私钥
-     * @throws Exception
+     * @throws Exception 任何异常
      */
     public abstract PrivateKey getPrivateKey (int length) throws Exception;
 
@@ -52,7 +54,7 @@ public abstract class RSAKeyFactory {
      * 根据指定的私钥，获取公钥
      * @param privateKey 指定的私钥
      * @return  和私钥相匹配的公钥
-     * @throws Exception
+     * @throws Exception 任何异常
      */
     public abstract PublicKey generatePublicKeyByPrivateKey (PrivateKey privateKey) throws Exception;
 

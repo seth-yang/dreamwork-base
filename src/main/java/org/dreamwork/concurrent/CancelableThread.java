@@ -8,9 +8,6 @@ import java.util.Set;
 
 /**
  * 可取消的线程.
- * <p>
- *
- * </p>
  * Created by seth on 16-1-14
  *
  * @since 2.1.0
@@ -29,6 +26,7 @@ public abstract class CancelableThread extends Thread implements ICancelable {
      *     <strong>重要</strong>
      *     <i>所有实现，若无特殊的原因，不应处理 InterruptedException 异常</i>
      * </p>
+     * @throws InterruptedException 中断异常
      */
     protected abstract void doWork () throws InterruptedException;
 
@@ -135,8 +133,8 @@ public abstract class CancelableThread extends Thread implements ICancelable {
      * 线程实现.
      *
      * <p>
-     *     无限调用 <code>{@link #doWork()}</code> 方法，直至线程被取消，<br/>
-     *     -- 或 --<br/>
+     *     无限调用 <code>{@link #doWork()}</code> 方法，直至线程被取消，<br>
+     *     -- 或 --<br>
      *     捕获到 <code>InterruptedException</code> 异常
      * </p>
      * 换句话说，<code>{@link #doWork()}</code> 方法的实现，不应该处理 <code>InterruptedException</code>，将它直接抛出，留给

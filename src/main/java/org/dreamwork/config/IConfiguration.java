@@ -11,7 +11,6 @@ public interface IConfiguration {
      *     <li>当前配置配置文件</li>
      *     <li>System.getEnv (String)</li>
      * </ol>
-     * </p>
      * @param key    参数名
      * @param params 可能的参数值
      * @return 字符串类型的参数值

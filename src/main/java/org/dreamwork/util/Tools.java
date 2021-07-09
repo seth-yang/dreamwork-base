@@ -172,6 +172,7 @@ public class Tools {
      *
      * 若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.
      *
+     * @param buff    数据
      * @param reverse 是否反转字节数组
      * @return 拼装后的整数值
      */
@@ -218,6 +219,7 @@ public class Tools {
      *
      * @param n 整数值
      * @param length 指定的返回的字节数组的长度，其值不能超过4。
+     * @param reverse 是否反转数据
      * @return 拆分后的字节数组
      */
     public static byte[] intToBytes (int n, int length, boolean reverse) {
