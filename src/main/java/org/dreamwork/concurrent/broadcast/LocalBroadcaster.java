@@ -1,5 +1,6 @@
 package org.dreamwork.concurrent.broadcast;
 
+import org.dreamwork.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +17,7 @@ import java.util.concurrent.ExecutorService;
  *
  * Created by seth.yang on 2018/2/9
  */
+@SuppressWarnings ("unused")
 public class LocalBroadcaster implements Runnable, ILocalBroadcastService, LocalBroadcasterMBean {
     private final Logger logger = LoggerFactory.getLogger (LocalBroadcaster.class);
     private final Map<String, List<ILocalBroadcastReceiver>> handlers = Collections.synchronizedMap (new HashMap<> ());
@@ -104,6 +106,12 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
 
     @Override
     public void broadcast (String category, LocalMessage message) {
+        if (!handlers.containsKey (category)) {
+            if (logger.isTraceEnabled ()) {
+                logger.warn ("there's no listener registered for category: {}, ignore this request", category);
+            }
+            return;
+        }
         queue.offer (new MessageWrapper (category, message));
     }
 
@@ -148,6 +156,24 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
     }
 
     private void dispatch (MessageWrapper wrapper) {
+        if (wrapper == null || StringUtil.isEmpty (wrapper.name)) {
+            if (logger.isTraceEnabled ()) {
+                logger.warn ("category is empty. ignore this request");
+            }
+            return;
+        }
+        if (!handlers.containsKey (wrapper.name)) {
+            if (logger.isTraceEnabled ()) {
+                logger.warn ("there's no listener registered for category: {}, ignore this request", wrapper.name);
+            }
+            return;
+        }
+        if (!workers.containsKey (wrapper.name)) {
+            if (logger.isTraceEnabled ()) {
+                logger.warn ("there's no worker named {}, ignore this request", wrapper.name);
+            }
+        }
+
         List<ILocalBroadcastReceiver> copy = new ArrayList<> ();
         synchronized (handlers) {
             for (Map.Entry<String, List<ILocalBroadcastReceiver>> entry : handlers.entrySet ()) {

@@ -18,7 +18,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <felix.maven.plugin.version>2.5.4</felix.maven.plugin.version>
-        <upstream.url>http://218.83.227.228:18081/repository</upstream.url>
+        <upstream.url>http://218.83.227.229:18081/repository</upstream.url>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
