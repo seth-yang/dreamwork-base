@@ -119,6 +119,11 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
         queue.offer (new MessageWrapper (null, QUIT));
     }
 
+    public void shutdownNow () {
+        queue.clear ();
+        queue.offer (new MessageWrapper (null, QUIT));
+    }
+
     @Override
     public void run () {
         Thread.currentThread ().setName (JMX_GROUP_NAME);
@@ -128,7 +133,20 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
                 MessageWrapper msg = queue.take ();
                 if (msg.message == QUIT) {
                     if (logger.isTraceEnabled ()) {
-                        logger.trace ("received a quit command.");
+                        logger.trace ("received a quit command. waiting for all workers shutdown ...");
+                    }
+                    if (!workers.isEmpty ()) {
+//                        workers.values ().forEach (LocalBroadcastWorker::shutdown);
+                        workers.forEach ((key, value) -> {
+                            if (logger.isTraceEnabled ()) {
+                                logger.trace (">>>>>>>>>>>>>>>>>>>>>>>>> shutdown worker:: {}", key);
+                            }
+                            value.shutdown ();
+                            if (logger.isTraceEnabled ()) {
+                                logger.trace ("<<<<<<<<<<<<<<<<<<<<<<<<< worker[{}] stopped.", key);
+                            }
+                        });
+                        workers.clear ();
                     }
                     break;
                 }
@@ -150,7 +168,6 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
             handlers.clear ();
         }
         if (!workers.isEmpty ()) {
-            workers.values ().forEach (LocalBroadcastWorker::shutdown);
             workers.clear ();
         }
     }
