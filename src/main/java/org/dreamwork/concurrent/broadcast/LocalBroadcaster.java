@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 本地消息信使
@@ -25,6 +26,7 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
     private final BlockingQueue<MessageWrapper> queue = new ArrayBlockingQueue<> (16);
     private final LocalMessage QUIT = new LocalMessage ();
     private final ExecutorService executor;
+    private final AtomicInteger counter = new AtomicInteger (0);
 
     private static final String JMX_GROUP_NAME = "org.dreamwork.jmx";
 
@@ -116,12 +118,31 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
     }
 
     public void shutdown () {
+        long start = System.currentTimeMillis ();
         queue.offer (new MessageWrapper (null, QUIT));
+
+        while (!workers.isEmpty ()) {
+            if (System.currentTimeMillis () - start > 30000) {
+//                throw new RuntimeException ("timeout");
+                logger.warn ("shutdown timeout");
+                break;
+            }
+            try {
+                Thread.sleep (1);
+            } catch (InterruptedException ex) {
+                if (logger.isTraceEnabled ()) {
+                    logger.warn (ex.getMessage (), ex);
+                }
+            }
+        }
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("shutdown takes {} ms.", System.currentTimeMillis () - start);
+        }
     }
 
     public void shutdownNow () {
         queue.clear ();
-        queue.offer (new MessageWrapper (null, QUIT));
+        shutdown ();
     }
 
     @Override

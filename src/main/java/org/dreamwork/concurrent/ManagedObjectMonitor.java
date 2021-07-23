@@ -81,7 +81,9 @@ public class ManagedObjectMonitor<T extends IManagedClosable<?>> {
                         } catch (InterruptedException ex) {
                             if (logger.isTraceEnabled ()) {
                                 logger.warn (ex.getMessage (), ex);
+                                logger.warn ("monitor interrupted, break the loop");
                             }
+                            break;
                         } finally {
                             locker.unlock ();
                         }

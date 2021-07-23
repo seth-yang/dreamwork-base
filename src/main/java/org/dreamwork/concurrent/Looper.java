@@ -56,7 +56,10 @@ public class Looper {
     private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor (32);
 
     static {
-        Runtime.getRuntime ().addShutdownHook (new Thread (Looper::exit));
+        Runtime.getRuntime ().addShutdownHook (new Thread (() -> {
+            Thread.currentThread ().setName ("Looper.ShutdownHook");
+            exit ();
+        }));
     }
 
     /**
@@ -471,18 +474,19 @@ public class Looper {
                 }
             }
 
-            pool.remove (name);
-            service.shutdown ();
+            group.interrupt ();
             while (!service.isTerminated ()) {
                 try {
                     Thread.sleep (1);
                 } catch (InterruptedException e) {
-                    //
-//                    e.printStackTrace ();
+                    // ignore
                 }
             }
-            group.list ();
-            group.destroy ();
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("service terminated.");
+            }
+
+            pool.remove (name);
 
             if (logger.isTraceEnabled ()) {
                 logger.trace (name + " removed.");

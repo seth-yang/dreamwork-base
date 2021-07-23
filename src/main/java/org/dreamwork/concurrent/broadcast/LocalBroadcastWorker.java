@@ -12,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class LocalBroadcastWorker implements Runnable {
     private final BlockingQueue<Object> queue = new LinkedBlockingQueue<> ();
     private final String name;
+    private final Object locker = new byte[0];
 
     private final Object QUIT = new byte[0];
     private final Logger logger = LoggerFactory.getLogger (LocalBroadcastWorker.class);
@@ -26,6 +27,13 @@ public class LocalBroadcastWorker implements Runnable {
 
     public void shutdown () {
         queue.offer (QUIT);
+        synchronized (locker) {
+            try {
+                locker.wait ();
+            } catch (InterruptedException e) {
+                e.printStackTrace ();
+            }
+        }
     }
 
     @Override
@@ -49,5 +57,8 @@ public class LocalBroadcastWorker implements Runnable {
             }
         }
         logger.info ("worker shutdown");
+        synchronized (locker) {
+            locker.notifyAll ();
+        }
     }
 }
