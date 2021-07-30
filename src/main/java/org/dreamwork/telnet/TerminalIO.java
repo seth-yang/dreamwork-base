@@ -305,7 +305,7 @@ public class TerminalIO {
             if (in == TerminalIO.DELETE || in == TerminalIO.BACKSPACE) {
                 if (pos > 0) {
                     backspace ();
-                    pos --;
+                    pos--;
                 }
 /*
                 if (strBuf.length () > 0) {
@@ -313,6 +313,9 @@ public class TerminalIO {
                     strBuf.deleteCharAt (strBuf.length () - 1);
                 }
 */
+            } else if (in == 3) { // ctrl-c
+                write ("^C");
+                return "";
             } else {
                 if (!mark) {
                     write ((byte) in);

@@ -24,7 +24,7 @@ public class TextFormater {
             return content.substring (0, columns);
         }
 
-        int d = columns - content.length ();
+        int d = columns - getWidth (content);
         StringBuilder builder = new StringBuilder ();
         if (align == Alignment.Left) {
             builder.append (content);
@@ -75,6 +75,15 @@ public class TextFormater {
         }
         return array;
 */
+    }
+
+    private static int getWidth (String content) {
+        int w = 0;
+        for (char ch : content.toCharArray ()) {
+            if (ch > 255) w += 2;
+            else w ++;
+        }
+        return w;
     }
 
     @SuppressWarnings ("unchecked")
