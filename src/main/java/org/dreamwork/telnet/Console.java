@@ -5,6 +5,7 @@ import org.dreamwork.cli.text.Alignment;
 import org.dreamwork.cli.text.TextFormater;
 import org.dreamwork.telnet.command.Command;
 import org.dreamwork.telnet.command.CommandParser;
+import org.dreamwork.telnet.command.Session;
 import org.dreamwork.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,139 +207,159 @@ public class Console extends TerminalIO implements ICommandLine {
 
         int ch;
         showPrompt ();
-        while (running) {
-            ch = read ();
-            switch (ch) {
-                case 3: // ctrl-c
-                    if (logger.isTraceEnabled ()) {
-                        logger.trace ("we got ctrl-c, break input");
-                    }
-                    write ("^C");
-                    println ();
-                    pos = cursor = 0;
-                    showPrompt ();
-                    break;
-                case UNRECOGNIZED:
-                    if (logger.isTraceEnabled ()) {
-                        logger.trace ("unrecognized input: " + String.format ("%02x", ch));
-                    }
-                    break;
-                case ENTER:
-                    // here, we got something input.
-                    println ();
-                    if (pos > 0) {
-                        String line = new String (buff, 0, pos).trim ();
+
+        Map<Command, Session> caches = new HashMap<> ();
+        try {
+            while (running) {
+                ch = read ();
+                switch (ch) {
+                    case 3: // ctrl-c
                         if (logger.isTraceEnabled ()) {
-                            logger.trace ("received line: " + line);
+                            logger.trace ("we got ctrl-c, break input");
                         }
-                        if ("q".equals (line) || "quit".equals (line) || "exit".equals (line)) {
-                            running = false;
-                            continue;
+                        write ("^C");
+                        println ();
+                        pos = cursor = 0;
+                        showPrompt ();
+                        break;
+                    case UNRECOGNIZED:
+                        if (logger.isTraceEnabled ()) {
+                            logger.trace ("unrecognized input: " + String.format ("%02x", ch));
                         }
+                        break;
+                    case ENTER:
+                        // here, we got something input.
+                        println ();
+                        if (pos > 0) {
+                            String line = new String (buff, 0, pos).trim ();
+                            if (logger.isTraceEnabled ()) {
+                                logger.trace ("received line: " + line);
+                            }
+                            if ("q".equals (line) || "quit".equals (line) || "exit".equals (line)) {
+                                running = false;
+                                continue;
+                            }
 
-                        // save the command anyway
-                        if (history.size () >= MAX_HISTORY_SIZE) {
-                            history.remove (0);
-                        }
-                        history.add (line);
-                        history_index = history.size ();
+                            // save the command anyway
+                            if (history.size () >= MAX_HISTORY_SIZE) {
+                                history.remove (0);
+                            }
+                            history.add (line);
+                            history_index = history.size ();
 
-                        Command command = commandParser.parse (line);
-                        if (command != null) {
-                            if (logger.isTraceEnabled ())
-                                logger.trace ("command = " + command.name);
-
-                            Matcher m = PATTERN.matcher (line);
-                            if (m.matches ()) {
-                                String content = m.group (2);
-                                command.setContent (content);
-                                if (command.isOptionSupported ()) {
-                                    command.parse (TextFormater.parse (content));
+                            Command command = commandParser.parse (line);
+                            if (command != null) {
+                                if (logger.isTraceEnabled ())
+                                    logger.trace ("command = " + command.name);
+                                try {
+                                    Session session = caches.computeIfAbsent (command, key -> new Session ());
+                                    command.setSession (session);
+                                    if (logger.isTraceEnabled ()) {
+                                        logger.trace ("injecting a session into command");
+                                    }
+                                    Matcher m = PATTERN.matcher (line);
+                                    if (m.matches ()) {
+                                        String content = m.group (2);
+                                        command.setContent (content);
+                                        if (command.isOptionSupported ()) {
+                                            command.parse (TextFormater.parse (content));
+                                        }
+                                    }
+                                    command.perform (this);
+                                } finally {
+                                    command.clearSession ();
+                                    if (logger.isTraceEnabled ()) {
+                                        logger.trace ("command session removed");
+                                    }
                                 }
+                            } else {
+                                errorln ("Invalid Command: " + line);
                             }
-                            command.perform (this);
-                        } else {
-                            errorln ("Invalid Command: " + line);
                         }
-                    }
-                    cursor = pos = 0; // reset pos and cursor
-                    showPrompt ();
-                    break;
-                case BACKSPACE :
-                case DELETE:
-                case DEL :
-                    if (cursor > 0) {
-                        if (pos == cursor) {
-                            // the normal mode
-                            backspace ();
-                        } else {
-                            // at first, backspace a char
-                            super.backspace ();
-                            // cursor move left
-                            cursor --;
-                            // copy the cached chars
-                            for (int i = cursor; i < pos; i ++) {
-                                buff [i] = buff [i + 1];
-                                write ((byte) buff[i]);
+                        cursor = pos = 0; // reset pos and cursor
+                        showPrompt ();
+                        break;
+                    case BACKSPACE:
+                    case DELETE:
+                    case DEL:
+                        if (cursor > 0) {
+                            if (pos == cursor) {
+                                // the normal mode
+                                backspace ();
+                            } else {
+                                // at first, backspace a char
+                                super.backspace ();
+                                // cursor move left
+                                cursor--;
+                                // copy the cached chars
+                                for (int i = cursor; i < pos; i++) {
+                                    buff[i] = buff[i + 1];
+                                    write ((byte) buff[i]);
+                                }
+                                // the position move left
+                                pos--;
+                                // move client cursor left (pos - cursor) times.
+                                moveCursor (LEFT, pos - cursor);
                             }
-                            // the position move left
-                            pos --;
-                            // move client cursor left (pos - cursor) times.
-                            moveCursor (LEFT, pos - cursor);
                         }
-                    }
-                    break;
-                case TerminalIO.UP:
-                    if (history_index > 0) {
-                        history_index --;
-                        processHistory ();
-                    }
-                    break;
-                case TerminalIO.DOWN :
-                    if (history_index < history.size () - 1) {
-                        history_index ++;
-                        processHistory ();
-                    }
-                    break;
-                case TerminalIO.LEFT:
-                    if (cursor > 0) {
-                        moveCursor (LEFT, 1);
-                        cursor --;
-                    }
-                    break;
-                case TerminalIO.RIGHT:
-                    if (cursor < pos) {
-                        moveCursor (RIGHT, 1);
-                        cursor ++;
-                    }
-                    break;
-                case TABULATOR :
-                    processTab ();
-                    break;
-                default:
-                    if (cursor != pos) {
-                        insert ((char) ch);
-                    } else {
-                        buff[pos++] = (char) ch;
-                        write ((byte) ch);
-                        cursor ++;
-                    }
-                    break;
-            }
+                        break;
+                    case TerminalIO.UP:
+                        if (history_index > 0) {
+                            history_index--;
+                            processHistory ();
+                        }
+                        break;
+                    case TerminalIO.DOWN:
+                        if (history_index < history.size () - 1) {
+                            history_index++;
+                            processHistory ();
+                        }
+                        break;
+                    case TerminalIO.LEFT:
+                        if (cursor > 0) {
+                            moveCursor (LEFT, 1);
+                            cursor--;
+                        }
+                        break;
+                    case TerminalIO.RIGHT:
+                        if (cursor < pos) {
+                            moveCursor (RIGHT, 1);
+                            cursor++;
+                        }
+                        break;
+                    case TABULATOR:
+                        processTab ();
+                        break;
+                    default:
+                        if (cursor != pos) {
+                            insert ((char) ch);
+                        } else {
+                            buff[pos++] = (char) ch;
+                            write ((byte) ch);
+                            cursor++;
+                        }
+                        break;
+                }
 
-            if (ch != TABULATOR) {
-                tab_mode = false;
-            }
+                if (ch != TABULATOR) {
+                    tab_mode = false;
+                }
 
-            try {
-                Thread.sleep (1);
-            } catch (InterruptedException e) {
-                e.printStackTrace ();
+                try {
+                    Thread.sleep (1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace ();
+                }
             }
+        } finally {
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("clearing all cached session");
+                logger.trace ("{}", caches.keySet ());
+            }
+            caches.clear ();
+            clear ();
+            home ();
         }
-
-        clear ();
-        home ();
     }
 
     private void insert (char ch) throws IOException {
