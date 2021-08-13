@@ -123,6 +123,12 @@ public class Console extends TerminalIO implements ICommandLine {
         }
     }
 
+    public void removeCommand (Command... commands) {
+        if (commandParser != null) {
+            commandParser.removeCommand (commands);
+        }
+    }
+
     /**
      * 获取命令解析器
      * @return 命令解析器
@@ -251,28 +257,35 @@ public class Console extends TerminalIO implements ICommandLine {
                             if (command != null) {
                                 if (logger.isTraceEnabled ())
                                     logger.trace ("command = " + command.name);
-                                try {
-                                    Session session = caches.computeIfAbsent (command, key -> new Session ());
-                                    command.setSession (session);
-                                    if (logger.isTraceEnabled ()) {
-                                        logger.trace ("injecting a session into command");
-                                    }
-                                    Matcher m = PATTERN.matcher (line);
-                                    if (m.matches ()) {
-                                        String content = m.group (2);
-                                        command.setContent (content);
-                                        if (command.isOptionSupported ()) {
-                                            command.parse (TextFormater.parse (content));
+                                if (executable (command)) {
+                                    try {
+                                        Session session = caches.computeIfAbsent (command, key -> new Session ());
+                                        command.setSession (session);
+                                        if (logger.isTraceEnabled ()) {
+                                            logger.trace ("injecting a session into command");
+                                        }
+                                        Matcher m = PATTERN.matcher (line);
+                                        if (m.matches ()) {
+                                            String content = m.group (2);
+                                            command.setContent (content);
+                                            if (command.isOptionSupported ()) {
+                                                command.parse (TextFormater.parse (content));
+                                            }
+                                        }
+                                        command.perform (this);
+                                    } catch (Exception ex) {
+                                        logger.warn (ex.getMessage (), ex);
+                                        if (ex instanceof IOException) {
+                                            throw (IOException) ex;
+                                        }
+                                    } finally {
+                                        command.clearSession ();
+                                        if (logger.isTraceEnabled ()) {
+                                            logger.trace ("command session removed");
                                         }
                                     }
-                                    command.perform (this);
-                                } catch (Exception ex) {
-                                    logger.warn (ex.getMessage (), ex);
-                                } finally {
-                                    command.clearSession ();
-                                    if (logger.isTraceEnabled ()) {
-                                        logger.trace ("command session removed");
-                                    }
+                                } else {
+                                    errorln ("you cannot execute this command: " + command.name);
                                 }
                             } else {
                                 errorln ("Invalid Command: " + line);
@@ -364,6 +377,10 @@ public class Console extends TerminalIO implements ICommandLine {
         }
     }
 
+    public boolean executable (Command command) {
+        return true;
+    }
+
     private void insert (char ch) throws IOException {
         int length = pos - cursor;
         char[] tmp = new char[length];
@@ -384,8 +401,17 @@ public class Console extends TerminalIO implements ICommandLine {
             tmp = tmp.trim ();
 
             List<Command> list = commandParser.guess (tmp);
-
             if (list != null && list.size () > 0) {
+                // 过滤掉当前不能执行的命令
+                List<Command> toDelete = new ArrayList<> ();
+                list.forEach (command -> {
+                    if (!executable (command)) {
+                        toDelete.add (command);
+                    }
+                });
+                if (!toDelete.isEmpty ()) {
+                    list.removeAll (toDelete);
+                }
                 // something valid.
                 if (list.size () == 1) {
                     // goal. show the command guess
@@ -426,7 +452,7 @@ public class Console extends TerminalIO implements ICommandLine {
                         }
                     }
                     tab_mode = false;
-                } else {
+                } else if (!list.isEmpty ()) {
                     if (tab_mode) {
                         println ();
                         clearBuffer ();

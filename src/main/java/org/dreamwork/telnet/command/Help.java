@@ -13,7 +13,7 @@ import java.util.List;
  * Created by seth.yang on 2018/9/20
  */
 public class Help extends Command {
-    private CommandParser commandParser;
+    private final CommandParser commandParser;
     private Command target;
 
     public Help (CommandParser commandParser) {
@@ -97,67 +97,81 @@ public class Help extends Command {
     public void showHelp (Console console) throws IOException {
         int columns = console.getColumns ();
         List<Command> list = commandParser.getValidCommands ();
+        if (list != null && !list.isEmpty ()) {
+            List<Command> toDelete = new ArrayList<> ();
+            list.forEach (command -> {
+                if (!console.executable (command)) {
+                    toDelete.add (command);
+                }
+            });
+            if (!toDelete.isEmpty ()) {
+                list.removeAll (toDelete);
+            }
 
-        int[] fields = new int[3];
-        for (Command cmd : list) {
-            String name  = cmd.name;
-            String alias = cmd.alias;
+            int[] fields = new int[3];
+            for (Command cmd : list) {
+                String name = cmd.name;
+                String alias = cmd.alias;
 
-            if (!StringUtil.isEmpty (name)) {
-                name = name.trim ();
-                if (name.length () > fields [0]) {
-                    fields [0] = name.length ();
+                if (!StringUtil.isEmpty (name)) {
+                    name = name.trim ();
+                    if (name.length () > fields[0]) {
+//                        fields[0] = name.length ();
+                        fields[0] = CommandUtilities.textLength (name);
+                    }
+                }
+
+                if (!StringUtil.isEmpty (alias)) {
+                    alias = this.alias.trim ();
+                    if (alias.length () > fields[1]) {
+                        fields[1] = alias.length ();
+                    }
                 }
             }
 
-            if (!StringUtil.isEmpty (alias)) {
-                alias = this.alias.trim ();
-                if (alias.length () > fields [1]) {
-                    fields [1] = alias.length ();
+            fields[0] += 4;
+            fields[1] += 4;
+            fields[2] = columns - fields[0] - fields[1];
+            int skip = fields[0] + fields[1];
+            for (Command cmd : list) {
+                String name = cmd.name;
+                String alias = cmd.alias;
+                String desc = cmd.desc;
+
+                if (CommandUtilities.NEED_CONVERT) {
+                    name = new String (name.getBytes (), CommandUtilities.CHARSET);
                 }
-            }
-        }
 
-        fields [0] += 4;
-        fields [1] += 4;
-        fields [2]  = columns - fields [0] - fields [1];
-        int skip    = fields [0] + fields [1];
-        for (Command cmd : list) {
-            String name  = cmd.name;
-            String alias = cmd.alias;
-            String desc  = cmd.desc;
+                if (StringUtil.isEmpty (name)) {
+                    name = "";
+                }
+                name = TextFormater.fill (name.trim (), ' ', fields[0], Alignment.Left);
+                console.write (name);
 
-            if (StringUtil.isEmpty (name)) {
-                name = "";
-            }
-            name = TextFormater.fill (name.trim (), ' ', fields [0], Alignment.Left);
-            console.write (name);
+                if (StringUtil.isEmpty (alias)) {
+                    alias = "";
+                }
+                alias = TextFormater.fill (alias.trim (), ' ', fields[1], Alignment.Left);
+                console.write (alias);
 
-            if (StringUtil.isEmpty (alias)) {
-                alias = "";
-            }
-            alias = TextFormater.fill (alias.trim (), ' ', fields[1], Alignment.Left);
-            console.write (alias);
+                if (!StringUtil.isEmpty (desc)) {
+                    desc = desc.trim ();
+                    if (CommandUtilities.NEED_CONVERT) {
+                        desc = new String (desc.getBytes (), CommandUtilities.CHARSET);
+                    }
+                    if (CommandUtilities.textLength (desc) > fields[2]) {
+                        while (CommandUtilities.textLength (desc) > fields[2]) {
+                            String temp = desc.substring (0, fields[2]);
+                            console.println (temp);
 
-            if (!StringUtil.isEmpty (desc)) {
-                desc = desc.trim ();
-                if (desc.length () <= fields [2]) {
+                            desc = desc.substring (fields[2]);
+                            console.moveCursor (TerminalIO.RIGHT, skip);
+                        }
+                    }
                     console.println (desc);
                 } else {
-                    while (desc.length () > fields [2]) {
-                        String temp = desc.substring (0, fields [2]);
-                        console.println (temp);
-
-                        desc = desc.substring (fields [2]);
-                        console.moveCursor (TerminalIO.RIGHT, skip);
-                    }
-
-                    if (desc.length () > 0) {
-                        console.println (desc);
-                    }
+                    console.println ();
                 }
-            } else {
-                console.println ();
             }
         }
     }

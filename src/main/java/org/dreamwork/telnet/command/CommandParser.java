@@ -62,6 +62,21 @@ public abstract class CommandParser {
         }
     }
 
+    public synchronized void removeCommand (Command... commands) {
+        if (commands == null) {
+            throw new NullPointerException ();
+        }
+
+        if (commands.length > 0) for (Command command : commands) {
+            if (!StringUtil.isEmpty (command.alias)) {
+                mappedByAlias.remove (command.alias);
+            }
+            if (!StringUtil.isEmpty (command.name)) {
+                mappedByName.remove (command.name);
+            }
+        }
+    }
+
     public synchronized Command getByName (String name) {
         return mappedByName.get (name);
     }
