@@ -266,6 +266,8 @@ public class Console extends TerminalIO implements ICommandLine {
                                         }
                                     }
                                     command.perform (this);
+                                } catch (Exception ex) {
+                                    logger.warn (ex.getMessage (), ex);
                                 } finally {
                                     command.clearSession ();
                                     if (logger.isTraceEnabled ()) {

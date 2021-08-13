@@ -1,9 +1,11 @@
 package org.dreamwork.telnet.command;
 
+import org.dreamwork.telnet.Console;
+import org.dreamwork.telnet.TerminalIO;
 import org.dreamwork.util.StringUtil;
 
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Created by seth.yang on 2018/9/20
