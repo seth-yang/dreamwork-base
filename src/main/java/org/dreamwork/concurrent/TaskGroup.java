@@ -25,7 +25,7 @@ public class TaskGroup<T> {
     private Monitor monitor;
 
     private static final Object QUIT = new byte[0];
-    private static final String KEY_MONITOR_ENABLED = "org.dreamwork.task.group.monitor";
+    private static final String KEY_MONITOR_ENABLED = "org.dreamwork.task.group.monitor.enabled";
     private static final String KEY_MONITOR_PORT    = "org.dreamwork.task.group.monitor.port";
     private static final int DEFAULT_MONITOR_PORT   = 43210;
 
@@ -75,6 +75,13 @@ public class TaskGroup<T> {
             try {
                 queue.put (QUIT);
             } catch (InterruptedException ignore) {
+            }
+        }
+        if (monitor != null) {
+            try {
+                monitor.unbind ();
+            } catch (IOException ex) {
+                ex.printStackTrace ();
             }
         }
         executor.shutdown ();
@@ -135,13 +142,12 @@ public class TaskGroup<T> {
     }
 
     private static final class Monitor {
-        private int port;
+        private final int port;
         private volatile boolean running = true;
         private DatagramSocket server;
         private Thread thread;
-        private ExecutorService executor = Executors.newCachedThreadPool ();
 
-        private List<DatagramSocket> clients = new ArrayList<> ();
+        private final List<DatagramSocket> clients = new ArrayList<> ();
 
         private Monitor (int port) {
             this.port = port;
@@ -173,6 +179,9 @@ public class TaskGroup<T> {
             if (server != null) {
                 server.disconnect ();
                 server.close ();
+            }
+            if (thread != null) {
+                thread.interrupt ();
             }
         }
     }
