@@ -1,7 +1,7 @@
 package org.dreamwork.config;
 
 import org.dreamwork.cli.text.Alignment;
-import org.dreamwork.cli.text.TextFormater;
+import org.dreamwork.cli.text.TextFormatter;
 import org.dreamwork.util.StringUtil;
 
 import java.util.*;
@@ -200,11 +200,9 @@ public class PropertyConfiguration implements IConfiguration {
         }
 
         char[] line = new char[max], empty = new char[width + 2];
-        for (int i = 0; i < empty.length; i ++) {
-            empty [i] = ' ';
-        }
+        Arrays.fill (empty, ' ');
         for (String[] p : values) {
-            System.out.print (TextFormater.fill (p[0], ' ', width, Alignment.Right));
+            System.out.print (TextFormatter.fill (p[0], ' ', width, Alignment.Right));
             System.out.print ("  ");
             String value = p[1];
             if (value.length () > max) {

@@ -1,7 +1,7 @@
 package org.dreamwork.cli;
 
 import com.google.gson.Gson;
-import org.dreamwork.cli.text.TextFormater;
+import org.dreamwork.cli.text.TextFormatter;
 import org.dreamwork.gson.GsonHelper;
 import org.dreamwork.util.StringUtil;
 
@@ -60,16 +60,16 @@ public class ArgumentParser {
             }
             String m = arg.required ? "<*>" : "";
 
-            out.print (TextFormater.fill (m, ' ', column_width[0], Left));
-            out.print (TextFormater.fill (shortOption, ' ', column_width[1], Left));
-            out.print (TextFormater.fill (longOption, ' ', column_width[2], Left));
-            out.print (TextFormater.fill (arg.description, ' ', column_width[3], Left));
+            out.print (TextFormatter.fill (m, ' ', column_width[0], Left));
+            out.print (TextFormatter.fill (shortOption, ' ', column_width[1], Left));
+            out.print (TextFormatter.fill (longOption, ' ', column_width[2], Left));
+            out.print (TextFormatter.fill (arg.description, ' ', column_width[3], Left));
             out.println ();
             if (arg.values != null) for (ArgumentValue av : arg.values) {
-                out.print (TextFormater.fill (" ", ' ', column_width[0], Left));
-                out.print (TextFormater.fill (" ", ' ', column_width[1], Left));
-                out.print (TextFormater.fill (" ", ' ', column_width[2], Left));
-                out.print (TextFormater.fill ("  " + av.value + " - " + av.desc, ' ', column_width[3], Left));
+                out.print (TextFormatter.fill (" ", ' ', column_width[0], Left));
+                out.print (TextFormatter.fill (" ", ' ', column_width[1], Left));
+                out.print (TextFormatter.fill (" ", ' ', column_width[2], Left));
+                out.print (TextFormatter.fill ("  " + av.value + " - " + av.desc, ' ', column_width[3], Left));
                 out.println ();
             }
         }

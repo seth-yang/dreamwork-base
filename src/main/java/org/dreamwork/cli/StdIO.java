@@ -3,10 +3,12 @@ package org.dreamwork.cli;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by seth.yang on 2018/11/7
  */
+@SuppressWarnings ("unused")
 public class StdIO implements ICommandLine {
     private BufferedReader reader;
 
@@ -52,12 +54,31 @@ public class StdIO implements ICommandLine {
     public synchronized String readLine () {
         try {
             if (reader == null) {
-                reader = new BufferedReader (new InputStreamReader (System.in, "utf-8"));
+                reader = new BufferedReader (new InputStreamReader (System.in, StandardCharsets.UTF_8));
             }
 
             return reader.readLine ();
         } catch (IOException ex) {
             throw new RuntimeException (ex);
         }
+    }
+
+    @Override
+    public Appendable append (CharSequence csq) throws IOException {
+        print (csq);
+        return this;
+    }
+
+    @Override
+    public Appendable append (CharSequence csq, int start, int end) throws IOException {
+        CharSequence cs = csq == null ? null : csq.subSequence (start, end);
+        print (cs);
+        return this;
+    }
+
+    @Override
+    public Appendable append (char c) throws IOException {
+        print (c);
+        return this;
     }
 }

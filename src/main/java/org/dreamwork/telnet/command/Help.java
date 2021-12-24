@@ -1,8 +1,9 @@
 package org.dreamwork.telnet.command;
 
 import org.dreamwork.cli.text.Alignment;
-import org.dreamwork.cli.text.TextFormater;
-import org.dreamwork.telnet.*;
+import org.dreamwork.cli.text.TextFormatter;
+import org.dreamwork.telnet.Console;
+import org.dreamwork.telnet.TerminalIO;
 import org.dreamwork.util.StringUtil;
 
 import java.io.IOException;
@@ -145,13 +146,13 @@ public class Help extends Command {
                 if (StringUtil.isEmpty (name)) {
                     name = "";
                 }
-                name = TextFormater.fill (name.trim (), ' ', fields[0], Alignment.Left);
+                name = TextFormatter.fill (name.trim (), ' ', fields[0], Alignment.Left);
                 console.write (name);
 
                 if (StringUtil.isEmpty (alias)) {
                     alias = "";
                 }
-                alias = TextFormater.fill (alias.trim (), ' ', fields[1], Alignment.Left);
+                alias = TextFormatter.fill (alias.trim (), ' ', fields[1], Alignment.Left);
                 console.write (alias);
 
                 if (!StringUtil.isEmpty (desc)) {

@@ -2,7 +2,7 @@ package org.dreamwork.telnet;
 
 import org.dreamwork.cli.ICommandLine;
 import org.dreamwork.cli.text.Alignment;
-import org.dreamwork.cli.text.TextFormater;
+import org.dreamwork.cli.text.TextFormatter;
 import org.dreamwork.telnet.command.Command;
 import org.dreamwork.telnet.command.CommandParser;
 import org.dreamwork.telnet.command.Session;
@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 /**
  * Created by seth.yang on 2018/9/20
  */
+@SuppressWarnings ("unused")
 public class Console extends TerminalIO implements ICommandLine {
     private static final int MAX_HISTORY_SIZE  = 255;
     private static final int DEFAULT_BUFF_SIZE = 1024;
@@ -269,7 +270,7 @@ public class Console extends TerminalIO implements ICommandLine {
                                             String content = m.group (2);
                                             command.setContent (content);
                                             if (command.isOptionSupported ()) {
-                                                command.parse (TextFormater.parse (content));
+                                                command.parse (TextFormatter.parse (content));
                                             }
                                         }
                                         command.perform (this);
@@ -500,7 +501,7 @@ public class Console extends TerminalIO implements ICommandLine {
 
         while (p < result.size ()) {
             text = result.get (p ++);
-            write (TextFormater.fill (text, ' ', width, Alignment.Left));
+            write (TextFormatter.fill (text, ' ', width, Alignment.Left));
             c ++;
             if (c == cells) {
                 println ();
@@ -655,5 +656,24 @@ public class Console extends TerminalIO implements ICommandLine {
         }
 
         return null;
+    }
+
+    @Override
+    public Appendable append (CharSequence csq) throws IOException {
+        print (csq);
+        return this;
+    }
+
+    @Override
+    public Appendable append (CharSequence csq, int start, int end) throws IOException {
+        if (csq == null) print ("<null>");
+        else print (csq.subSequence (start, end));
+        return this;
+    }
+
+    @Override
+    public Appendable append (char c) throws IOException {
+        print (c);
+        return this;
     }
 }

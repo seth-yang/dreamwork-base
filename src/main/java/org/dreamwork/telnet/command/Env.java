@@ -1,7 +1,7 @@
 package org.dreamwork.telnet.command;
 
 import org.dreamwork.cli.text.Alignment;
-import org.dreamwork.cli.text.TextFormater;
+import org.dreamwork.cli.text.TextFormatter;
 import org.dreamwork.telnet.Console;
 import org.dreamwork.telnet.TerminalIO;
 import org.dreamwork.util.StringUtil;
@@ -38,7 +38,7 @@ public class Env extends Command {
         int width = console.getColumns () - max;
         for (String key : keys) {
             String value = env.get (key);
-            console.write (TextFormater.fill (key, ' ', max, Alignment.Left));
+            console.write (TextFormatter.fill (key, ' ', max, Alignment.Left));
             if (StringUtil.isEmpty (value)) {
                 console.println ();
                 continue;

@@ -10,7 +10,7 @@ import static org.dreamwork.cli.CommandLineHelper.*;
 /**
  * Created by seth.yang on 2018/11/7
  */
-public interface ICommandLine {
+public interface ICommandLine extends Appendable {
     String CRLF = "\r\n";
 
     void error (String message) throws IOException;

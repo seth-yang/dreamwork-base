@@ -1,7 +1,7 @@
 package org.dreamwork.telnet.command;
 
 import org.dreamwork.cli.text.Alignment;
-import org.dreamwork.cli.text.TextFormater;
+import org.dreamwork.cli.text.TextFormatter;
 import org.dreamwork.telnet.Console;
 import org.dreamwork.telnet.TerminalIO;
 
@@ -63,7 +63,7 @@ public class CommandUtilities {
                 if (i > 0) {
                     console.print ("    ");
                 }
-                console.print (TextFormater.fill (header, ' ', matrix.sizes[i], alignments[i]));
+                console.print (TextFormatter.fill (header, ' ', matrix.sizes[i], alignments[i]));
             }
             console.println ();
 
@@ -82,7 +82,7 @@ public class CommandUtilities {
                 if (i > 0) {
                     console.print ("    ");
                 }
-                console.print (TextFormater.fill (line[i], ' ', matrix.sizes[i], alignments[i]));
+                console.print (TextFormatter.fill (line[i], ' ', matrix.sizes[i], alignments[i]));
             }
             console.println ();
         }
