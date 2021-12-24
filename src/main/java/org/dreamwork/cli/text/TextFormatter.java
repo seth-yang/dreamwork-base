@@ -70,7 +70,10 @@ public class TextFormatter {
     private static int getWidth (String content) {
         int w = 0;
         for (char ch : content.toCharArray ()) {
-            if (ch > 255) w += 2;
+            if (ch >= 0x4e00 && ch <= 0x9fa5) {
+                // chinese characters
+                w += 2;
+            }
             else w ++;
         }
         return w;
