@@ -414,15 +414,6 @@ public class Tools {
      * @return ip地址的字符串形式
      */
     public static String ipToString (int ip) {
-/*
-        byte[] buff = intToBytes (ip);
-        StringBuilder builder = new StringBuilder ();
-        for (byte b : buff) {
-            if (builder.length () > 0) builder.append ('.');
-            builder.append (b & 0xff);
-        }
-        return builder.toString ();
-*/
         char[] buff = new char[16];
         int pos     = 15, offset, n, m, r;
         for (int i = 3; i >= 0; i --) {
@@ -431,8 +422,8 @@ public class Tools {
             }
             offset = (3 - i) << 3;
             m = n = (ip >> offset) & 0xff;
-            while (m > 10) {
-                while (n > 10) {
+            while (m >= 10) {
+                while (n >= 10) {
                     r = n / 10;
                     n = n - ((r << 3) + (r << 1));
                 }
@@ -441,7 +432,7 @@ public class Tools {
             }
             buff [pos --] = (char) (m + '0');
         }
-        return new String (buff, pos, 16 - pos);
+        return new String (buff, pos + 1, 15 - pos);
     }
 
     /**
@@ -469,14 +460,6 @@ public class Tools {
         }
         n = (n << 8) | t;
         return n;
-/*
-        String[] tmp = ip.split ("\\.");
-        byte[] buff = new byte[4];
-        for (int i = 0; i < 4; i ++) {
-            buff [i] = (byte) (Integer.parseInt (tmp [i]) & 0xff);
-        }
-        return bytesToInt (buff);
-*/
     }
 
     public static byte[] memset (byte value, int length) {
@@ -486,9 +469,7 @@ public class Tools {
     }
 
     public static void memset (byte[] buff, byte value) {
-        for (int i = 0; i < buff.length; i ++) {
-            buff [i] = value;
-        }
+        Arrays.fill (buff, value);
     }
 
     public static void memset (byte[] buff, byte value, int start, int length) {

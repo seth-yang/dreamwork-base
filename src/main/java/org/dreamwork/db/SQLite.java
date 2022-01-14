@@ -37,6 +37,8 @@ public class SQLite extends AbstractDatabase {
         limitSupported = true;
     }
 
+    protected SQLite () {}
+
     private String path;
 
     @Override

@@ -1,11 +1,13 @@
 package org.dreamwork.cli.text;
 
 import org.dreamwork.config.KeyValuePair;
+import org.dreamwork.util.ReferenceUtil;
 import org.dreamwork.util.StringUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings ("unused")
 public class TextFormatter {
@@ -175,6 +177,53 @@ public class TextFormatter {
 
     public static void printTable (List<List<?>> data, List<String> header) throws IOException {
         printTable (System.out, data, header, null, true);
+    }
+
+    @SuppressWarnings ("unchecked")
+    public static void printTable (Appendable printer, List<?> data, String[] fields, List<String> header, List<Alignment> alignments, boolean showDivider) throws IOException {
+        Object[][] _data = null;
+        String[]   _header = null;
+        Alignment[] _alignments = null;
+
+        if (header != null) _header = header.toArray (new String[0]);
+        if (alignments != null) _alignments = alignments.toArray (new Alignment[0]);
+
+        if (data != null && !data.isEmpty ()) {
+            _data = new Object[data.size ()][];
+            for (int i = 0; i < data.size (); i ++) {
+                Object o = data.get (i);
+                if (o == null) {
+                    _data[i] = new Object[0];
+                } else {
+                    if (o instanceof Map) {
+                        Map<String, ?> m = (Map<String, ?>) o;
+                        _data[i] = new Object[m.size ()];
+                        for (int j = 0; j < fields.length; j++) {
+                            _data[i][j] = m.get (fields[j]);
+                        }
+                    } else if (o instanceof Number) {
+                        throw new RuntimeException ("unsupported data type.");
+                    } else if (o instanceof List) {
+                        throw new RuntimeException ("unsupported data type. you may call printTable (Appendable, " +
+                                "List<List<?>>, List<String>, List<Alignment>, boolean) version");
+                    } else {
+                        Class<?> type = o.getClass ();
+                        if (type.isPrimitive ()) {
+                            throw new RuntimeException ("unsupported data type.");
+                        }
+                        _data[i] = new Object[fields.length];
+                        try {
+                            for (int j = 0; j < fields.length; j++) {
+                                _data[i][j] = ReferenceUtil.get (o, fields[j]);
+                            }
+                        } catch (Exception ex) {
+                            throw new RuntimeException (ex);
+                        }
+                    }
+                }
+            }
+        }
+        printTable (printer, _data, _header, _alignments, showDivider);
     }
 
     public static void printTable (Appendable printer, List<List<?>> data, List<String> header, List<Alignment> alignments, boolean showDivider) throws IOException {
