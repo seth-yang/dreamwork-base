@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
 
 /**
  * 分组队列.
@@ -26,16 +25,16 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
     private final Logger logger = LoggerFactory.getLogger (GroupedQueue.class);
     private final ExecutorService executor = Executors.newCachedThreadPool ();
     private final Map<K, GroupProcessor<K, T>> clutch = Collections.synchronizedMap (new HashMap<> ());
-    private final BiConsumer<Integer, T> consumer;
+    private final IGroupedProcessor<K, T> processor;
     private int capacity = 32;
 
     /**
      * 构造函数
      * @param processor 消息处理器. 处理器的第一个参数是队列内的处理次数，第二参数为消息对象
      */
-    public GroupedQueue (BiConsumer<Integer, T> processor) {
+    public GroupedQueue (IGroupedProcessor<K, T> processor) {
         Objects.requireNonNull (processor, "processor cannot be null");
-        this.consumer = processor;
+        this.processor = processor;
     }
 
     /**
@@ -43,7 +42,7 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
      * @param capacity  队列容量
      * @param processor 消息处理器. 处理器的第一个参数是队列内的处理次数，第二参数为消息对象
      */
-    public GroupedQueue (int capacity, BiConsumer<Integer, T> processor) {
+    public GroupedQueue (int capacity, IGroupedProcessor<K, T> processor) {
         this (processor);
         this.capacity = capacity;
     }
@@ -78,7 +77,7 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
                 p.add (value);
                 executor.execute (() -> {
                     Thread.currentThread ().setName (String.format ("processor-#%s", index));
-                    p.process (consumer);
+                    p.process (processor);
                 });
                 return p;
             });
@@ -94,7 +93,7 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
         executor.shutdownNow ();
     }
 
-    private static final class GroupProcessor<K, T> {
+    private static class GroupProcessor<K, T> {
         private final Logger logger = LoggerFactory.getLogger (GroupProcessor.class);
         private final K key;
         private final GroupedQueue<K, T> container;
@@ -111,22 +110,28 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
             this.queue.push (message);
         }
 
-        void process (BiConsumer<Integer, T> consumer) {
-            int index = 0;
-            while (queue.size () > 0) {
-                try {
-                    consumer.accept (index ++, queue.take ());
-                } catch (Exception ex) {
-                    logger.warn (ex.getLocalizedMessage (), ex);
+        void process (IGroupedProcessor<K, T> processor) {
+            try {
+                processor.setup (key);
+                while (queue.size () > 0) {
+                    try {
+                        processor.process (queue.take ());
+                    } catch (Exception ex) {
+                        logger.warn (ex.getMessage (), ex);
+                    }
+                    if (logger.isTraceEnabled ()) {
+                        count ++;
+                    }
                 }
+                processor.cleanup (key);
+            } catch (Exception ex) {
+                logger.warn (ex.getMessage ());
+            } finally {
                 if (logger.isTraceEnabled ()) {
-                    count ++;
+                    logger.trace ("{} jobs done in processor[{}]. remove the group from clutch", count, key);
                 }
+                container.remove (key);
             }
-            if (logger.isTraceEnabled ()) {
-                logger.trace ("{} jobs done in processor[{}]. remove the group from clutch", count, key);
-            }
-            container.remove (key);
         }
     }
 }
