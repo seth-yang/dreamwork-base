@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * 分组队列.
@@ -26,14 +26,14 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
     private final Logger logger = LoggerFactory.getLogger (GroupedQueue.class);
     private final ExecutorService executor = Executors.newCachedThreadPool ();
     private final Map<K, GroupProcessor<K, T>> clutch = Collections.synchronizedMap (new HashMap<> ());
-    private final Consumer<T> consumer;
+    private final BiConsumer<Integer, T> consumer;
     private int capacity = 32;
 
     /**
      * 构造函数
-     * @param processor 消息处理器
+     * @param processor 消息处理器. 处理器的第一个参数是队列内的处理次数，第二参数为消息对象
      */
-    public GroupedQueue (Consumer<T> processor) {
+    public GroupedQueue (BiConsumer<Integer, T> processor) {
         Objects.requireNonNull (processor, "processor cannot be null");
         this.consumer = processor;
     }
@@ -41,9 +41,9 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
     /**
      * 构造函数
      * @param capacity  队列容量
-     * @param processor 消息处理器
+     * @param processor 消息处理器. 处理器的第一个参数是队列内的处理次数，第二参数为消息对象
      */
-    public GroupedQueue (int capacity, Consumer<T> processor) {
+    public GroupedQueue (int capacity, BiConsumer<Integer, T> processor) {
         this (processor);
         this.capacity = capacity;
     }
@@ -94,7 +94,7 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
         executor.shutdownNow ();
     }
 
-    public static final class GroupProcessor<K, T> {
+    private static final class GroupProcessor<K, T> {
         private final Logger logger = LoggerFactory.getLogger (GroupProcessor.class);
         private final K key;
         private final GroupedQueue<K, T> container;
@@ -107,14 +107,15 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
             this.queue = new CircleArrayQueue<> (capacity);
         }
 
-        public void add (T message) {
+        void add (T message) {
             this.queue.push (message);
         }
 
-        public void process (Consumer<T> consumer) {
+        void process (BiConsumer<Integer, T> consumer) {
+            int index = 0;
             while (queue.size () > 0) {
                 try {
-                    consumer.accept (queue.take ());
+                    consumer.accept (index ++, queue.take ());
                 } catch (Exception ex) {
                     logger.warn (ex.getLocalizedMessage (), ex);
                 }
