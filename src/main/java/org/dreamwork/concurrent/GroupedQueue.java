@@ -115,7 +115,7 @@ public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
                 processor.setup (key);
                 while (queue.size () > 0) {
                     try {
-                        processor.process (queue.take ());
+                        processor.process (key, queue.take ());
                     } catch (Exception ex) {
                         logger.warn (ex.getMessage (), ex);
                     }
