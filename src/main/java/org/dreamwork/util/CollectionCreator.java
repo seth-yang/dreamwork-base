@@ -7,6 +7,15 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings ("unused")
 public class CollectionCreator {
+    @SafeVarargs
+    public static<K, V> Map<K, V> asMap (Function<V, K> keyTranslator, V... args) {
+        if (args.length == 0) return Collections.emptyMap ();
+        if (keyTranslator == null)
+            throw new NullPointerException ();
+
+        return Arrays.stream (args).collect (Collectors.toMap (keyTranslator, e -> e));
+    }
+
     @SuppressWarnings ("unchecked")
     public static<K, V> Map<K, V> asMap (Object... args) {
         if (args.length == 0) return Collections.emptyMap ();
