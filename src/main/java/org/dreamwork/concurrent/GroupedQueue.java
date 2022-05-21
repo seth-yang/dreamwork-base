@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 
 /**
  * 分组队列.
- * 已 {@code K} 分组的消息 {@code T} 队列.
+ * 以 {@code K} 分组的消息 {@code T} 队列.
  * 不同的分组将尽量并行处理；而相同的分组则按 {@code FIFO} 原则依次处理。相同分组的处理器将在同一个线程内处理，
  * 故处理器<strong>不应该阻塞当前线程</strong>
  * @param <K> 分组键值
