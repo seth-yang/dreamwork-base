@@ -49,11 +49,12 @@ public class Looper {
     private static final Map<Long, ScheduledFuture<?>> futures = new HashMap<> ();
     private static final Logger logger = LoggerFactory.getLogger (Looper.class);
     private static final ReentrantReadWriteLock locker         = new ReentrantReadWriteLock ();
+    private static final AtomicInteger      namedTaskCount     = new AtomicInteger (0);
 
-    private static ExecutorService          executor  = Executors.newFixedThreadPool (16);
-    private static ExecutorService          namedExecutor = Executors.newCachedThreadPool ();
-    private static ScheduledExecutorService monitor   = new ScheduledThreadPoolExecutor (1);
-    private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor (32);
+    private static ExecutorService          executor/*  = Executors.newFixedThreadPool (16)*/;
+    private static ExecutorService          namedExecutor/* = Executors.newCachedThreadPool ()*/;
+//    private static ScheduledExecutorService monitor   = new ScheduledThreadPoolExecutor (1);
+    private static ScheduledExecutorService scheduler/* = new ScheduledThreadPoolExecutor (32)*/;
 
     static {
         Runtime.getRuntime ().addShutdownHook (new Thread (() -> {
@@ -88,21 +89,25 @@ public class Looper {
     /**
      * 创建一个命名的线程队列.
      * @param name 线程名
-     * @param size 同时可容纳任务的数量
-     * @param count 同时执行任务的线程数
+     * @param capcity 同时可容纳任务的数量
+     * @param threads 同时执行任务的线程数
      * @see #runInLoop(String, Runnable) runInLoop
      * @see #exists(String) exists
      * @see #destory(String) destory
      */
-    public synchronized static void create (String name, int size, int count) {
+    public synchronized static void create (String name, int capcity, int threads) {
         if (pool.containsKey (name)) {
             throw new IllegalArgumentException ("the looper: " + name + " already exists!");
         }
 
-        InternalLoop loop = new InternalLoop (name, size, count);
+        InternalLoop loop = new InternalLoop (name, capcity, threads);
         synchronized (pool) {
+            if (namedExecutor == null) {
+                namedExecutor = Executors.newCachedThreadPool ();
+            }
             pool.put (name, loop);
             namedExecutor.execute (loop);
+            namedTaskCount.incrementAndGet ();
         }
     }
 
@@ -120,6 +125,12 @@ public class Looper {
             loop.cancel ();
 
             pool.remove (name);
+            int count = namedTaskCount.decrementAndGet ();
+            if (count <= 0) {
+                namedExecutor.shutdownNow ();
+                namedExecutor = null;
+                namedTaskCount.set (0);
+            }
         }
     }
 
@@ -269,10 +280,13 @@ public class Looper {
         }
 
         if (timeout < 0) {
-            executor.shutdown ();
-            monitor.shutdown ();
-            scheduler.shutdown ();
-            namedExecutor.shutdown ();
+            if (executor != null)
+                executor.shutdown ();
+//            monitor.shutdown ();
+            if (scheduler != null)
+                scheduler.shutdown ();
+            if (namedExecutor != null)
+                namedExecutor.shutdown ();
 
 /*
             while (!pool.isEmpty ()) {
@@ -311,10 +325,13 @@ public class Looper {
                 loop.cancel ();
             }
 
-            executor.shutdownNow ();
-            monitor.shutdownNow ();
-            scheduler.shutdownNow ();
-            namedExecutor.shutdownNow ();
+            if (executor != null)
+                executor.shutdownNow ();
+//            monitor.shutdownNow ();
+            if (scheduler != null)
+                scheduler.shutdownNow ();
+            if (namedExecutor != null)
+                namedExecutor.shutdownNow ();
         }
 
         pool.clear ();
@@ -344,9 +361,14 @@ public class Looper {
         long taskId = (((long) runner.hashCode ()) << 32) ^ System.currentTimeMillis ();
         ScheduleWorker worker = new ScheduleWorker (runner);
         worker.taskId = taskId;
-        futures.put (taskId, scheduler.schedule (worker, delay, unit));
-        if (logger.isTraceEnabled ()) {
-            logger.trace ("task [" + taskId + "] scheduled executing in " + unit.toMillis (delay) + " ms.");
+        synchronized (futures) {
+            if (scheduler == null) {
+                scheduler = new ScheduledThreadPoolExecutor (32);
+            }
+            futures.put (taskId, scheduler.schedule (worker, delay, unit));
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("task [" + taskId + "] scheduled executing in " + unit.toMillis (delay) + " ms.");
+            }
         }
         return taskId;
     }
@@ -366,10 +388,14 @@ public class Looper {
                     logger.trace ("task [" + taskId + "] canceled.");
                 }
             }
+            if (futures.isEmpty ()) {
+                scheduler.shutdownNow ();
+                scheduler = null;
+            }
         }
     }
 
-    private static final AtomicLong counter = new AtomicLong (0);
+//    private static final AtomicLong counter = new AtomicLong (0);
 
     private static final class InternalRunner implements Runnable {
         private Runnable runner;
@@ -410,25 +436,31 @@ public class Looper {
         private ThreadGroup group;
         private AtomicInteger counter = new AtomicInteger (1);
 
+        private final int threads;
+
         private InternalLoop (String name, int size) {
             this (name, size, 1);
         }
 
-        private InternalLoop (String name, int size, int count) {
+        private InternalLoop (String name, int capcity, int threads) {
             this.name = name;
+            this.threads = threads;
             group = new ThreadGroup (name);
-            queue = new ArrayBlockingQueue<Object> (size);
+            queue = new ArrayBlockingQueue<Object> (capcity);
 
             if (logger.isTraceEnabled ()) {
-                logger.trace ("name = {}, count = {}, size = {}", name, count, size);
+                logger.trace ("name = {}, count = {}, size = {}", name, threads, capcity);
             }
 
-            service = Executors.newFixedThreadPool (count, r -> {
+            service = Executors.newFixedThreadPool (threads, r -> {
                 String threadName = name + "." + counter.getAndIncrement ();
                 if (logger.isTraceEnabled ()) {
                     logger.trace ("thread-name = {}", threadName);
                 }
-                return new Thread (group, r, threadName);
+                Thread thread = new Thread (group, r, threadName);
+                // 避免阻止jvm退出
+                thread.setDaemon (true);
+                return thread;
             });
         }
 
@@ -496,7 +528,10 @@ public class Looper {
 
         public void cancel () {
             running = false;
-            queue.offer (FINISH);
+            service.shutdownNow ();
+            for (int i = 0; i < threads; i ++) {
+                queue.offer (FINISH);
+            }
         }
     }
 

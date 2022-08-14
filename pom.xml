@@ -4,7 +4,7 @@
 
     <groupId>org.dreamwork</groupId>
     <artifactId>dreamwork-base</artifactId>
-    <version>3.1.2</version>
+    <version>3.1.3</version>
     <packaging>bundle</packaging>
     <description><![CDATA[
         剔除对log4j的依赖
