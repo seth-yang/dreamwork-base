@@ -18,6 +18,7 @@ public class PostgreSQL extends AbstractDatabase {
 
     public PostgreSQL (DataSource dataSource) {
         this.ds = dataSource;
+        limitSupported = true;
     }
 
     public PostgreSQL (String jndiName) {

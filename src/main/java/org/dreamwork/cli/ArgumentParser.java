@@ -16,7 +16,8 @@ import static org.dreamwork.cli.text.Alignment.Left;
  */
 public class ArgumentParser {
     private static final int MAX_WIDTH = 120;
-    private Set<Argument> defs, parsedArguments;
+    private final Set<Argument> defs;
+    private Set<Argument> parsedArguments;
 
     public ArgumentParser (List<Argument> defs) {
         this.defs = new TreeSet<> (defs);
@@ -181,6 +182,32 @@ public class ArgumentParser {
             }
         }
         parsedArguments = new TreeSet<> (list);
+/*
+        Function<Argument, String> key = a -> {
+            if (!StringUtil.isEmpty (a.shortOption)) return a.shortOption;
+            if (!StringUtil.isEmpty (a.longOption)) return a.longOption;
+            return "";
+        };
+        Function<Argument, Argument> value = a -> a;
+
+        Map<String, Argument> standards = defs.stream()
+                .filter (a -> a.required)
+                .collect (Collectors.toMap (key, value));
+        Map<String, Argument> provides = parsedArguments.stream ()
+                .filter (a -> a.required)
+                .collect (Collectors.toMap (key, value));
+
+        for (Map.Entry<String, Argument> e : standards.entrySet ()) {
+            String option = e.getKey ();
+            if (!provides.containsKey (option)) {
+                System.err.println ("the mandatory option: " + option + " is not provided.");
+                showHelp ();
+                throw new IllegalArgumentException ();
+            }
+        }
+*/
+
+/*
         int count = 0, p = 0;
         for (Argument a : defs) {
             if (a.required) count ++;
@@ -192,6 +219,7 @@ public class ArgumentParser {
             showHelp ();
             throw new IllegalArgumentException ();
         }
+*/
         return list;
     }
 

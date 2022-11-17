@@ -66,7 +66,7 @@ class SimpleTransactionImpl implements ITransaction {
 
     @Override
     public void delete (Object o) {
-        db.update (o);
+        db.delete (o);
     }
 
     @Override
