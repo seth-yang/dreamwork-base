@@ -13,14 +13,14 @@ import java.util.concurrent.ExecutorService;
 public abstract class BatchProcessor<T> implements Runnable {
     private static final long BLOCK_TIME = 60000;
     private final Object LOCKER     = new byte[0];
-    private final Object LOCKBACK   = new byte[0];
+    private final Object LOCK_BACK  = new byte[0];
     private final Logger logger     = LoggerFactory.getLogger (BatchProcessor.class);
 
-    private int     size;
-    private int     timeout;
-    private String  name;
-    private boolean running = true;
-    private List<T> data;
+    private final int     size;
+    private final int     timeout;
+    private final String  name;
+    private transient boolean running = true, stopped = false;
+    private final List<T> data;
 
     public BatchProcessor (String name, int capacity, int size, int timeout) {
         this.name       = name;
@@ -42,9 +42,9 @@ public abstract class BatchProcessor<T> implements Runnable {
         }
 
         if (local_flag) {
-            synchronized (LOCKBACK) {
+            synchronized (LOCK_BACK) {
                 try {
-                    LOCKBACK.wait ();
+                    LOCK_BACK.wait ();
                 } catch (InterruptedException e) {
                     e.printStackTrace ();
                 }
@@ -70,12 +70,14 @@ public abstract class BatchProcessor<T> implements Runnable {
             if (logger.isTraceEnabled ()) {
                 start = System.currentTimeMillis ();
             }
-            synchronized (LOCKBACK) {
-                try {
-                    LOCKBACK.wait (BLOCK_TIME);          // wait for top to 60 seconds, and kill the thread.
-                } catch (InterruptedException ex) {
-                    if (logger.isTraceEnabled ()) {
-                        logger.warn (ex.getMessage (), ex);
+            synchronized (LOCK_BACK) {
+                if (!stopped) {
+                    try {
+                        LOCK_BACK.wait (BLOCK_TIME);          // wait for top to 60 seconds, and kill the thread.
+                    } catch (InterruptedException ex) {
+                        if (logger.isTraceEnabled ()) {
+                            logger.warn (ex.getMessage (), ex);
+                        }
                     }
                 }
             }
@@ -133,8 +135,9 @@ public abstract class BatchProcessor<T> implements Runnable {
         if (logger.isTraceEnabled ()) {
             logger.trace ("all jobs done. trying to notify the dispose thread.");
         }
-        synchronized (LOCKBACK) {
-            LOCKBACK.notifyAll ();
+        synchronized (LOCK_BACK) {
+            LOCK_BACK.notifyAll ();
+            stopped = true;
         }
         if (logger.isTraceEnabled ()) {
             logger.trace ("the dispose thread notified.");
@@ -163,8 +166,8 @@ public abstract class BatchProcessor<T> implements Runnable {
                 data.clear ();
             }
         }
-        synchronized (LOCKBACK) {
-            LOCKBACK.notifyAll ();
+        synchronized (LOCK_BACK) {
+            LOCK_BACK.notifyAll ();
         }
 
         return copy;
