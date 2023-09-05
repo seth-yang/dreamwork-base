@@ -62,6 +62,7 @@ public abstract class AbstractDatabase implements IDatabase {
             }
         });
         monitor.start ();
+        Runtime.getRuntime ().addShutdownHook (new Thread (monitor::stop));
     }
 
     protected abstract Connection connect () throws SQLException;
