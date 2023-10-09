@@ -19,6 +19,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Created by seth.yang on 2017/4/19
@@ -915,6 +916,48 @@ public abstract class AbstractDatabase implements IDatabase {
         Serializable[] a = new Serializable[pk.size ()];
         a = pk.toArray (a);
         delete (type, a);
+    }
+
+    @Override
+    public void runInTransaction (Consumer<ITransaction> consumer) {
+        ITransaction tx = null;
+        try {
+            tx = beginTransaction ();
+            consumer.accept (tx);
+            tx.commit ();
+        } catch (Exception ex) {
+            logger.warn (ex.getMessage (), ex);
+            rollback (tx);
+        } finally {
+            close (tx);
+        }
+    }
+
+    @Override
+    public void runInTransaction (int timeout, TimeUnit unit, Consumer<ITransaction> consumer) {
+        ITransaction tx = null;
+        try {
+            tx = beginTransaction (timeout, unit);
+            consumer.accept (tx);
+            tx.commit ();
+        } catch (Exception ex) {
+            logger.warn (ex.getMessage (), ex);
+            rollback (tx);
+        } finally {
+            close (tx);
+        }
+    }
+
+    private void rollback (ITransaction tx) {
+        if (tx != null) try {
+            tx.rollback ();
+        } catch (SQLException ignore) {}
+    }
+
+    private void close (ITransaction tx) {
+        if (tx != null) try {
+            tx.close ();
+        } catch (Exception ignore) {}
     }
 
     protected ITypedMap build (ResultSet rs) throws SQLException {

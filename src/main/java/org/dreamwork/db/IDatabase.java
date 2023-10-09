@@ -1,5 +1,6 @@
 package org.dreamwork.db;
 
+import com.google.gson.annotations.Since;
 import org.dreamwork.util.ITypedMap;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Created by seth.yang on 2017/4/19
@@ -92,4 +94,24 @@ public interface IDatabase extends IUpdatable {
      * @see #beginTransaction()
      */
     ITransaction beginTransaction (int timeout, TimeUnit unit) throws SQLException;
+
+    /**
+     * java 8 风格的事务调用
+     * @param consumer 事务的消费者
+     * @see #beginTransaction()
+     * @see #runInTransaction(int, TimeUnit, Consumer)
+     * @since 3.1.4
+     */
+    void runInTransaction (Consumer<ITransaction> consumer);
+
+    /**
+     * java8 风格的事务调用
+     * @param timeout  超时时长
+     * @param unit     时间单位
+     * @param consumer 事务的消费者
+     * @see #beginTransaction(int, TimeUnit)
+     * @see #runInTransaction(Consumer)
+     * @since 3.1.4
+     */
+    void runInTransaction (int timeout, TimeUnit unit, Consumer<ITransaction> consumer);
 }
