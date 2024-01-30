@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 public class GroupedQueue<K, T> implements IGroupedQueue<K, T> {
     private final Logger logger = LoggerFactory.getLogger (GroupedQueue.class);
     private final ExecutorService executor = Executors.newCachedThreadPool ();
+    /** 离合器，用于分组处理器 */
     private final Map<K, GroupProcessor<K, T>> clutch = Collections.synchronizedMap (new HashMap<> ());
     private final IGroupedProcessor<K, T> processor;
     private int capacity = 32;

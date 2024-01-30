@@ -992,7 +992,7 @@ public abstract class AbstractDatabase implements IDatabase {
             } else {
                 try {
                     field.set (o, rs.getObject (i, c));
-                } catch (SQLFeatureNotSupportedException ex) {
+                } catch (SQLException ex) {
                     legacySet (c, field, o, rs, i, rsmd);
                 }
             }
@@ -1167,7 +1167,7 @@ public abstract class AbstractDatabase implements IDatabase {
             try {
                 value = rs.getObject (1, fieldType);
                 field.set (item, value);
-            } catch (SQLFeatureNotSupportedException ex) {
+            } catch (SQLException ex) {
                 ResultSetMetaData rsmd = rs.getMetaData ();
                 legacySet (fieldType, field, item, rs, 1, rsmd);
             }
