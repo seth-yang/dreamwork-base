@@ -3,7 +3,6 @@ package org.dreamwork.concurrent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -53,7 +52,7 @@ public class Looper {
 
     private static ExecutorService          executor/*  = Executors.newFixedThreadPool (16)*/;
     private static ExecutorService          namedExecutor/* = Executors.newCachedThreadPool ()*/;
-//    private static ScheduledExecutorService monitor   = new ScheduledThreadPoolExecutor (1);
+    //    private static ScheduledExecutorService monitor   = new ScheduledThreadPoolExecutor (1);
     private static ScheduledExecutorService scheduler/* = new ScheduledThreadPoolExecutor (32)*/;
 
     static {
@@ -555,30 +554,5 @@ public class Looper {
                 }
             }
         }
-    }
-
-    public static void main (String[] args) {
-        Looper.create ("test", 1, 2);
-        for (int i = 0; i < 3; i ++) {
-            final int index = i;
-            Looper.runInLoop ("test", () -> {
-                String name = Thread.currentThread ().getName ();
-                int time = (int) (Math.random () * 3 + 10) * 1000;
-                info (name, String.format ("[%s] waiting for %d sec....", "runner-" + index, time));
-                try {
-                    Thread.sleep (time);
-                } catch (InterruptedException e) {
-                    info (name, "interrupted");
-                }
-                info (name, "done!");
-            });
-        }
-        Looper.destory ("test");
-        Looper.waitForShutdown ();
-    }
-
-    private static void info (String name, String message) {
-        SimpleDateFormat sdf = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss");
-        System.out.printf ("[%s][%s] - %s%n", name, sdf.format (System.currentTimeMillis ()), message);
     }
 }
