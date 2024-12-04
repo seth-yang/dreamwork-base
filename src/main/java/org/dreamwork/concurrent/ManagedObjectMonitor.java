@@ -12,6 +12,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.dreamwork.util.ThreadHelper.delay;
+
 /**
  * 受管理可关闭对象的监视器.
  * @param <T> 受托管对象的类型
@@ -57,7 +59,6 @@ public class ManagedObjectMonitor<T extends IManagedClosable<?>> {
         this.listener = listener;
     }
 
-    @SuppressWarnings ("unchecked")
     public void start () {
         if (Looper.exists (name)) {
             throw new IllegalStateException ("loop [" + name + "] already exists!");
@@ -94,9 +95,9 @@ public class ManagedObjectMonitor<T extends IManagedClosable<?>> {
 
                     if (running.get ()) {
                         List<T> copy = new ArrayList<> ();
-                        for (IManagedClosable<?> imc : pool) {
+                        for (T imc : pool) {
                             if (imc.isTimedOut ()) {
-                                copy.add ((T) imc);
+                                copy.add (imc);
                             }
                         }
 
@@ -109,7 +110,7 @@ public class ManagedObjectMonitor<T extends IManagedClosable<?>> {
                                 logger.trace ("now pool contains: {}", pool);
                             }
 
-                            for (IManagedClosable<?> imc : copy) {
+                            for (T imc : copy) {
                                 if (logger.isTraceEnabled ()) {
                                     logger.trace ("{} is timed out, trying to close it", imc);
                                 }
@@ -121,18 +122,14 @@ public class ManagedObjectMonitor<T extends IManagedClosable<?>> {
                                     }
                                 } finally {
                                     if (listener != null) {
-                                        listener.onClosed ((T) imc);
+                                        listener.onClosed (imc);
                                     }
                                 }
                             }
                             copy.clear ();
                         }
 
-                        try {
-                            Thread.sleep (10);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace ();
-                        }
+                        delay (10);
                     }
                 }
 

@@ -13,9 +13,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.dreamwork.util.ThreadHelper.delay;
+
 /**
  * 本地消息信使
- *
  * Created by seth.yang on 2018/2/9
  */
 @SuppressWarnings ("unused")
@@ -29,6 +30,8 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
     private final AtomicInteger counter = new AtomicInteger (0);
 
     private static final String JMX_GROUP_NAME = "org.dreamwork.jmx";
+
+    private volatile boolean running = true;
 
     @Override
     public Set<String> getRegisteredWorkerNames () {
@@ -119,21 +122,15 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
 
     public void shutdown () {
         long start = System.currentTimeMillis ();
+        running = false;
         queue.offer (new MessageWrapper (null, QUIT));
 
         while (!workers.isEmpty ()) {
             if (System.currentTimeMillis () - start > 30000) {
-//                throw new RuntimeException ("timeout");
                 logger.warn ("shutdown timeout");
                 break;
             }
-            try {
-                Thread.sleep (1);
-            } catch (InterruptedException ex) {
-                if (logger.isTraceEnabled ()) {
-                    logger.warn (ex.getMessage (), ex);
-                }
-            }
+            delay (1);
         }
         if (logger.isTraceEnabled ()) {
             logger.trace ("shutdown takes {} ms.", System.currentTimeMillis () - start);
@@ -149,7 +146,7 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
     public void run () {
         Thread.currentThread ().setName (JMX_GROUP_NAME);
         logger.info ("starting local broadcaster ...");
-        while (true) {
+        while (running) {
             try {
                 MessageWrapper msg = queue.take ();
                 if (msg.message == QUIT) {
@@ -157,7 +154,6 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
                         logger.trace ("received a quit command. waiting for all workers shutdown ...");
                     }
                     if (!workers.isEmpty ()) {
-//                        workers.values ().forEach (LocalBroadcastWorker::shutdown);
                         workers.forEach ((key, value) -> {
                             if (logger.isTraceEnabled ()) {
                                 logger.trace (">>>>>>>>>>>>>>>>>>>>>>>>> shutdown worker:: {}", key);
@@ -173,8 +169,15 @@ public class LocalBroadcaster implements Runnable, ILocalBroadcastService, Local
                 }
 
                 dispatch (msg);
-            } catch (InterruptedException e) {
-                e.printStackTrace ();
+            } catch (InterruptedException ex) {
+                if (logger.isTraceEnabled ()) {
+                    // 仅trace模式才打印这个错误堆栈
+                    logger.warn (ex.getMessage (), ex);
+                }
+
+                if (!running) {
+                    break;
+                }
             }
         }
 

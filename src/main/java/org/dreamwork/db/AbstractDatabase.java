@@ -49,12 +49,6 @@ public abstract class AbstractDatabase implements IDatabase {
                 logger.warn ("the connection is not close. it's very like memory leak.");
                 managedConnections.remove (imc);
                 monitor.remove ((ConnectionWrapper) imc);
-
-/*
-                if (managedConnections.isEmpty ()) {
-                    monitor.stop ();
-                }
-*/
             }
 
             @Override
