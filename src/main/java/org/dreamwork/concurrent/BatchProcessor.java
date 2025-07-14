@@ -6,21 +6,28 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by seth.yang on 2018/11/5
  */
 public abstract class BatchProcessor<T> implements Runnable {
     private static final long BLOCK_TIME = 60000;
-    private final Object LOCKER     = new byte[0];
-    private final Object LOCK_BACK  = new byte[0];
     private final Logger logger     = LoggerFactory.getLogger (BatchProcessor.class);
 
     private final int     size;
     private final int     timeout;
     private final String  name;
-    private transient boolean running = true, stopped = false;
+    private volatile boolean running = true, stopping = false;
     private final List<T> data;
+    private final Lock locker = new ReentrantLock ();
+    private final Condition notFull = locker.newCondition (),   // 用于插入等待
+                            transfer = locker.newCondition (),  // 用于复制等待
+                            stopped  = locker.newCondition ();  // 用于停止等待
+    private volatile boolean transferring = false;
 
     public BatchProcessor (String name, int capacity, int size, int timeout) {
         this.name       = name;
@@ -31,26 +38,23 @@ public abstract class BatchProcessor<T> implements Runnable {
     }
 
     public void add (T target) {
-        boolean local_flag = false;
-        synchronized (LOCKER) {
-            if (data.size () < size) {
-                data.add (target);
-            } else {
-                LOCKER.notifyAll ();
-                local_flag = true;
-            }
-        }
-
-        if (local_flag) {
-            synchronized (LOCK_BACK) {
-                try {
-                    LOCK_BACK.wait ();
-                } catch (InterruptedException e) {
-                    e.printStackTrace ();
+        if (!stopping) {
+            locker.lock ();
+            try {
+                while (transferring) {
+                    notFull.await ();
                 }
-            }
-            synchronized (LOCKER) {
+
                 data.add (target);
+                if (data.size () >= size && !transferring) {
+                    logger.warn ("{} data needs to be copied.", data.size ());
+                    transferring = true;
+                    transfer.signalAll ();
+                }
+            } catch (InterruptedException ex) {
+                throw new RuntimeException (ex);
+            } finally {
+                locker.unlock ();
             }
         }
     }
@@ -60,35 +64,31 @@ public abstract class BatchProcessor<T> implements Runnable {
     }
 
     public void dispose (boolean block) {
-        synchronized (LOCKER) {
-            running = false;
-            LOCKER.notifyAll ();
+        running = false;
+        locker.lock ();
+        try {
+            notFull.signalAll ();
+            transferring = true;
+            transfer.signalAll ();
+        } finally {
+            locker.unlock ();
         }
 
         if (block) {
-            long start = 0;
-            if (logger.isTraceEnabled ()) {
-                start = System.currentTimeMillis ();
-            }
-            synchronized (LOCK_BACK) {
-                if (!stopped) {
-                    try {
-                        LOCK_BACK.wait (BLOCK_TIME);          // wait for top to 60 seconds, and kill the thread.
-                    } catch (InterruptedException ex) {
-                        if (logger.isTraceEnabled ()) {
-                            logger.warn (ex.getMessage (), ex);
-                        }
+            locker.lock ();
+            try {
+                logger.info ("waiting for shutdown progress completed.");
+                if (stopping) {
+                    if (stopped.await (BLOCK_TIME, TimeUnit.MILLISECONDS)) {
+                        logger.trace ("shutdown normally");
+                    } else {
+                        logger.trace ("shutdown forced");
                     }
                 }
-            }
-            if (logger.isTraceEnabled ()) {
-                long end = System.currentTimeMillis ();
-                long delta = end - start;
-                if (delta < BLOCK_TIME) {
-                    logger.trace ("shutdown normally");
-                } else {
-                    logger.trace ("shutdown forced");
-                }
+            } catch (InterruptedException ex) {
+                logger.warn (ex.getMessage (), ex);
+            } finally {
+                locker.unlock ();
             }
         }
     }
@@ -97,81 +97,84 @@ public abstract class BatchProcessor<T> implements Runnable {
     public void run () {
         Thread.currentThread ().setName (name);
         if (logger.isTraceEnabled ()) {
-            logger.trace ("setting thread name to " + name);
+            logger.trace ("setting thread name to {}", name);
         }
         if (logger.isInfoEnabled ()) {
-            logger.info ("batch processor:" + name + " started");
+            logger.info ("batch processor:{} started", name);
         }
-        while (running) {
-            while (running && data.isEmpty ()) {
-                synchronized (LOCKER) {
-                    try {
-                        LOCKER.wait (timeout);
-                    } catch (InterruptedException ex) {
-                        if (logger.isTraceEnabled ()) {
-                            logger.warn (ex.getMessage (), ex);
-                        }
 
-                        break;
+        List<T> copy = null;
+
+        while (running) {
+            locker.lock ();
+            try {
+                while (!transferring && data.isEmpty ()) {
+                    if (transfer.await (timeout, TimeUnit.MILLISECONDS)) {
+                        if (!data.isEmpty ()) {
+                            logger.trace ("the buff is full, process the data ...");
+                        }
+                    } else {
+                        logger.trace ("timed out, process the {} data now remains ...", data.size ());
                     }
                 }
+
+                if (running) {
+                    copy = new ArrayList<> (data);
+                    data.clear ();
+                    transferring = false;
+                    notFull.signalAll ();
+                }
+            } catch (InterruptedException ex) {
+                logger.warn (ex.getMessage (), ex);
+            } finally {
+                locker.unlock ();
             }
 
-            if (running) {
-                process ();
+            if (copy != null && !copy.isEmpty ()) {
+                try {
+                    process (copy);
+                } catch (Exception ex) {
+                    logger.warn (ex.getMessage (), ex);
+                } finally {
+                    copy.clear ();
+                }
             }
         }
 
         if (logger.isInfoEnabled ()) {
             logger.info ("the process thread break, trying to shutdown thread");
         }
+
         if (!data.isEmpty ()) {
             if (logger.isTraceEnabled ()) {
-                logger.trace ("there's some data remain, process them!");
+                logger.trace ("there's some data remains, process them!");
             }
-            process ();
+
+            locker.lock ();
+            try {
+                stopping = true;
+                copy = new ArrayList<> (data);
+                data.clear ();
+                if (!copy.isEmpty ()) {
+                    try {
+                        process (copy);
+                        transferring = false;
+                        stopped.signalAll ();
+                    } catch (Exception ex) {
+                        logger.warn (ex.getMessage (), ex);
+                    }
+                }
+            } finally {
+                locker.unlock ();
+            }
         }
 
         if (logger.isTraceEnabled ()) {
             logger.trace ("all jobs done. trying to notify the dispose thread.");
-        }
-        synchronized (LOCK_BACK) {
-            LOCK_BACK.notifyAll ();
-            stopped = true;
-        }
-        if (logger.isTraceEnabled ()) {
             logger.trace ("the dispose thread notified.");
         }
     }
 
-    private void process () {
-        List<T> copy = copy ();
-        if (logger.isInfoEnabled ()) {
-            logger.trace ("copied data: " + copy);
-        }
-        if (copy != null) {
-            try {
-                process (copy);
-            } catch (Exception ex) {
-                logger.warn (ex.getMessage (), ex);
-            }
-        }
-    }
-
-    private List<T> copy () {
-        List<T> copy = null;
-        synchronized (LOCKER) {
-            if (!data.isEmpty ()) {
-                copy = new ArrayList<> (data);
-                data.clear ();
-            }
-        }
-        synchronized (LOCK_BACK) {
-            LOCK_BACK.notifyAll ();
-        }
-
-        return copy;
-    }
 
     protected abstract void process (List<T> data) throws Exception;
 }
