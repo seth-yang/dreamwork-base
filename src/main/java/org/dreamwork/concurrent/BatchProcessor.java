@@ -37,7 +37,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *         protected void process (List&lt;String&gt; data) {
  *             processedCount += data.size ();
  *             // some code to consume the data
- *             if (processedCount >= total) {
+ *             if (processedCount &lt;= total) {
  *                 latch.countDown ();
  *             }
  *         }
