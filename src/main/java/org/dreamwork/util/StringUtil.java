@@ -13,7 +13,10 @@ public class StringUtil {
     private static final char[] LETTER = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     public static boolean isEmpty (String str) {
-        return str == null || str.trim ().length () == 0;
+        return str == null || str.trim ().isEmpty ();
+    }
+    public static boolean isNotEmpty (String str) {
+        return !isEmpty (str);
     }
 
     public static boolean inArray (String[] array, String text) {

@@ -152,9 +152,15 @@ public class Looper {
         synchronized (pool) {
             InternalLoop looper = pool.get (name);
             try {
+                if (logger.isTraceEnabled ()) {
+                    logger.trace ("trying to put a new job into queue, before put, size = {}", looper.queue.size ());
+                }
                 looper.queue.put (runner);
-            } catch (InterruptedException e) {
-                e.printStackTrace ();
+                if (logger.isTraceEnabled ()) {
+                    logger.trace ("after put, size = {}", looper.queue.size ());
+                }
+            } catch (InterruptedException ex) {
+                logger.warn (ex.getMessage (), ex);
             }
         }
     }

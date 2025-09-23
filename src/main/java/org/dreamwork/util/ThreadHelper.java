@@ -15,4 +15,8 @@ public class ThreadHelper {
             }
         }
     }
+
+    public static void setName (String name) {
+        Thread.currentThread ().setName (name);
+    }
 }
