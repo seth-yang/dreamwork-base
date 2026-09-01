@@ -25,19 +25,19 @@ public class JdkResourceAdapter extends AbstractResourceAdapter {
     }
 
     private static class JdkResourceBundle implements IResourceBundle {
-        private ResourceBundle res;
+        private final ResourceBundle res;
 
         private JdkResourceBundle (String baseName, Locale locale) {
             res = ResourceBundle.getBundle (baseName, locale);
         }
 
         public String getString (String name, String defaultValue) {
-            String value = res.getString (name);
-            return value == null ? defaultValue : value;
+            return res.getString (name);
         }
 
         public boolean isResourcePresent (String name) {
-            return res.getString (name) != null;
+            res.getString (name);
+            return true;
         }
     }
 }

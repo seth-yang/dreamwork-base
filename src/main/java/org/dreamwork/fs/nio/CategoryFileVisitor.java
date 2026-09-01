@@ -12,8 +12,8 @@ import java.util.logging.Logger;
  * Created by game on 2017/4/18
  */
 public class CategoryFileVisitor<T extends FileIndex> extends SimpleFileVisitor<Path> {
-    private String category;
-    private IFileIndexAdapter<T> adapter;
+    private final String category;
+    private final IFileIndexAdapter<T> adapter;
 
     private static final Logger logger = Logger.getLogger (CategoryFileVisitor.class.getName ());
 

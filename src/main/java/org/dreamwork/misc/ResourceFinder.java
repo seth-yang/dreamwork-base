@@ -12,9 +12,7 @@ import java.net.URL;
  * Created by seth.yang on 2014/12/6
  */
 public class ResourceFinder {
-    public static InputStream findResource(String resourceName, String resourceFileName)
-            throws IOException
-    {
+    public static InputStream findResource (String resourceName, String resourceFileName) throws IOException {
         if (!StringUtil.isEmpty(resourceName)) {
             String name = System.getProperty(resourceName);
             if (!StringUtil.isEmpty (name)) {

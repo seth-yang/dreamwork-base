@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Time: 23:58
  */
 public class DefaultSerialNumberSequence implements ISerialNumberSequence {
-    private AtomicLong atomic = new AtomicLong (0);
+    private final AtomicLong atomic = new AtomicLong (0);
     private int step = 1;
 
     public DefaultSerialNumberSequence () {}

@@ -3,6 +3,7 @@ package org.dreamwork.util;
 import java.io.*;
 import java.util.Properties;
 
+@SuppressWarnings ("unused")
 public class VirtualFile {
     private String clientPath;
     private String name;
@@ -11,7 +12,7 @@ public class VirtualFile {
     private long length = -1;
     private VirtualOutputStream baos;
 
-    private boolean useCach = false;
+    private boolean useCache = false;
     private String tempFileName;
 
     private static long MAX_LENGTH = 1024 * 1024 * 2;
@@ -23,14 +24,12 @@ public class VirtualFile {
 
     static {
         // prepare temp dir.
-        String dir = System.getProperty ("user.home") + "/.dreamwork/cach/jasmine/virtual-files";
+        String dir = System.getProperty ("user.home") + "/.dreamwork/cache/jasmine/virtual-files";
         tempDir = new File (dir);
         if (!tempDir.exists () && !tempDir.mkdirs ())
             try {
                 throw new RuntimeException ("Can't mkdir: " + tempDir.getCanonicalPath ());
-            } catch (IOException e) {
-                e.printStackTrace ();
-            }
+            } catch (IOException ignored) { }
 
         // calculate max length.
         String fLength = System.getProperty (KEY_FILE_LENGTH);
@@ -82,11 +81,11 @@ public class VirtualFile {
 
     public VirtualFile (int length) {
         this.length = length;
-        if (this.length > MAX_LENGTH) initCach ();
+        if (this.length > MAX_LENGTH) initCache ();
     }
 
-    public VirtualFile (boolean useCach) {
-        if (useCach) initCach ();
+    public VirtualFile (boolean useCache) {
+        if (useCache) initCache ();
     }
 
     public String getClientPath () {
@@ -114,13 +113,13 @@ public class VirtualFile {
     }
 
     public byte[] getContent () {
-        if (useCach) throw new IllegalStateException ("too large data to load in memory");
+        if (useCache) throw new IllegalStateException ("too large data to load in memory");
         return content;
     }
 
-    private void initCach () {
+    private void initCache () {
         if (tempFileName == null) {
-            useCach = true;
+            useCache = true;
             tempFileName = getTempFileName ();
         }
     }
@@ -136,14 +135,14 @@ public class VirtualFile {
                 fos.flush ();
                 fos.close ();
             }
-            useCach = true;
+            useCache = true;
         } else
             this.content = content;
     }
 
     public long getLength () {
         if (length != -1) return length;
-        if (useCach) {
+        if (useCache) {
             File file = new File (tempDir, tempFileName);
             if (file.exists () && file.canRead ())
                 return length = file.length ();
@@ -154,13 +153,13 @@ public class VirtualFile {
         return length;
     }
 
-    public boolean isUseCach () {
-        return useCach;
+    public boolean isUseCache () {
+        return useCache;
     }
 
     public InputStream getInputStream () throws IOException {
         InputStream in;
-        if (useCach) {
+        if (useCache) {
             File file = new File (tempDir, tempFileName);
             in = new FileInputStream (file);
         } else {
@@ -171,7 +170,7 @@ public class VirtualFile {
     }
 
     public OutputStream getOutputStream () throws IOException {
-        if (useCach) {
+        if (useCache) {
             File file = new File (tempDir, tempFileName);
             return new FileOutputStream (file);
         } else {
@@ -181,7 +180,7 @@ public class VirtualFile {
     }
 
     public boolean deleteTempFile () {
-        if (!useCach) return true;
+        if (!useCache) return true;
 
         File file = new File (tempDir, tempFileName);
         return file.delete ();
@@ -192,9 +191,8 @@ public class VirtualFile {
         if (!dir.exists () && !dir.mkdirs ())
             throw new IOException ("Can't mkdir: " + dir.getCanonicalPath ());
         File file = new File (dir, name);
-        if (useCach) {
+        if (useCache) {
             File tempFile = new File (tempDir, tempFileName);
-//            tempFile.renameTo (file);
             FileInfo.renameTo (tempFile, file, true);
         } else {
             FileOutputStream fos = new FileOutputStream (file);
@@ -212,10 +210,8 @@ public class VirtualFile {
         File dir = file.getParentFile ();
         if (!dir.exists ()&& !dir.mkdirs ())
             throw new IOException ("Can't mkdir: " + dir.getCanonicalPath ());
-//        File file = new File (dir, name);
-        if (useCach) {
+        if (useCache) {
             File tempFile = new File (tempDir, tempFileName);
-//            tempFile.renameTo (file);
             FileInfo.renameTo (tempFile, file, true);
         } else {
             FileOutputStream fos = new FileOutputStream (file);
@@ -232,12 +228,9 @@ public class VirtualFile {
         File dir = new File (path);
         if (!dir.exists ()) throw new IOException (path + " not exist");
         File file = new File (dir, name);
-        FileInputStream fis = new FileInputStream (file);
-        content = new byte[(int) file.length ()];
-        try {
+        try (FileInputStream fis = new FileInputStream (file)) {
+            content = new byte[(int) file.length ()];
             length = fis.read (content);
-        } finally {
-            fis.close ();
         }
     }
 
@@ -245,7 +238,7 @@ public class VirtualFile {
         long now = System.currentTimeMillis ();
         String temp = String.valueOf (now);
         int length = temp.length () * 2 + CHAR_LENGTH;
-        StringBuffer sb = new StringBuffer ();
+        StringBuilder sb = new StringBuilder ();
         int i = 0;
         while (i < length) {
             double first = Math.random ();
@@ -278,19 +271,5 @@ public class VirtualFile {
             flush ();
             super.close ();
         }
-    }
-
-    public static void main (String[] args) throws Exception {
-        VirtualFile vfile = new VirtualFile (true);
-        OutputStream out = vfile.getOutputStream ();
-        File file = new File ("D:/Downloads/README.TXT");
-        FileInputStream in = new FileInputStream (file);
-        byte[] buff = new byte[1024];
-        int len;
-        while ((len = in.read (buff)) != -1) out.write (buff, 0, len);
-        in.close ();
-        out.flush ();
-
-        System.out.println (vfile.getContent ().length);
     }
 }

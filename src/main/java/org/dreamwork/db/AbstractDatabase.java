@@ -2,6 +2,7 @@ package org.dreamwork.db;
 
 import org.dreamwork.concurrent.IManagedClosable;
 import org.dreamwork.concurrent.ManagedObjectMonitor;
+import org.dreamwork.persistence.DatabaseFieldDefinition;
 import org.dreamwork.persistence.DatabaseSchema;
 import org.dreamwork.persistence.ISchemaField;
 import org.dreamwork.persistence.ReflectUtil;
@@ -12,18 +13,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.lang.reflect.Field;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
  * Created by seth.yang on 2017/4/19
  */
+@SuppressWarnings ("unused")
 public abstract class AbstractDatabase implements IDatabase {
     protected ReflectUtil ref = new ReflectUtil ();
     protected boolean debug = false;
@@ -78,12 +81,6 @@ public abstract class AbstractDatabase implements IDatabase {
     public Connection getConnection () throws SQLException {
         Connection conn = connect ();
         if (conn != null) {
-/*
-            if (managedConnections.isEmpty ()) {
-                monitor.start ();
-            }
-*/
-
             ConnectionWrapper wrapper = new ConnectionWrapper (conn);
             monitor.add (wrapper);
             managedConnections.add (wrapper);
@@ -115,7 +112,7 @@ public abstract class AbstractDatabase implements IDatabase {
         try (Connection conn = connect ()) {
             Statement stmt = conn.createStatement ();
             if (debug) {
-                logger.debug ("executing sql: " + sql);
+                logger.debug ("executing sql: {}", sql);
             }
             return stmt.execute (sql);
         } catch (SQLException ex) {
@@ -149,7 +146,7 @@ public abstract class AbstractDatabase implements IDatabase {
                 Statement stmt = conn.createStatement ();
                 for (String sql : list) {
                     if (debug) {
-                        logger.debug ("executing statement: " + sql);
+                        logger.debug ("executing statement: {}", sql);
                     }
                     stmt.execute (sql);
                 }
@@ -229,8 +226,7 @@ public abstract class AbstractDatabase implements IDatabase {
     public <T> T getSingleField (Class<T> type, String sql, Object... args) {
         try (Connection conn = connect ()) {
             if (debug) {
-                logger.debug ("executing sql: " + sql + "\n" +
-                              "parameters   : [" + Arrays.toString (args) + "]");
+                logger.debug ("executing sql: {}\nparameters   : [{}]", sql, Arrays.toString (args));
             }
             PreparedStatement pstmt = conn.prepareStatement (sql);
             for (int i = 0; i < args.length; i ++) {
@@ -291,7 +287,7 @@ public abstract class AbstractDatabase implements IDatabase {
             Statement stmt = conn.createStatement ();
             for (DatabaseSchema schema : DatabaseSchema.MAP.values ()) {
                 if (debug) {
-                    logger.debug ("executing sql: " + schema.getCreateDDL ());
+                    logger.debug ("executing sql: {}", schema.getCreateDDL ());
                 }
                 stmt.execute (schema.getCreateDDL ());
             }
@@ -333,7 +329,7 @@ public abstract class AbstractDatabase implements IDatabase {
             conn = getConnection ();
             Statement stmt = conn.createStatement ();
             if (debug) {
-                logger.debug ("executing sql: " + sql);
+                logger.debug ("executing sql: {}", sql);
             }
             return new ResultSetWrapper (conn, stmt.executeQuery (sql));
         } catch (SQLException ex) {
@@ -346,8 +342,7 @@ public abstract class AbstractDatabase implements IDatabase {
         try {
             Connection conn = getConnection ();
             if (debug) {
-                logger.debug ("\nexecuting sql: " + sql + "\n" +
-                        "parameters   : [" + Arrays.toString (args) + "]");
+                logger.debug ("\nexecuting sql: {}\nparameters   : [{}]", sql, Arrays.toString (args));
             }
             PreparedStatement pstmt = conn.prepareStatement (sql);
             for (int i = 0; i < args.length; i ++) {
@@ -366,7 +361,7 @@ public abstract class AbstractDatabase implements IDatabase {
     public List<ITypedMap> list (String sql) {
         try (Connection conn = connect ()) {
             if (debug) {
-                logger.debug ("executing sql: " + sql);
+                logger.debug ("executing sql: {}", sql);
             }
             PreparedStatement pstmt = conn.prepareStatement (sql);
             if (logger.isTraceEnabled ()) {
@@ -403,7 +398,7 @@ public abstract class AbstractDatabase implements IDatabase {
     public <T> List<T> list (Class<T> type, String sql) {
         try (Connection conn = connect ()) {
             if (debug) {
-                logger.debug ("executing sql: " + sql);
+                logger.debug ("executing sql: {}", sql);
             }
             ResultSet rs = executeQuery (conn, sql, false);
             List<T> list = new ArrayList<> ();
@@ -424,8 +419,7 @@ public abstract class AbstractDatabase implements IDatabase {
         }
         try (Connection conn = connect ()) {
             if (debug) {
-                logger.debug ("\nexecuting sql: " + sql + "\n" +
-                        "parameters   : [" + Arrays.toString (args) + "]");
+                logger.debug ("\nexecuting sql: {}\nparameters   : [{}]", sql, Arrays.toString (args));
             }
             ResultSet rs = executeQuery (conn, sql, scrollable, args);
             if (scrollable) {
@@ -470,7 +464,7 @@ public abstract class AbstractDatabase implements IDatabase {
     public int executeUpdate (String sql) {
         try (Connection conn = connect ()) {
             if (debug) {
-                logger.debug ("executing sql: " + sql);
+                logger.debug ("executing sql: {}", sql);
             }
             PreparedStatement pstmt = conn.prepareStatement (sql);
             if (logger.isTraceEnabled ()) {
@@ -486,8 +480,7 @@ public abstract class AbstractDatabase implements IDatabase {
     public int executeUpdate (String sql, Object... args) {
         try (Connection conn = connect ()) {
             if (debug) {
-                logger.debug ("\nexecuting sql: " + sql + "\n" +
-                        "parameters   : [" + Arrays.toString (args) + "]");
+                logger.debug ("\nexecuting sql: {}\nparameters   : [{}]", sql, Arrays.toString (args));
             }
             return executeUpdate (conn, sql, args);
         } catch (SQLException ex) {
@@ -560,36 +553,6 @@ public abstract class AbstractDatabase implements IDatabase {
         } catch (Exception ex) {
             throw new RuntimeException (ex);
         }
-/*
-        if (item == null) {
-            throw new NullPointerException ();
-        }
-
-        try (Connection conn = connect ()) {
-            Class<?> type = item.getClass ();
-            DatabaseSchema schema = ref.map (type);
-            Map<String, Metadata> mds = getMetadata (schema, conn);
-
-            PreparedStatement pstmt;
-            String sql = buildInsertSQL (type);
-            if (fetchPK) {
-                pstmt = conn.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS);
-            } else {
-                pstmt = conn.prepareStatement (sql);
-            }
-            setParameter (pstmt, item, mds);
-            if (logger.isTraceEnabled ()) {
-                logger.trace ("executing prepared statement: {}", pstmt);
-            }
-            pstmt.executeUpdate ();
-
-            if (fetchPK) {
-                fetchPK (pstmt, schema, type, item);
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException (ex);
-        }
-*/
     }
 
     /**
@@ -688,7 +651,7 @@ public abstract class AbstractDatabase implements IDatabase {
                     if (conn != null)
                         conn.rollback ();
                 } catch (SQLException e) {
-                    e.printStackTrace ();
+                    logger.warn (e.getMessage (), e);
                 }
             }
             throw new RuntimeException (ex);
@@ -696,7 +659,7 @@ public abstract class AbstractDatabase implements IDatabase {
             if (conn != null) try {
                 conn.close ();
             } catch (SQLException ex) {
-                ex.printStackTrace ();
+                logger.warn (ex.getMessage (), ex);
             }
         }
     }
@@ -846,18 +809,17 @@ public abstract class AbstractDatabase implements IDatabase {
 
         Class<?> type = o.getClass ();
         DatabaseSchema schema = ref.map (type);
-        Map<String, Field> map = ref.getTypedList (type);
+        Map<String, DatabaseFieldDefinition> map = ref.getTypedList (type);
+//        Map<String, AccessibleObject> map = ref.getTypedList (type);
         String pkName = schema.getPrimaryKeyName ();
-        Field field = map.get (pkName);
-        if (field == null) {
+//        AccessibleObject ao = map.get (pkName);
+        DatabaseFieldDefinition def = map.get (pkName);
+        if (def == null) {
             throw new RuntimeException ("NoPrimaryKeyException");
-        }
-        if (!field.isAccessible ()) {
-            field.setAccessible (true);
         }
 
         try {
-            Object v = field.get (o);
+            Object v = ref.getValue (def, o);
             if (v != null) {
                 if (!(v instanceof Serializable)) {
                     throw new RuntimeException ("only serializable PK supported.");
@@ -1007,30 +969,37 @@ public abstract class AbstractDatabase implements IDatabase {
     }
 
     protected <T> T build (ResultSet rs, Class<T> type) throws Exception {
-        T o = type.newInstance ();
+        T o = type.getDeclaredConstructor ().newInstance ();
         ResultSetMetaData rsmd = rs.getMetaData ();
         int count = rsmd.getColumnCount ();
-        Map<String, Field> map = ref.getTypedList (type);
+        Map<String, DatabaseFieldDefinition> map = ref.getTypedList (type);
         for (int i = 1; i <= count; i ++) {
             String name = rsmd.getColumnName (i);
-            Field field = map.get (name);
-            if (field == null) {
+            DatabaseFieldDefinition def = map.get (name);
+            if (def == null) {
                 continue;
             }
 
-            Class<?> c = field.getType ();
+            Class<?> c = ReflectUtil.getFieldType (def);
             if (c.isEnum ()) {
                 String v = rs.getString (i);
                 if (!StringUtil.isEmpty (v)) {
                     @SuppressWarnings ("unchecked")
                     Object t = Enum.valueOf ((Class<? extends Enum>) c, v);
-                    field.set (o, t);
+                    ref.setValue (def, o, t);
                 }
             } else {
                 try {
-                    field.set (o, rs.getObject (i, c));
+                    if (c.isPrimitive ()) {
+                        Class<?> w = getWrapperClass (c);
+                        if (w != null) {
+                            ref.setValue (def, o, rs.getObject (i, w));
+                        }
+                    } else {
+                        ref.setValue (def, o, rs.getObject (i, c));
+                    }
                 } catch (SQLFeatureNotSupportedException ex) {
-                    legacySet (c, field, o, rs, i, rsmd);
+                    legacySet (c, def, o, rs, i, rsmd);
                 }
             }
         }
@@ -1038,11 +1007,31 @@ public abstract class AbstractDatabase implements IDatabase {
         return o;
     }
 
-    private void legacySet (Class<?> c, Field field, Object o, ResultSet rs, int i, ResultSetMetaData rsmd) throws Exception {
+    private static Class<?> getWrapperClass (Class<?> c) {
+        Class<?> w = null;
+        if (c == boolean.class) {
+            w = Boolean.class;
+        } else if (c == byte.class) {
+            w = Byte.class;
+        } else if (c == short.class) {
+            w = Short.class;
+        } else if (c == int.class) {
+            w = Integer.class;
+        } else if (c == long.class) {
+            w = Long.class;
+        } else if (c == float.class) {
+            w = Float.class;
+        } else if (c == double.class) {
+            w = Double.class;
+        }
+        return w;
+    }
+
+    private void legacySet (Class<?> c, DatabaseFieldDefinition def, Object o, ResultSet rs, int i, ResultSetMetaData rsmd) throws Exception {
             if (c.isAssignableFrom (String.class)) {
-                field.set (o, rs.getString (i));
+                ref.setValue (def, o, rs.getString (i));
             } else if (c == int.class || c == Integer.class) {
-                field.set (o, rs.getInt (i));
+                ref.setValue (def, o, rs.getInt (i));
             } else if (c == boolean.class || c == Boolean.class) {
                 String tmp = rs.getString (i);
                 boolean value = false;
@@ -1059,50 +1048,49 @@ public abstract class AbstractDatabase implements IDatabase {
                             // ignore
                         }
                     }
-                    field.set (o, value);
+                    ref.setValue (def, o, value);
                 }
             } else if (c == long.class || c == Long.class) {
-                field.set (o, rs.getLong (i));
+                ref.setValue (def, o, rs.getLong (i));
             } else if (c == float.class || c == Float.class) {
-                field.set (o, rs.getFloat (i));
+                ref.setValue (def, o, rs.getFloat (i));
             } else if (c == short.class || c == Short.class) {
-                field.set (o, rs.getShort (i));
+                ref.setValue (def, o, rs.getShort (i));
             } else if (c == double.class || c == Double.class) {
-                field.set (o, rs.getDouble (i));
+                ref.setValue (def, o, rs.getDouble (i));
             } else if (c.isEnum ()) {
                 String v = rs.getString (i);
                 if (!StringUtil.isEmpty (v)) {
                     @SuppressWarnings ("unchecked")
                     Object t = Enum.valueOf ((Class<? extends Enum>) c, v);
-                    field.set (o, t);
+                    ref.setValue (def, o, t);
                 }
             } else if (java.util.Date.class.isAssignableFrom (c)) {
                 int sqlType = rsmd.getColumnType (i);
                 switch (sqlType) {
                     case Types.TIMESTAMP :
-                        field.set (o, rs.getTimestamp (i));
+                        ref.setValue (def, o, rs.getTimestamp (i));
                         break;
                     case Types.DATE :
-                        field.set (o, rs.getDate (i));
+                        ref.setValue (def, o, rs.getDate (i));
                         break;
                 }
             }
     }
 
-    protected void setParameter (PreparedStatement pstmt, Object item, Map<String, Metadata> mds) throws SQLException, IllegalAccessException {
+    protected void setParameter (PreparedStatement pstmt, Object item, Map<String, Metadata> mds) throws SQLException, IllegalAccessException, InvocationTargetException {
         int index = 1;
         Class<?> type = item.getClass ();
         DatabaseSchema schema = ref.map (type);
         String[] fieldNames = schema.getFields ();
-        Map<String, Field> fields = ref.getTypedList (type);
+        Map<String, DatabaseFieldDefinition> fields = ref.getTypedList (type);
         for (String name : fieldNames) {
-            Field field = fields.get (name);
-            Metadata m  = mds.get (name);
-            if (field.isAnnotationPresent (ISchemaField.class)) {
-                ISchemaField isf = field.getAnnotation (ISchemaField.class);
-                if (!isf.autoincrement ()) {
-                    setParameter (pstmt, index ++, item, field, m.type);
-                }
+            DatabaseFieldDefinition def = fields.get (name);
+            Metadata m = mds.get (name);
+
+            ISchemaField isf = def.annotation;
+            if (!isf.autoincrement ()) {
+                setParameter (pstmt, index ++, item, def, m.type);
             }
         }
     }
@@ -1128,15 +1116,15 @@ public abstract class AbstractDatabase implements IDatabase {
         StringBuilder builder = new StringBuilder ();
         for (String name : fields) {
             if (name.equals (pkName)) continue;
-            if (builder.length () > 0) builder.append (", ");
+            if (!builder.isEmpty ()) builder.append (", ");
             builder.append (name).append (" = ?");
         }
         builder.append (" WHERE ").append (pkName).append (" = ?");
         return "UPDATE " + schema.getTableName () + " SET " + builder;
     }
 
-    private void setParameter (PreparedStatement pstmt, int index, Object item, Field field, int type) throws IllegalAccessException, SQLException {
-        Object v = field.get (item);
+    private void setParameter (PreparedStatement pstmt, int index, Object item, DatabaseFieldDefinition def, int type) throws IllegalAccessException, SQLException, InvocationTargetException {
+        Object v = ref.getValue (def, item);
         if (v == null) {
             pstmt.setNull (index, type);
         } else {
@@ -1154,19 +1142,15 @@ public abstract class AbstractDatabase implements IDatabase {
             ordered.add (name);
         }
         ordered.add (pkName);
-        Map<String, Field> map = ref.getTypedList (type);
+        Map<String, DatabaseFieldDefinition> map = ref.getTypedList (type);
         for (int i = 0; i < ordered.size (); i ++) {
             String name = ordered.get (i);
-            Field field = map.get (name);
+            DatabaseFieldDefinition def = map.get (name);
             Metadata m  = mds.get (name);
-            if (field == null) {
+            if (def == null) {
                 pstmt.setObject (i + 1, null, m.type);
             } else {
-                if (!field.isAccessible ()) {
-                    field.setAccessible (true);
-                }
-
-                Object v = field.get (o);
+                Object v = ref.getValue (def, o);
                 pstmt.setObject (i + 1, v, m.type);
             }
         }
@@ -1193,20 +1177,19 @@ public abstract class AbstractDatabase implements IDatabase {
         ResultSet rs = pstmt.getGeneratedKeys ();
         if (rs.next ()) {
             String fieldName = schema.getPrimaryKeyName ();
-            Map<String, Field> map = ref.getTypedList (type);
-            Field field = map.get (fieldName);
-            if (!field.isAccessible ()) {
-                field.setAccessible (true);
-            }
+            Map<String, DatabaseFieldDefinition> map = ref.getTypedList (type);
+            DatabaseFieldDefinition def = map.get (fieldName);
 
-            Class<?> fieldType = field.getType ();
+            Class<?> fieldType = ReflectUtil.getFieldType (def);
             Object value;
             try {
                 value = rs.getObject (1, fieldType);
-                field.set (item, value);
+                if (value != null) {
+                    ref.setValue (def, item, value);
+                }
             } catch (SQLFeatureNotSupportedException ex) {
                 ResultSetMetaData rsmd = rs.getMetaData ();
-                legacySet (fieldType, field, item, rs, 1, rsmd);
+                legacySet (fieldType, def, item, rs, 1, rsmd);
             }
         }
     }
@@ -1220,7 +1203,7 @@ public abstract class AbstractDatabase implements IDatabase {
     private String join (String[] array, char ch) {
         StringBuilder builder = new StringBuilder ();
         for (String e : array) {
-            if (builder.length () > 0) {
+            if (!builder.isEmpty ()) {
                 builder.append (ch).append (' ');
             }
             builder.append (e);
@@ -1233,27 +1216,25 @@ public abstract class AbstractDatabase implements IDatabase {
             return INSERT_SQL_MAP.get (type);
         }
 
-        DatabaseSchema schema     = ref.map (type);
-        Map<String, Field> fields = ref.getTypedList (type);
-        String[] fieldNames       = schema.getFields ();
+        DatabaseSchema schema = ref.map (type);
+        Map<String, DatabaseFieldDefinition> fields = ref.getTypedList (type);
+        String[] fieldNames = schema.getFields ();
         int index = 0;
         StringBuilder select = new StringBuilder (), values = new StringBuilder ();
         for (String name : fieldNames) {
-            Field field = fields.get (name);
-            if (field.isAnnotationPresent (ISchemaField.class)) {
-                ISchemaField isf = field.getAnnotation (ISchemaField.class);
-                if (isf.autoincrement ()) {
-                    continue;
-                }
-
-                if (index != 0) {
-                    select.append (", ");
-                    values.append (", ");
-                }
-                select.append (isf.name ());
-                values.append ("?");
-                index ++;
+            DatabaseFieldDefinition def = fields.get (name);
+            ISchemaField isf = def.annotation;
+            if (isf.autoincrement ()) {
+                continue;
             }
+
+            if (index != 0) {
+                select.append (", ");
+                values.append (", ");
+            }
+            select.append (def.name);
+            values.append ("?");
+            index ++;
         }
 
         String sql = "INSERT INTO " + schema.getTableName () + "(" + select + ") VALUES (" + values + ")";
@@ -1261,20 +1242,17 @@ public abstract class AbstractDatabase implements IDatabase {
         return sql;
     }
 
-    private Object[] getInsertParameters (DatabaseSchema schema, Object item, Class<?> type) throws IllegalAccessException {
-        Map<String, Field> fields = ref.getTypedList (type);
+    private Object[] getInsertParameters (DatabaseSchema schema, Object item, Class<?> type) throws IllegalAccessException, InvocationTargetException {
+        Map<String, DatabaseFieldDefinition> fields = ref.getTypedList (type);
         String[] fieldNames       = schema.getFields ();
         List<Object> list         = new ArrayList<> ();
         for (String name : fieldNames) {
-            Field field = fields.get (name);
-            if (field.isAnnotationPresent (ISchemaField.class)) {
-                ISchemaField isf = field.getAnnotation (ISchemaField.class);
-                if (isf.autoincrement ()) {
-                    continue;
-                }
+            DatabaseFieldDefinition def = fields.get (name);
+            if (def.annotation.autoincrement ()) {
+                continue;
             }
 
-            list.add (field.get (item));
+            list.add (ref.getValue (def, item));
         }
         Object[] args = new Object[list.size ()];
         return list.toArray (args);
@@ -1289,8 +1267,7 @@ public abstract class AbstractDatabase implements IDatabase {
         try (Connection conn = connect ()) {
             List<ITypedMap> list = new ArrayList<> ();
             if (debug) {
-                logger.debug ("\nexecuting sql: " + sql + "\n" +
-                        "parameters   : [" + Arrays.toString (args) + "]");
+                logger.debug ("\nexecuting sql: {}\nparameters   : [{}]", sql, Arrays.toString (args));
             }
             ResultSet rs = executeQuery (conn, sql, scrollable, args);
             if (scrollable) {

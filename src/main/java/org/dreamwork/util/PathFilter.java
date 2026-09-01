@@ -19,7 +19,7 @@ public class PathFilter {
 
     private String expression;
     private Pattern pattern;
-    private int type;
+    private final int type;
 
     private List<PathFilter> stack;
 

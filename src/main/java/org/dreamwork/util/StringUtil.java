@@ -38,7 +38,7 @@ public class StringUtil {
     public static String join (String[] array, String join, int start, int end) {
         StringBuilder builder = new StringBuilder ();
         for (int i = start; i <= end; i++) {
-            if (builder.length () > 0) builder.append (join);
+            if (!builder.isEmpty ()) builder.append (join);
             builder.append (array[i]);
         }
         return builder.toString ();
@@ -149,7 +149,7 @@ public class StringUtil {
                 target[idx++] = letter[(n >> 4) & 0x0f];
                 target[idx++] = letter[(n & 0x0f)];
             } catch (Exception ex) {
-                ex.printStackTrace ();
+                throw new RuntimeException (ex);
             }
         }
         return idx;

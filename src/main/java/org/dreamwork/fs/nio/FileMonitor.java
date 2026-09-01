@@ -16,14 +16,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class FileMonitor implements Runnable {
     private boolean running = true;
-    private WatchService monitor;
-    private Map<WatchKey, Path> cache = new HashMap<> ();
-    private Set<Path> paths = new HashSet<> ();
-    private ExecutorService service = Executors.newFixedThreadPool (1);
-    private ExecutorService wet     = Executors.newCachedThreadPool ();
-    private List<IFileMonitorListener> listeners = new ArrayList<> ();
+    private final WatchService monitor;
+    private final Map<WatchKey, Path> cache = new HashMap<> ();
+    private final Set<Path> paths = new HashSet<> ();
+    private final ExecutorService service = Executors.newFixedThreadPool (1);
+    private final ExecutorService wet     = Executors.newCachedThreadPool ();
+    private final List<IFileMonitorListener> listeners = new ArrayList<> ();
 
-    private static final Logger logger = LoggerFactory.getLogger (FileMonitor.class);
+    private final Logger logger = LoggerFactory.getLogger (FileMonitor.class);
 
     public FileMonitor () throws IOException {
         monitor = FileSystems.getDefault ().newWatchService ();
@@ -58,23 +58,21 @@ public class FileMonitor implements Runnable {
         if (monitor != null) {
             try {
                 monitor.close ();
-            } catch (IOException e) {
-                e.printStackTrace ();
+            } catch (IOException ex) {
+                logger.warn (ex.getMessage (), ex);
             }
         }
 
         wet.shutdown ();
         try {
             wet.awaitTermination (1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace ();
-        }
+        } catch (InterruptedException ignored) {}
     }
 
     private void register (Path path) throws IOException {
         path = path.toAbsolutePath ();
         if (logger.isTraceEnabled ())
-            logger.trace ("registering the path: " + path);
+            logger.trace ("registering the path: {}", path);
         if (!paths.contains (path)) {
             paths.add (path);
 
@@ -97,7 +95,7 @@ public class FileMonitor implements Runnable {
                     logger.trace ("waiting for new watch key.");
                 key = monitor.take ();
                 if (logger.isTraceEnabled ()) {
-                    logger.trace ("got a watch key: " + key);
+                    logger.trace ("got a watch key: {}", key);
                     logger.trace ("checking for the key whether valid or not");
                 }
                 if (!key.isValid ()) {
@@ -122,9 +120,9 @@ public class FileMonitor implements Runnable {
 
                     if (logger.isTraceEnabled ()) {
                         logger.trace ("poll a watch event");
-                        logger.trace ("context = " + event.context ());
-                        logger.trace ("kind    = " + event.kind ().name ());
-                        logger.trace ("is dir  = " + isDir);
+                        logger.trace ("context = {}", event.context ());
+                        logger.trace ("kind    = {}", event.kind ().name ());
+                        logger.trace ("is dir  = {}", isDir);
                     }
 
                     if ("ENTRY_CREATE".equals (name) && isDir) {
@@ -133,7 +131,7 @@ public class FileMonitor implements Runnable {
                                 logger.trace ("the new context is a directory, register it");
                             register (target);
                         } catch (IOException e1) {
-                            e1.printStackTrace ();
+                            logger.warn (e1.getMessage (), e1);
                             logger.error ("can't register monitor on {}", target);
                         }
                     }
@@ -151,16 +149,16 @@ public class FileMonitor implements Runnable {
 
                 if (!key.reset ()) {
                     if (logger.isTraceEnabled ())
-                        logger.trace (key + " reset fail, remove it from cache");
+                        logger.trace ("{} reset fail, remove it from cache", key);
                     cache.remove (key);
                 }
             } catch (InterruptedException ex) {
-                ex.printStackTrace ();
+                logger.warn (ex.getMessage (), ex);
             }
         }
     }
 
-    private SimpleFileVisitor<Path> visitor = new SimpleFileVisitor<Path> () {
+    private final SimpleFileVisitor<Path> visitor = new SimpleFileVisitor<> () {
         @Override
         public FileVisitResult preVisitDirectory (Path dir, BasicFileAttributes attrs) throws IOException {
             register (dir);

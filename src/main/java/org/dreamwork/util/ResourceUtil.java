@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
+import static org.dreamwork.util.CollectionHelper.isNotEmpty;
+
 /**
  * Created with IntelliJ IDEA.
  * User: seth.yang
@@ -30,21 +32,22 @@ public class ResourceUtil {
         String name = packageName.replace('.', '/');
         Enumeration<URL> e = loader.getResources (name);
         if (e == null)
-            return new ArrayList<Class<?>> ();
+            return Collections.emptyList ();
 
-        List<Class<?>> list = new ArrayList<Class<?>> ();
-        for (; e.hasMoreElements (); ) {
+        List<Class<?>> list = new ArrayList<> ();
+        while (e.hasMoreElements ()) {
             URL url = e.nextElement ();
             IURLFetcher fetcher = findURLFetcher (url, loader);
             List<Class<?>> ret = fetcher.fetchClasses (packageName, url, loader, filter);
-            if (ret != null && ret.size () > 0)
+            if (isNotEmpty (ret)) {
                 list.addAll (ret);
+            }
         }
 
         return list;
     }
 
-    public static File getPhysicalFile (Class clazz) throws Exception {
+    public static File getPhysicalFile (Class<?> clazz) throws Exception {
         ClassLoader loader = clazz.getClassLoader ();
         String classFileName = clazz.getName ().replace ('.', '/') + ".class";
         URL url = loader.getResource (classFileName);
@@ -72,7 +75,7 @@ public class ResourceUtil {
                 throw new RuntimeException ("Can't find URLFetcher for protocol: " + protocol);
 
             Class<?> c = loader.loadClass (fetcherClassName.trim ());
-            fetcher = (IURLFetcher) c.newInstance ();
+            fetcher = (IURLFetcher) c.getDeclaredConstructor ().newInstance ();
         }
 
         caches.put (protocol, fetcher);

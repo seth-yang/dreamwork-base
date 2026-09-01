@@ -9,6 +9,7 @@ import java.util.Arrays;
  * 杂项工具函数
  * Created by seth on 15-12-23.
  */
+@SuppressWarnings ("unused")
 public class Tools {
     public  static final int PN9       = 0x1ff;
     private static final byte[] CRLF   = {'\r', '\n'};
@@ -59,8 +60,7 @@ public class Tools {
 
     /**
      * 反转数组.
-     *
-     * 在源数组上将数组元素反转。若要返回一个新数组，应使用 {@link #reverseTo(byte[])}
+     * <p>在源数组上将数组元素反转。若要返回一个新数组，应使用 {@link #reverseTo(byte[])}</p>
      * @param data 源数组
      */
     public static void reverse (byte[] data) {
@@ -69,8 +69,7 @@ public class Tools {
 
     /**
      * 对数组的部分区域进行反转.
-     *
-     * 在源数组上针对部分区间进行元素的反转。若要返回一个反转后的数据区间切片，应使用 {@link #reverseTo(byte[], int, int)}
+     * <p>在源数组上针对部分区间进行元素的反转。若要返回一个反转后的数据区间切片，应使用 {@link #reverseTo(byte[], int, int)}</p>
      * @param data 源数组
      * @param start 区间开始位置。若无效的区间开始位置（start &lt; 0 || start + length &gt; data.length)，则抛出数组越界异常
      * @param length 区间长度
@@ -87,8 +86,7 @@ public class Tools {
 
     /**
      * 反转数组并返回一个新的数组.
-     *
-     * 反转不会影响源数组。
+     * <p>反转不会影响源数组。</p>
      * 参见 {@link #reverse(byte[])}, {@link #reverse(byte[], int, int)}, {@link #reverseTo(byte[], int, int)}
      * @param data 源数组
      * @return 反转后的数组.
@@ -99,8 +97,7 @@ public class Tools {
 
     /**
      * 反转源数组的指定区域，并返回反转部分数组的新的拷贝.
-     *
-     * 注意，该方法不会影响源数组。
+     * <p>注意，该方法不会影响源数组。</p>
      * 参见 {@link #reverse(byte[])}, {@link #reverse(byte[], int, int)}, {@link #reverseTo(byte[])}
      * @param data 源数组
      * @param start 区间开始
@@ -136,9 +133,7 @@ public class Tools {
 
     /**
      * 将字节数组的指定部分拼装成整数.
-     *
-     * 若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.
-     *
+     * <p>若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.</p>
      * @param data 字节数组
      * @param start 开始位置
      * @param length 长度
@@ -155,9 +150,7 @@ public class Tools {
 
     /**
      * 将字节数组的指定部分拼装成整数.
-     *
-     * 若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.
-     *
+     * <p>若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.</p>
      * @param data 字节数组
      * @param length 长度
      * @param reverse 是否反转字节数组
@@ -169,9 +162,7 @@ public class Tools {
 
     /**
      * 将字节数组的指定部分拼装成整数.
-     *
-     * 若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.
-     *
+     * <p>若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.</p>
      * @param buff    数据
      * @param reverse 是否反转字节数组
      * @return 拼装后的整数值
@@ -182,10 +173,10 @@ public class Tools {
 
     /**
      * 将整数拆分位字节数组.
-     *
+     * <p>
      * 返回的数组长度为 4.若要指定返回的数组的长度，请使用 {@link #intToBytes(int, int)},
      * 若需要将返回的字节数组反转，则使用 {@link #intToBytes(int, int, boolean)}
-     *
+     * </p>
      * @param n 整数值
      * @return 拆分后的字节数组
      */
@@ -195,9 +186,7 @@ public class Tools {
 
     /**
      * 将整数拆分位字节数组.
-     *
-     * 若需要将返回的字节数组反转，则使用 {@link #intToBytes(int, int, boolean)}
-     *
+     * <p>若需要将返回的字节数组反转，则使用 {@link #intToBytes(int, int, boolean)}</p>
      * @param n 整数值
      * @param length 指定的返回的字节数组的长度，其值不能超过4。
      * @return 拆分后的字节数组
@@ -214,8 +203,7 @@ public class Tools {
 
     /**
      * 将整数拆分位字节数组.
-     *
-     * 若参数 reverse 为 真，则对返回的字节数组进行反转
+     * <p>若参数 reverse 为 真，则对返回的字节数组进行反转</p>
      *
      * @param n 整数值
      * @param length 指定的返回的字节数组的长度，其值不能超过4。
@@ -251,8 +239,7 @@ public class Tools {
 
     /**
      * 将字节数组的指定部分拼装成长整数.
-     *
-     * 若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.
+     * <p>若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.</p>
      *
      * @param data 字节数组
      * @param reverse 是否反转字节数组
@@ -264,8 +251,7 @@ public class Tools {
 
     /**
      * 将字节数组的指定部分拼装成长整数.
-     *
-     * 若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.
+     * <p>若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.</p>
      *
      * @param data 字节数组
      * @param length 长度
@@ -278,8 +264,7 @@ public class Tools {
 
     /**
      * 将字节数组的指定部分拼装成整数.
-     *
-     * 若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.
+     * <p>若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.</p>
      *
      * @param data 字节数组
      * @param start 起始位置
@@ -297,9 +282,8 @@ public class Tools {
 
     /**
      * 将长整数拆分位字节数组.
-     *
-     * 若需要指定返回数组的长度，请使用 {@link #longToBytes(long, int)}
-     * 若需要将返回的字节数组反转，则使用 {@link #intToBytes(int, int, boolean)}
+     * <p>若需要指定返回数组的长度，请使用 {@link #longToBytes(long, int)}
+     * 若需要将返回的字节数组反转，则使用 {@link #intToBytes(int, int, boolean)}</p>
      *
      * @param n 整数值
      * @return 拆分后的字节数组
@@ -310,8 +294,7 @@ public class Tools {
 
     /**
      * 将长整数拆分位字节数组.
-     *
-     * 若需要将返回的字节数组反转，则使用 {@link #intToBytes(int, int, boolean)}
+     * <p>若需要将返回的字节数组反转，则使用 {@link #intToBytes(int, int, boolean)}</p>
      *
      * @param n 整数值
      * @param length 指定返回数组的长度
@@ -331,8 +314,7 @@ public class Tools {
 
     /**
      * 将长整数拆分位字节数组.
-     *
-     * 若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.
+     * <p>若参数 reverse 为真，则先将指定的区域进行反转，然后再进行拼装.</p>
      *
      * @param n 整数值
      * @param length 指定返回数组的长度
@@ -362,7 +344,7 @@ public class Tools {
     }
 
     public static byte[] fromHex (String hex) {
-        if (hex == null || hex.trim ().length () == 0)
+        if (hex == null || hex.trim ().isEmpty ())
             return new byte[0];
         hex = hex.trim ().replaceAll ("\\s+", "");
         if (hex.length () % 2 != 0)
@@ -407,8 +389,7 @@ public class Tools {
 
     /**
      * 将整数形式的IP地址值转成字符串形式.
-     *
-     * 逆操作参见 {@link #stringToIp(String)}
+     * <p>逆操作参见 {@link #stringToIp(String)}</p>
      *
      * @param ip ip地址的整数形式
      * @return ip地址的字符串形式
@@ -437,7 +418,7 @@ public class Tools {
 
     /**
      * 将字符串形式的IP地址表达式转成整数形式.
-     * 逆操作参见 {@link #ipToString(int)}
+     * <p>逆操作参见 {@link #ipToString(int)}</p>
      * @param ip 字符串形式的IP地址表达式
      * @return IP地址的整数值
      */
@@ -551,11 +532,6 @@ public class Tools {
         }
     }
 
-    @Deprecated
-    public static void whiting (byte[] data, int offset, int length, int pn9) {
-        whitening (data, offset, length, pn9);
-    }
-
     public static int toBinaryString (InputStream in, OutputStream out) throws IOException {
         return toBinaryString (in, out, 8, -1);
     }
@@ -588,7 +564,7 @@ public class Tools {
                 i ++;
             }
             j ++;
-            if (j != 0 && j % 8 != 0) {
+            if (j % 8 != 0) {
                 out.write (' ');
                 i ++;
             }
@@ -612,9 +588,6 @@ public class Tools {
 
         int count = length * 8;
         int lines = count / 8;
-        if (count % 8 != 0) {
-            lines ++;
-        }
         count += lines * 2;
         char[] data = new char[count];
 
@@ -634,7 +607,7 @@ public class Tools {
                 }
             }
             j ++;
-            if (j != 0 && j % 8 != 0) {
+            if (j % 8 != 0) {
                 data [i ++] = ' ';
             }
 

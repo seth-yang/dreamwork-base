@@ -7,9 +7,6 @@ import org.dreamwork.persistence.DatabaseSchema;
 import org.junit.After;
 import org.junit.Test;
 
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,11 +19,11 @@ public class TestMain {
 
     @org.junit.Before
     public void setUp () throws Exception {
-//        Looper.create ("test.loop", 16);
+        Looper.create ("test.loop", 16);
         DatabaseSchema.register (new TestDatabaseSchema ());
         DatabaseSchema.register (PostBackLogSchema.class);
 
-        db = new PostgreSQL ("jdbc:postgresql://192.168.2.29/nb_dump", "nb", "nb");
+        db = new PostgreSQL ("jdbc:postgresql://127.0.0.1/cemetery", "nb", "nb");
         if (!db.isTablePresent (TestBean.class)) {
             db.createSchemas ();
         }
@@ -37,21 +34,15 @@ public class TestMain {
         for (int i = 0; i < 10; i ++) {
             Looper.runInLoop ("test.loop", new TestRunner ("#" + i));
         }
-/*
-        try {
-            Thread.sleep (10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace ();
-        }
-*/
     }
 
     @After
     public void teardown () {
-//        Looper.exit ();
-//        System.out.println ("shutdown.");
+        Looper.exit ();
+        System.out.println ("shutdown.");
     }
 
+/*
     @Test
     public void testPagination () throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss");
@@ -71,6 +62,7 @@ public class TestMain {
         long now   = System.currentTimeMillis ();
         System.out.println (now - ts);
     }
+*/
 
     private List<TestBean> create (int count) {
         List<TestBean> list = new ArrayList<> (count);

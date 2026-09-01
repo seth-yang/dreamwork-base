@@ -3,6 +3,10 @@ package org.dreamwork.util;
 import java.util.Map;
 
 public class CollectionHelper {
+    public static boolean isEmpty (IDataCollection<?> c) {
+        return c == null || c.getTotalRows () == 0;
+    }
+
     public static boolean isEmpty (java.util.Collection<?> c) {
         return c == null || c.isEmpty ();
     }
@@ -37,6 +41,10 @@ public class CollectionHelper {
 
     public static boolean isEmpty (float[] a) {
         return a == null || a.length == 0;
+    }
+
+    public static boolean isNotEmpty (IDataCollection<?> c) {
+        return c != null && c.getTotalRows () > 0;
     }
 
     public static boolean isNotEmpty (java.util.Collection<?> c) {

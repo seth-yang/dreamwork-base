@@ -8,9 +8,10 @@ import java.sql.Types;
  */
 @Inherited
 @Documented
-@Target (ElementType.FIELD)
+@Target ({ElementType.FIELD, ElementType.METHOD})
 @Retention (RetentionPolicy.RUNTIME)
 public @interface ISchemaField {
+    String value () default ""; // alias for name
     String name () default "";
     boolean id () default false;
     boolean autoincrement () default false;

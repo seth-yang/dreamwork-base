@@ -15,9 +15,9 @@ import static org.dreamwork.network.TunnelPool.*;
  */
 public class Tunnel {
     private static long globalId = 0;
-    private static Logger logger = LoggerFactory.getLogger (Tunnel.class);
+    private static final Logger logger = LoggerFactory.getLogger (Tunnel.class);
 
-    private long id;
+    private final long id;
     String name;
     Socket a, b;
     long touch, timeout, waitingTimeout;
@@ -130,12 +130,12 @@ public class Tunnel {
                 }
             } catch (Exception ex) {
                 System.err.println ("thread = " + name);
-                ex.printStackTrace ();
+                logger.warn (ex.getMessage (), ex);
             } finally {
                 try {
                     dismiss ();
-                } catch (IOException e) {
-                    e.printStackTrace ();
+                } catch (IOException ex) {
+                    logger.warn (ex.getMessage ());
                 }
             }
 
@@ -152,17 +152,17 @@ public class Tunnel {
             if (in != null) try {
                 in.close ();
             } catch (IOException ex) {
-                ex.printStackTrace ();
+                logger.warn (ex.getMessage (), ex);
             }
             in = null;
 
             if (out != null) try {
                 out.close ();
             } catch (IOException ex) {
-                ex.printStackTrace ();
+                logger.warn (ex.getMessage (), ex);
             }
             out = null;
-            logger.info (name + " disposed.");
+            logger.info ("{} disposed.", name);
             peer = null;
         }
     }

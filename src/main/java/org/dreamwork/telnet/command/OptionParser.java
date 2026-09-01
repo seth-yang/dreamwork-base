@@ -1,7 +1,7 @@
 package org.dreamwork.telnet.command;
 
-import com.google.gson.Gson;
 import org.dreamwork.cli.Argument;
+import org.dreamwork.util.JsonHelper;
 import org.dreamwork.util.StringUtil;
 
 import java.util.*;
@@ -46,8 +46,7 @@ public class OptionParser {
      */
     public OptionParser (String spec, boolean strict) {
         this.strict = strict;
-        Gson g = new Gson ();
-        definition = g.fromJson (spec, Argument.AS_LIST);
+        definition = JsonHelper.fromJson (spec, Argument.AS_LIST);
         definition.forEach (a -> {
             if (!StringUtil.isEmpty (a.shortOption)) {
                 byShort.put (a.shortOption, a);

@@ -15,10 +15,10 @@ public class TunnelPool {
     private final static Map<String, List<Tunnel>> pool = new HashMap<String, List<Tunnel>> ();
     private static final Logger logger = LoggerFactory.getLogger (TunnelPool.class);
 
-    private static PausableThread monitor = new PausableThread (true, "Tunnel Monitor") {
+    private static final PausableThread monitor = new PausableThread (true, "Tunnel Monitor") {
         @Override
         protected void doWork () {
-            Map<String, List<Tunnel>> temp = new HashMap<String, List<Tunnel>> ();
+            Map<String, List<Tunnel>> temp = new HashMap<> ();
             synchronized (pool) {
                 for (String name : pool.keySet ()) {
                     List<Tunnel> list = pool.get (name);
@@ -32,7 +32,7 @@ public class TunnelPool {
 
                         if (System.currentTimeMillis () - tunnel.touch > timeout) {
                             if (logger.isTraceEnabled ()) {
-                                logger.trace ("The tunnel [" + tunnel.name + "] times out, it'll be removed from the pool");
+                                logger.trace ("The tunnel [{}] times out, it'll be removed from the pool", tunnel.name);
                             }
 
                             List<Tunnel> set = temp.computeIfAbsent (name, k -> new ArrayList<> ());
@@ -48,21 +48,21 @@ public class TunnelPool {
                             try {
                                 tunnel.dismiss ();
                                 remove (tunnel);
-                            } catch (IOException e) {
-                                e.printStackTrace ();
+                            } catch (IOException ex) {
+                                logger.warn (ex.getMessage (), ex);
                             }
                         }
                     }
                     if (logger.isTraceEnabled ()) {
-                        logger.trace ("now, the pool contains: " + pool.keySet ());
+                        logger.trace ("now, the pool contains: {}", pool.keySet ());
                     }
                 }
             }
 
             try {
                 sleep (100);
-            } catch (InterruptedException e) {
-                e.printStackTrace ();
+            } catch (InterruptedException ex) {
+                Thread.currentThread ().interrupt ();
             }
         }
     };

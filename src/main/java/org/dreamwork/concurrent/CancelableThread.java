@@ -17,7 +17,7 @@ public abstract class CancelableThread extends Thread implements ICancelable {
     volatile protected boolean running = false;
     private static final Logger logger = LoggerFactory.getLogger (CancelableThread.class);
 
-    private static final Set<CancelableThread> references = new HashSet<CancelableThread> ();
+    private static final Set<CancelableThread> references = new HashSet<> ();
 
     /**
      * 真正实现业务的方法.
@@ -32,7 +32,6 @@ public abstract class CancelableThread extends Thread implements ICancelable {
 
     /**
      * 取消线程前的处理代码，您可以在这里销毁该对象所持有的资源.
-     *
      * 在 <code>{@link #cancel(boolean)}</code> 方法内部被调用
      *
      * <p>该方法并不能阻止线程被取消.</p>
@@ -81,6 +80,7 @@ public abstract class CancelableThread extends Thread implements ICancelable {
      * @param name 指定线程名
      * @param running 是否自动启动线程
      */
+    @SuppressWarnings ("unused")
     public CancelableThread (String name, boolean running) {
         super (name);
         references.add (this);
@@ -99,8 +99,8 @@ public abstract class CancelableThread extends Thread implements ICancelable {
     @Override
     public void cancel (boolean block) {
         if (logger.isTraceEnabled ()) {
-            logger.trace ("trying to stop " + getName () + "...");
-            logger.trace ("invoking the before cancel...");
+            logger.trace ("trying to stop {} ...", getName ());
+            logger.trace ("invoking the before cancel ...");
         }
         try {
             beforeCancel ();
@@ -111,13 +111,13 @@ public abstract class CancelableThread extends Thread implements ICancelable {
         if (block && (Thread.currentThread () != this))
             try {
                 this.join ();
-            } catch (InterruptedException e) {
-                e.printStackTrace ();
+            } catch (InterruptedException ex) {
+                logger.warn (ex.getMessage (), ex);
             }
         synchronized (references) {
             references.remove (this);
         }
-        logger.info ("Server [" + getName () + "] stopped.");
+        logger.info ("Server [{}] stopped.", getName ());
     }
 
     /**
@@ -143,18 +143,19 @@ public abstract class CancelableThread extends Thread implements ICancelable {
     @Override
     public void run () {
         if (logger.isTraceEnabled ())
-            logger.trace ("Starting thread[" + getName () + "]");
+            logger.trace ("Starting thread[{}]", getName ());
         while (running) {
             try {
                 doWork ();
             } catch (InterruptedException ex) {
                 logger.warn ("the thread is interrupted.");
+                Thread.currentThread ().interrupt ();
                 break;
             } catch (Exception ex) {
                 logger.warn (ex.getMessage (), ex);
             }
         }
         if (logger.isTraceEnabled ())
-            logger.trace ("Thread[" + getName () + "] stopped.");
+            logger.trace ("Thread[{}] stopped.", getName ());
     }
 }

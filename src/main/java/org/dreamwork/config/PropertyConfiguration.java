@@ -8,12 +8,13 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings ("unused")
 public class PropertyConfiguration implements IConfiguration {
-    private Properties props;
-    private Map<String, Integer> int_cache   = new HashMap<> ();
-    private Map<String, Long> long_cache     = new HashMap<> ();
-    private Map<String, Double> double_cache = new HashMap<> ();
-    private Map<String, Boolean> bool_cache  = new HashMap<> ();
+    private final Properties props;
+    private final Map<String, Integer> int_cache   = new HashMap<> ();
+    private final Map<String, Long> long_cache     = new HashMap<> ();
+    private final Map<String, Double> double_cache = new HashMap<> ();
+    private final Map<String, Boolean> bool_cache  = new HashMap<> ();
 
     public PropertyConfiguration (Properties props) {
         this.props = new Properties ();
@@ -70,10 +71,8 @@ public class PropertyConfiguration implements IConfiguration {
 
         if (!StringUtil.isEmpty (value)) {
             value = value.trim ();
-            if (params.length > 0) {
-                for (KeyValuePair<?> p : params) {
-                    value = value.replace ("${" + p.getName () + "}", String.valueOf (p.getValue ()));
-                }
+            for (KeyValuePair<?> p : params) {
+                value = value.replace ("${" + p.getName () + "}", String.valueOf (p.getValue ()));
             }
 
             if (value.contains ("${")) {
@@ -166,6 +165,9 @@ public class PropertyConfiguration implements IConfiguration {
         }
     }
 
+    private static final Pattern PATTERN_TRUE = Pattern.compile ("^(true|on|1|yes|y|t|是)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PATTERN_FALSE = Pattern.compile ("^(false|off|0|no|n|f|否)$", Pattern.CASE_INSENSITIVE);
+
     @Override
     public boolean getBoolean (String key, boolean defaultValue) {
         Boolean b = checkDefaultValue (key, bool_cache, defaultValue);
@@ -173,9 +175,19 @@ public class PropertyConfiguration implements IConfiguration {
             return b;
         }
         String value = rawProperty (key);
-//        String value = props.getProperty (key).trim ();
+
         try {
-            boolean b_value = Boolean.valueOf (value.trim ());
+            Matcher m = PATTERN_TRUE.matcher (value.trim ());
+            if (m.matches ()) {
+                bool_cache.put (key, true);
+                return true;
+            }
+            m = PATTERN_FALSE.matcher (value.trim ());
+            if (m.matches ()) {
+                bool_cache.put (key, false);
+                return false;
+            }
+            boolean b_value = Boolean.parseBoolean (value.trim ());
             bool_cache.put (key, b_value);
             return b_value;
         } catch (Exception ex) {

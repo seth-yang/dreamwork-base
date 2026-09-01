@@ -9,8 +9,8 @@ import java.util.*;
  * Time: 下午3:49
  */
 public abstract class AbstractResourceManager implements IResourceManager {
-    protected final Map<String, IResourceAdapter> softCache = new HashMap<String, IResourceAdapter> ();
-    protected SortedSet<LocaleWarp> locales = new TreeSet<LocaleWarp> ();
+    protected final Map<String, IResourceAdapter> softCache = new HashMap<> ();
+    protected SortedSet<LocaleWarp> locales = new TreeSet<> ();
 
     /**
      * 获取资源绑定器的工厂方法.
@@ -44,7 +44,7 @@ public abstract class AbstractResourceManager implements IResourceManager {
      * @return 所有支持的区域设置
      */
     public Collection<LocaleWarp> getSupportedLocales () {
-        if (locales.size () == 0) {
+        if (locales.isEmpty ()) {
             for (IResourceAdapter adapter : softCache.values ()) {
                 locales.addAll (adapter.getSupportedLocales ());
             }

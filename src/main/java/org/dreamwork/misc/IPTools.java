@@ -19,7 +19,7 @@ public class IPTools {
     public static String getIpStringFromBytes (byte[] ip) {
         StringBuilder builder = new StringBuilder ();
         for (int i = 0; i < 4; i ++) {
-            if (builder.length () > 0) builder.append ('.');
+            if (!builder.isEmpty ()) builder.append ('.');
             builder.append (ip [i] & 0xff);
         }
         return builder.toString ();

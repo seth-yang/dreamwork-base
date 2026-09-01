@@ -38,7 +38,11 @@ public class FileInfo {
 
     public static String getCanonicalParent (String path) {
         try {
-            return getCanonicalFolder (path).getParentFile ().getCanonicalPath ();
+            File folder = getCanonicalFolder (path);
+            if (folder != null) {
+                return folder.getParentFile ().getCanonicalPath ();
+            }
+            throw new IOException ("Can't get canonical folder of " + path);
         } catch (IOException ex) {
             return "";
         }
@@ -81,7 +85,7 @@ public class FileInfo {
         }
         StringBuilder builder = new StringBuilder ();
         for (String entry : stack) {
-            if (builder.length () != 0) builder.append ('/');
+            if (!builder.isEmpty ()) builder.append ('/');
             builder.append (entry);
         }
 

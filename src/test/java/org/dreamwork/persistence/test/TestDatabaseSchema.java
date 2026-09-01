@@ -15,14 +15,15 @@ public class TestDatabaseSchema extends DatabaseSchema {
 
     @Override
     public String getCreateDDL () {
-        return  "CREATE table test_table (\n" +
-                "    id          serial8              not null primary key,\n" +
-                "    f_name      varchar(32),\n" +
-                "    f_int       integer,\n" +
-                "    f_long      bigint,\n" +
-                "    f_ts        timestamp,\n" +
-                "    f_txt       text\n" +
-                ")";
+        return """
+                CREATE table test_table (
+                    id          serial8              not null primary key,
+                    f_name      varchar(32),
+                    f_int       integer,
+                    f_long      bigint,
+                    f_ts        timestamp,
+                    f_txt       text
+                )""";
     }
 
     @Override

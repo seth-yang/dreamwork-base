@@ -1,6 +1,7 @@
 package org.dreamwork.misc;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -41,8 +42,8 @@ public class AlgorithmUtil {
     }
 
     @Deprecated
-    public static String md5 (String data) throws UnsupportedEncodingException, NoSuchAlgorithmException {
-        byte[] ret = md5 (data.getBytes ("iso-8859-1"));
+    public static String md5 (String data) throws NoSuchAlgorithmException {
+        byte[] ret = md5 (data.getBytes (StandardCharsets.ISO_8859_1));
         StringBuilder builder = new StringBuilder ();
         for (byte i : ret) builder.append (String.format ("%02x", i));
         return builder.toString ();

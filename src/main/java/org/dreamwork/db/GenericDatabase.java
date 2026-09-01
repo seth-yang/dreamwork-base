@@ -5,7 +5,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public class GenericDatabase extends AbstractDatabase {
-    private DataSource datasource;
+    private final DataSource datasource;
 
     public GenericDatabase (DataSource datasource) {
         this.datasource = datasource;

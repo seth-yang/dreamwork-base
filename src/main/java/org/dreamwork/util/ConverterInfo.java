@@ -16,6 +16,6 @@ public @interface ConverterInfo {
     Class<?> type ();
     String format () default "";
     Class<? extends IConverter> converter () default DefaultConverter.class;
+    @Deprecated
     Class<? extends IXMLConverter> xmlConverter () default IXMLConverter.NullXMLConverter.class;
-    Class<? extends IJSONConverter> jsonConverter () default IJSONConverter.DefaultJSONConverter.class;
 }

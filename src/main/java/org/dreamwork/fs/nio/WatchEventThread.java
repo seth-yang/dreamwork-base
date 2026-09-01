@@ -1,5 +1,8 @@
 package org.dreamwork.fs.nio;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
@@ -8,9 +11,10 @@ import java.nio.file.WatchEvent;
  * Created by seth.yang on 2017/4/17
  */
 final class WatchEventThread implements Runnable {
-    private IFileMonitorListener listener;
-    private WatchEvent<Path> event;
-    private Path path;
+    private final IFileMonitorListener listener;
+    private final WatchEvent<Path> event;
+    private final Path path;
+    private final Logger logger = LoggerFactory.getLogger (WatchEventThread.class);
 
     public WatchEventThread (IFileMonitorListener listener, WatchEvent<Path> event, Path path) {
         this.listener = listener;
@@ -34,7 +38,7 @@ final class WatchEventThread implements Runnable {
                     break;
             }
         } catch (IOException ex) {
-            ex.printStackTrace ();
+            logger.warn (ex.getMessage (), ex);
             throw new RuntimeException (ex);
         }
     }

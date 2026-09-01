@@ -28,7 +28,7 @@ public abstract class Server extends CancelableThread implements IServer {
         try {
             beforeBind ();
             super.start ();
-            logger.info ("Server [" + getName () + "] listen on: " + port);
+            logger.info ("Server [{}] listen on: {}", getName (), port);
         } catch (Exception ex) {
             logger.warn (ex.getMessage (), ex);
             beforeCancel ();

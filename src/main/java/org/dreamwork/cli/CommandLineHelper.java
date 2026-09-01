@@ -86,6 +86,7 @@ public class CommandLineHelper {
         return null;
     }
 
+    @SuppressWarnings ("unused")
     public static Properties initLogger (ClassLoader loader, String logLevel, String logFile, String... packages) throws IOException {
         File file = new File (logFile);
         File parent = file.getParentFile ();
@@ -108,10 +109,8 @@ public class CommandLineHelper {
                 props.setProperty ("log4j.appender.stdout.Threshold", logLevel);
                 props.setProperty ("log4j.appender.FILE.File", logFile);
                 props.setProperty ("log4j.appender.FILE.Threshold", logLevel);
-                if (packages.length > 0) {
-                    for (String name : packages) {
-                        props.setProperty ("log4j.logger." + name, "trace");
-                    }
+                for (String name : packages) {
+                    props.setProperty ("log4j.logger." + name, "trace");
                 }
             } else {
 //                props.setProperty ("log4j.rootLogger", logLevel + ", stdout, FILE");
@@ -122,6 +121,7 @@ public class CommandLineHelper {
         }
     }
 
+    @SuppressWarnings ("unused")
     public static Properties parseConfig (String configFile) throws IOException {
         System.out.println ("parsing config file ...");
         configFile = configFile.trim ();
@@ -162,9 +162,7 @@ public class CommandLineHelper {
             StringBuilder builder = new StringBuilder (key);
             if (key.length () < length) {
                 int d = length - key.length ();
-                for (int i = 0; i < d; i ++) {
-                    builder.append (' ');
-                }
+                builder.append (" ".repeat (d));
             }
             builder.append (" : ").append (props.getProperty (key));
             System.out.println (builder);

@@ -9,16 +9,7 @@ import java.util.Locale;
  * Date: 12-10-22
  * Time: 下午8:38
  */
-public class LocaleWarp implements Serializable, Comparable<LocaleWarp> {
-    private Locale locale;
-
-    public LocaleWarp (Locale locale) {
-        this.locale = locale;
-    }
-
-    public Locale getLocale () {
-        return locale;
-    }
+public record LocaleWarp(Locale locale) implements Serializable, Comparable<LocaleWarp> {
 
     public String getDisplayLanguage () {
         return locale.getDisplayLanguage (locale);

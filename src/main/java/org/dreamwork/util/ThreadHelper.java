@@ -13,6 +13,7 @@ public class ThreadHelper {
             if (logger.isTraceEnabled ()) {
                 logger.warn (ex.getMessage (), ex);
             }
+            Thread.currentThread ().interrupt ();
         }
     }
 

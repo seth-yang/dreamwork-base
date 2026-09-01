@@ -52,17 +52,17 @@ public abstract class AbstractResourceAdapter implements IResourceAdapter {
         String value = res.getString (name, null);
         if (value == null) { // 在对应的区域语言中未找到对应的资源，寻找最接近的语言
             if (logger.isTraceEnabled ())
-                logger.trace ("Can't find resource [" + name + "] in locale [" + locale.getDisplayName () + "], trying to find a closet one.");
+                logger.trace ("Can't find resource [{}] in locale [{}], trying to find a closet one.", name, locale.getDisplayName ());
             for (Locale l : softCache.keySet ()) {
                 if (l.equals (locale)) continue;
 
                 if (l.getLanguage ().equals (locale.getLanguage ())) {
                     if (logger.isTraceEnabled ())
-                        logger.trace ("Trying find resource in locale [" + l.getDisplayName () + "]");
+                        logger.trace ("Trying find resource in locale [{}]", l.getDisplayName ());
                     IResourceBundle bundle = softCache.get (l);
                     if (bundle.isResourcePresent (name)) {
                         if (logger.isTraceEnabled ())
-                            logger.trace ("Resource [" + name + "] found in locale [" + l.getDisplayName () + "]");
+                            logger.trace ("Resource [{}] found in locale [{}]", name, l.getDisplayName ());
                         value = bundle.getString (name, null);
                         break;
                     }
@@ -72,7 +72,7 @@ public abstract class AbstractResourceAdapter implements IResourceAdapter {
 
         if (value == null) {
             if (logger.isTraceEnabled ())
-                logger.trace ("Can't find resource in language [" + locale.getDisplayLanguage () + "], returning resource in default locale");
+                logger.trace ("Can't find resource in language [{}], returning resource in default locale", locale.getDisplayLanguage ());
             return defaultResourceBundle.getString (name, defaultValue);
         }
         return value;
@@ -87,7 +87,7 @@ public abstract class AbstractResourceAdapter implements IResourceAdapter {
     }
 
     protected static boolean isEmpty (String text) {
-        return text == null || text.trim ().length () == 0;
+        return text == null || text.trim ().isEmpty ();
     }
 
     protected boolean isLocaleSupport (Locale locale) {
@@ -108,11 +108,11 @@ public abstract class AbstractResourceAdapter implements IResourceAdapter {
         IResourceBundle bundle = softCache.get (locale);
         if (bundle == null) {
             if (logger.isTraceEnabled ())
-                logger.trace ("Can't match locale [" + locale + "], trying to match a closet one");
+                logger.trace ("Can't match locale [{}], trying to match a closet one", locale);
             for (Locale l : softCache.keySet ()) {
                 if (l.getLanguage ().equals (locale.getLanguage ())) {
                     if (logger.isDebugEnabled ())
-                        logger.debug ("match [" + locale + "] to [" + l + "]");
+                        logger.debug ("match [{}] to [{}]", locale, l);
                     return softCache.get (l);
                 }
             }

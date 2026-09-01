@@ -13,10 +13,10 @@ import java.util.List;
  * Time: 上午10:44
  */
 public class FSWatcher implements Runnable {
-    private FolderWalker walker;
+    private final FolderWalker walker;
     private long interval = 60000L;
     private boolean running, asynchronous;
-    private FSMonitor monitor;
+    private final FSMonitor monitor;
 
     private static final Object locker = new Object ();
     private static final Logger logger = LoggerFactory.getLogger (FSWatcher.class);
@@ -124,31 +124,5 @@ public class FSWatcher implements Runnable {
             logger.warn ("Can't start watcher");
             logger.warn (ex.getMessage (), ex);
         }
-    }
-
-    public static void main (String[] args) throws Exception {
-        FSWatcher watcher = new FSWatcher (new File ("/home/seth/poc"));
-        watcher.setInterval (10000L);
-//        watcher.setFileFilter ("*.*");
-        watcher.addFileHandler (new IFileHandler () {
-            @Override
-            public void processFile (FSMonitor monitor, File file) {
-                try {
-                    System.out.println ("process " + file.getCanonicalPath ());
-                } catch (IOException e) {
-                    e.printStackTrace ();  //To change body of catch statement use File | Settings | File Templates.
-                }
-            }
-
-            @Override
-            public void processDir (FSMonitor monitor, File dir) {
-                try {
-                    System.out.println ("process dir: " + dir.getCanonicalPath ());
-                } catch (IOException e) {
-                    e.printStackTrace ();  //To change body of catch statement use File | Settings | File Templates.
-                }
-            }
-        });
-        watcher.watch ();
     }
 }

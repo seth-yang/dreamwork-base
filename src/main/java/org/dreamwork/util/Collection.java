@@ -9,7 +9,7 @@ import java.util.*;
  * Time: 3:04:48
  */
 public class Collection<T> extends HashMap<String, T> implements ICollection<T> {
-    private List<String> indexes;
+    private final List<String> indexes;
 
     public Collection () {
         indexes = new ArrayList<> ();
@@ -60,7 +60,7 @@ public class Collection<T> extends HashMap<String, T> implements ICollection<T> 
 
     public T add (String key, T value) {
         key = key.toUpperCase ();
-        if (indexes.indexOf (key) == -1) indexes.add (key);
+        if (!indexes.contains (key)) indexes.add (key);
         return put (key, value);
     }
 
@@ -68,7 +68,7 @@ public class Collection<T> extends HashMap<String, T> implements ICollection<T> 
         key = key.toUpperCase ();
         if (size () == 0) return add (key, value);
         else {
-            if (indexes.indexOf (key) != -1) indexes.remove (key);
+            indexes.remove (key);
             indexes.add (index, key);
             return put (key, value);
         }

@@ -12,10 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Time: 上午11:28
  */
 public class FSMonitor implements Runnable {
-    private File index;
-    private Map<String, Long> map = new ConcurrentHashMap<String, Long> ();
-    private boolean running = true;
-    private long interval = 60000L;
+    private final File index;
+    private final Map<String, Long> map = new ConcurrentHashMap<String, Long> ();
+    private volatile boolean running = true;
 
     private static final Object locker = new Object ();
     private static final String INDEX_FILE = ".index";
@@ -79,11 +78,12 @@ public class FSMonitor implements Runnable {
     public void run () {
         while (running) {
             try {
+                long interval = 60000L;
                 Thread.sleep (interval);
 
                 flushIndices ();
-            } catch (Exception e) {
-                e.printStackTrace ();
+            } catch (Exception ex) {
+                Thread.currentThread ().interrupt ();
             }
         }
     }

@@ -15,6 +15,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created with IntelliJ IDEA.
@@ -36,7 +37,7 @@ public class XMLUtil {
     }
 
     public static Document parse (String string) throws IOException, ParserConfigurationException, SAXException {
-        return parse (new ByteArrayInputStream (string.getBytes ("utf-8")));
+        return parse (new ByteArrayInputStream (string.getBytes (StandardCharsets.UTF_8)));
     }
 
     public static Document parse (File file) throws ParserConfigurationException, IOException, SAXException {
@@ -44,11 +45,8 @@ public class XMLUtil {
     }
 
     public static Document parse (URL url) throws IOException, ParserConfigurationException, SAXException {
-        InputStream in = url.openStream ();
-        try {
+        try (InputStream in = url.openStream ()) {
             return parse (in);
-        } finally {
-            in.close ();
         }
     }
 

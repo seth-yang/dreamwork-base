@@ -19,7 +19,7 @@ public class PathFilter {
 
     private String expression;
     private Pattern pattern;
-    private int type;
+    private final int type;
 
     private List<PathFilter> stack;
 
@@ -35,7 +35,7 @@ public class PathFilter {
             String e = expression.replace (".", "\\.").replace ("*", ".*").replace ("$", "\\$");
             pattern = Pattern.compile (e);
         } else {
-            stack = new ArrayList<PathFilter> ();
+            stack = new ArrayList<> ();
             for (String part : expression.split ("/")) {
                 stack.add (new PathFilter (part));
             }

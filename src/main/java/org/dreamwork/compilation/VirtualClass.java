@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 /**
  * 虚拟类，用于中间代码生成。
- *
  * Created by IntelliJ IDEA.
  * User: seth
  * Date: 2009-2-2
@@ -203,7 +202,7 @@ public class VirtualClass extends VirtualType<VirtualClass> {
         buff.append (name).append (" ");
         if (superClassName != null)
             buff.append ("extends ").append (superClassName).append (" ");
-        if (interfaces.size () > 0) {
+        if (!interfaces.isEmpty ()) {
             buff.append ("implements ");
             for (int i = 0; i < interfaces.size (); i ++) {
                 if (i != 0) buff.append (", ");

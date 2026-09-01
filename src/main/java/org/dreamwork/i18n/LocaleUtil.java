@@ -12,7 +12,7 @@ import java.util.Set;
  * Time: 下午4:48
  */
 public class LocaleUtil {
-    public static Set<String> VALID_LOCALE_NAME = new HashSet<String> ();
+    public static Set<String> VALID_LOCALE_NAME = new HashSet<> ();
     static {
         for (Locale locale : Locale.getAvailableLocales ())
             VALID_LOCALE_NAME.add (locale.toString ());
@@ -23,7 +23,7 @@ public class LocaleUtil {
     }
 
     public static Locale findClosetLocale (Collection<Locale> c, Locale locale) {
-        if (c == null || c.size () == 0) return null;
+        if (c == null || c.isEmpty ()) return null;
         if (c.contains (locale)) return locale;
 
         for (Locale l : c) {

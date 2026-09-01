@@ -16,5 +16,5 @@ public interface IProgressWatcher<T> {
     void fail (int code, String reason);
     void updateProgress ();
 
-    IProgressWatcher execute (IProgressWorker worker) throws Exception;
+    IProgressWatcher<T> execute (IProgressWorker worker) throws Exception;
 }

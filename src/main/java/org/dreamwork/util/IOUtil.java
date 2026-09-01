@@ -79,11 +79,8 @@ public class IOUtil {
 
     public static void dump (File file, OutputStream out) throws IOException {
         int size = (int) Math.max (file.length (), MAX_LENGTH);
-        InputStream in = new FileInputStream (file);
-        try {
+        try (InputStream in = new FileInputStream (file)) {
             dump (in, out, size);
-        } finally {
-            in.close ();
         }
     }
 
@@ -133,12 +130,8 @@ public class IOUtil {
     }
 
     public static byte[] read (File file) throws IOException {
-        FileInputStream fis = null;
-        try{
-            fis = new FileInputStream(file);
-            return read(fis);
-        }finally{
-            if (fis != null) fis.close ();
+        try (FileInputStream fis = new FileInputStream (file)) {
+            return read (fis);
         }
     }
 
@@ -147,11 +140,8 @@ public class IOUtil {
     }
 
     public static void write (byte[] buff, File file) throws IOException {
-        FileOutputStream fos = new FileOutputStream (file);
-        try {
+        try (FileOutputStream fos = new FileOutputStream (file)) {
             fos.write (buff, 0, buff.length);
-        } finally {
-            fos.close ();
         }
     }
 }

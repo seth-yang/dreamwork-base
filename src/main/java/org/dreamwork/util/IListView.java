@@ -8,6 +8,6 @@ import java.io.Serializable;
  * Date: 2009-1-20
  * Time: 17:07:10
  */
-public interface IListView extends Serializable {
-    ICollection getCollection ();
+public interface IListView<T> extends Serializable {
+    ICollection<T> getCollection ();
 }

@@ -1,16 +1,15 @@
 package org.dreamwork.cli;
 
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.dreamwork.util.StringUtil;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
 /**
  * Created by seth.yang on 2017/7/10
  */
 public class Argument implements Comparable<Argument> {
-    public String shortOption, longOption, description, value, defaultValue, propKey;
+    public String shortOption, longOption, description, value, defaultValue;
     public boolean required, requireValue;
     public ArgumentValue[] values;
 
@@ -52,5 +51,5 @@ public class Argument implements Comparable<Argument> {
         return buildKey ().hashCode ();
     }
 
-    public static final Type AS_LIST = new TypeToken<List<Argument>> () {}.getType ();
+    public static final TypeReference<List<Argument>> AS_LIST = new TypeReference<> () {};
 }

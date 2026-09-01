@@ -10,11 +10,12 @@ import java.util.Map;
 /**
  * Created by seth.yang on 2017/6/27
  */
+@SuppressWarnings ("unused")
 public class VirtualAnnotation extends VirtualType<VirtualAnnotation> {
     private static final String NO_VALUE   = "<NO_VALUE>";
 
     private String value;
-    private Map<String, Object> parameters = new HashMap<> ();
+    private final Map<String, Object> parameters = new HashMap<> ();
 
     public VirtualAnnotation (String name) {
         setName (name);
@@ -35,11 +36,11 @@ public class VirtualAnnotation extends VirtualType<VirtualAnnotation> {
                 parameters.put (name, cast (value));
             } else {
                 Class<?> oc = o.getClass ();
-                List list;
+                List<Object> list;
                 if (List.class.isAssignableFrom (oc)) {
-                    list = (List) o;
+                    list = (List<Object>) o;
                 } else {
-                    list = new ArrayList ();
+                    list = new ArrayList<> ();
                     list.add (o);
                     parameters.put (name, list);
                 }
@@ -75,13 +76,13 @@ public class VirtualAnnotation extends VirtualType<VirtualAnnotation> {
         } else if (c == String.class) {
             return '"' + value.toString ().replace ("\"", "\\\"") + '"';
         } else if (c.isEnum ()) {
-            Enum e = (Enum) value;
-            Class ec = e.getDeclaringClass ();
-            return ec.getCanonicalName () + '.' + e.toString ();
+            Enum<?> e = (Enum<?>) value;
+            Class<?> ec = e.getDeclaringClass ();
+            return ec.getCanonicalName () + '.' + e;
         } else if (c == VirtualClass.class) {
             return ((VirtualClass) value).getReferenceName () + ".class";
         } else if (c == Class.class) {
-            return ((Class) value).getName () + ".class";
+            return ((Class<?>) value).getName () + ".class";
         }
 
         throw new RuntimeException ("unknown type: " + c);
@@ -105,7 +106,8 @@ public class VirtualAnnotation extends VirtualType<VirtualAnnotation> {
                     builder.append (key).append (" = ").append (o);
                 } else {
                     builder.append (key).append (" = {");
-                    List list = (List) o;
+                    @SuppressWarnings ("unchecked")
+                    List<Object> list = (List<Object>) o;
                     for (int j = 0; j < list.size (); j ++) {
                         if (j > 0) {
                             builder.append (", ");

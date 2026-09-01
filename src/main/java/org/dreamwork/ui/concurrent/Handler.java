@@ -24,37 +24,6 @@ public class Handler {
         return new Message (what, object);
     }
 
-    /**
-     * replaced by {@link #sendUIMessage(int)}
-     * @see #sendUIMessage(int)
-     * @param what the command
-     */
-    @Deprecated
-    public void sendMessage (int what) {
-        sendUIMessage (what);
-    }
-
-    /**
-     * replaced by {@link #sendUIMessage(int, Object)}
-     * @see #sendUIMessage(int, Object)
-     * @param what   command
-     * @param object the parameter object
-     */
-    @Deprecated
-    public void sendMessage (int what, Object object) {
-        sendUIMessage (what, object);
-    }
-
-    /**
-     * replaced by {@link #sendUIMessage(Message)}
-     * @see #sendUIMessage(Message)
-     * @param message the command parameter
-     */
-    @Deprecated
-    public void sendMessage (Message message) {
-        sendUIMessage (message);
-    }
-
     public void sendUIMessage (int what) {
         sendUIMessage (obtain (what));
     }
@@ -97,6 +66,12 @@ public class Handler {
             Looper.runInLoop (THREAD_NAME, r);
         } else {
             Looper.invokeLater (r);
+        }
+    }
+
+    public void dispose () {
+        if (Looper.exists (THREAD_NAME)) {
+            Looper.destory (THREAD_NAME);
         }
     }
 

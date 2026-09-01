@@ -16,7 +16,7 @@ public class TestScriptExecutor {
 
     @Before
     public void setup () {
-        script = new File ("E:\\workspace\\home_center\\java\\modules\\center-web\\web\\WEB-INF\\init-data.sql");
+        script = new File ("F:\\projects\\seth.yang\\home_center\\java\\modules\\center-web\\web\\WEB-INF\\init-data.sql");
     }
 
     @Test

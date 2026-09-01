@@ -1,39 +1,45 @@
 package org.dreamwork.fs;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.util.*;
 
+import static org.dreamwork.util.CollectionHelper.isNotEmpty;
+
 /**
  * 文件系统遍历工具
- *
  * Created by IntelliJ IDEA.
  * User: seth.yang
  * Date: 2010-4-12
  * Time: 13:30:10
  */
 public class FolderWalker {
+    private static final Logger log = LoggerFactory.getLogger (FolderWalker.class);
     private String baseDir;
     private boolean createIndex = true, synchronous = true;
 
     private Map<String, Long> map;
     private FSMonitor monitor;
 
-    private List<IFileHandler> handlers = Collections.synchronizedList (new ArrayList<IFileHandler> ());
+    private final List<IFileHandler> handlers = Collections.synchronizedList (new ArrayList<IFileHandler> ());
 
-    private FileFilter dirFilter = new FileFilter() {
+    private final FileFilter dirFilter = new FileFilter() {
         public boolean accept (File pathname) {
             return pathname.isDirectory ();
         }
     };
-    private WalkerFileFilter fileFilter = new WalkerFileFilter ();
+    private final WalkerFileFilter fileFilter = new WalkerFileFilter ();
 
-    private static IFileHandler synchronousHandler = new IFileHandler () {
+    private static final IFileHandler synchronousHandler = new IFileHandler () {
+        private final Logger logger = LoggerFactory.getLogger ("synchronousHandler");
         @Override
         public void processFile (FSMonitor monitor, File file) {
             try {
                 monitor.commit (file);
-            } catch (IOException e) {
-                e.printStackTrace ();
+            } catch (IOException ex) {
+                logger.warn (ex.getMessage (), ex);
             }
         }
 
@@ -41,25 +47,11 @@ public class FolderWalker {
         public void processDir (FSMonitor monitor, File dir) {
             try {
                 monitor.commit (dir);
-            } catch (IOException e) {
-                e.printStackTrace ();
+            } catch (IOException ex) {
+                logger.warn (ex.getMessage (), ex);
             }
         }
     };
-
-    /*
-     * 创建一个指定路径的文件遍历工具类
-     * @param baseDir 指定的路径
-     */
-/*
-    public FolderWalker (String baseDir) throws IOException {
-        this (new File (baseDir));
-    }
-
-    public FolderWalker (File file) throws IOException {
-        this.baseDir = file.getCanonicalPath ();
-    }
-*/
 
     /**
      * 是否创建文件索引
@@ -98,9 +90,7 @@ public class FolderWalker {
      * @return 文件处理器列表
      */
     public List<IFileHandler> getFileHandlers () {
-        List<IFileHandler> list = new ArrayList<IFileHandler> ();
-        list.addAll (handlers);
-        return list;
+        return new ArrayList<> (handlers);
     }
 
     /**
@@ -132,7 +122,7 @@ public class FolderWalker {
      * @return 过滤器规则
      */
     public String getFileFilter () {
-        return fileFilter == null ? null : fileFilter.getFilter ();
+        return fileFilter.getFilter ();
     }
 
     /**
@@ -168,14 +158,6 @@ public class FolderWalker {
         map = monitor.dumpIndices ();
         File file = new File (baseDir);
         listDir (file);
-
-/*
-        List<IFileHandler> handlers = getFileHandlers ();
-        Set<File> set = new HashSet<File> ();
-        for (IFileHandler handler : handlers) {
-            set.addAll (handler.getFailFiles ());
-        }
-*/
     }
 
     private void processDirectory (File dir) {
@@ -205,14 +187,18 @@ public class FolderWalker {
 
 
         File[] dirs = dir.listFiles (dirFilter);
-        for (File di : dirs) {
-            System.out.println ("dir = " + di.getCanonicalPath ());
-            listDir (di);
+        if (isNotEmpty (dirs)) {
+            for (File di : dirs) {
+                System.out.println ("dir = " + di.getCanonicalPath ());
+                listDir (di);
+            }
         }
         File[] files = dir.listFiles (fileFilter);
-        for (File file : files) {
-            System.out.println ("file = " + file.getCanonicalPath ());
-            recordFile (file);
+        if (isNotEmpty (files)) {
+            for (File file : files) {
+                System.out.println ("file = " + file.getCanonicalPath ());
+                recordFile (file);
+            }
         }
     }
 
@@ -227,12 +213,4 @@ public class FolderWalker {
             processFile (file);
         }
     }
-
-/*
-    private void processAndRecordFile (File file) throws IOException {
-        String key = file.getCanonicalPath ();
-        processFile (file);
-        map.put (key, file.lastModified ());
-    }
-*/
 }

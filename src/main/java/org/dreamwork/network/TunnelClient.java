@@ -2,12 +2,13 @@ package org.dreamwork.network;
 
 import org.dreamwork.concurrent.CancelableThread;
 import org.dreamwork.secure.SecureUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.Key;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,6 +19,7 @@ import java.util.concurrent.Executors;
 public abstract class TunnelClient extends CancelableThread {
     private static final int MAX_THREAD_COUNT = 5;
     private static final ExecutorService service = Executors.newFixedThreadPool (MAX_THREAD_COUNT);
+    private static final Logger logger = LoggerFactory.getLogger (TunnelClient.class);
 
     protected int port;
     protected String host, name;
@@ -37,8 +39,8 @@ public abstract class TunnelClient extends CancelableThread {
         if (socket != null) {
             try {
                 socket.close ();
-            } catch (IOException e) {
-                e.printStackTrace ();
+            } catch (IOException ex) {
+                logger.warn (ex.getMessage (), ex);
             }
         }
     }
@@ -57,10 +59,8 @@ public abstract class TunnelClient extends CancelableThread {
             socket = new Socket (host, port);
             InputStream in   = null;
             OutputStream out = null;
-        } catch (UnknownHostException e) {
-            e.printStackTrace ();
-        } catch (IOException e) {
-            e.printStackTrace ();
+        } catch (IOException ex) {
+            logger.warn (ex.getMessage (), ex);
         }
     }
 }

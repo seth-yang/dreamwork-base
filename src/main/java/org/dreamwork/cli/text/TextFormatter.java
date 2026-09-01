@@ -26,26 +26,20 @@ public class TextFormatter {
 
         int d = columns - getWidth (content);
         StringBuilder builder = new StringBuilder ();
+        String repeated = String.valueOf (fill).repeat (Math.max (0, d));
         if (align == Alignment.Left) {
             builder.append (content);
-            for (int i = 0; i < d; i ++)
-                builder.append (fill);
+            builder.append (repeated);
             return builder.toString ();
         } else if (align == Alignment.Center) {
             int start = d / 2;
             int end   = d - start;
-            for (int i = 0; i < start; i ++) {
-                builder.append (fill);
-            }
+            builder.append (String.valueOf (fill).repeat (Math.max (0, start)));
             builder.append (content);
-            for (int i = 0; i < end; i ++) {
-                builder.append (fill);
-            }
+            builder.append (String.valueOf (fill).repeat (Math.max (0, end)));
             return builder.toString ();
         } else {
-            for (int i = 0; i < d; i ++) {
-                builder.append (fill);
-            }
+            builder.append (repeated);
             builder.append (content);
             return builder.toString ();
         }

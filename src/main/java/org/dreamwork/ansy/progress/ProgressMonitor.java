@@ -1,6 +1,9 @@
 package org.dreamwork.ansy.progress;
 
 import org.dreamwork.util.IDisposable;
+import org.dreamwork.util.ThreadHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -9,21 +12,24 @@ import org.dreamwork.util.IDisposable;
  * Time: 下午12:27
  */
 public class ProgressMonitor extends Thread implements IDisposable {
-    private IProgressWatcher watcher;
-    private long interval;
+    private final Logger logger = LoggerFactory.getLogger (ProgressMonitor.class);
+
+    private final IProgressWatcher<?> watcher;
+    private final long interval;
     private boolean watching = false, pause = false;
 
     private final Object locker = new Object ();
 
-    public ProgressMonitor (IProgressWatcher watcher) {
+    public ProgressMonitor (IProgressWatcher<?> watcher) {
         this (watcher, 200);
     }
 
-    public ProgressMonitor (IProgressWatcher watcher, long interval) {
+    public ProgressMonitor (IProgressWatcher<?> watcher, long interval) {
         this.watcher = watcher;
         this.interval = interval;
     }
 
+    @SuppressWarnings ("unused")
     public void watchOn () {
         synchronized (locker) {
             locker.notifyAll ();
@@ -35,17 +41,17 @@ public class ProgressMonitor extends Thread implements IDisposable {
         try {
             watching = true;
             while (watching) {
-                sleep (interval);
+                ThreadHelper.delay (interval);
                 watcher.updateProgress ();
 
-                if (pause && watching) {
+                while (pause && watching) {
                     synchronized (locker) {
-                        locker.wait ();
+                        locker.wait (interval);
                     }
                 }
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace ();
+        } catch (InterruptedException ex) {
+            logger.warn (ex.getMessage (), ex);
         }
     }
 
@@ -53,6 +59,7 @@ public class ProgressMonitor extends Thread implements IDisposable {
         watching = false;
     }
 
+    @SuppressWarnings ("unused")
     public void pause () {
         synchronized (locker) {
             pause = true;

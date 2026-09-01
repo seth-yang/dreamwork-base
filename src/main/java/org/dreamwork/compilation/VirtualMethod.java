@@ -10,11 +10,12 @@ import java.util.List;
  * Date: 2009-2-2
  * Time: 11:39:56
  */
+@SuppressWarnings ("unused")
 public class VirtualMethod extends VirtualType<VirtualMethod> {
     private String returnType;
-    private List<VirtualParameter> parameters = new ArrayList<> ();
-    private List<CharSequence> statements = new ArrayList<> ();
-    private List<String> exceptions = new ArrayList<> ();
+    private final List<VirtualParameter> parameters = new ArrayList<> ();
+    private final List<CharSequence> statements = new ArrayList<> ();
+    private final List<String> exceptions = new ArrayList<> ();
 
     /**
      * 获取方法返回类型
@@ -97,7 +98,7 @@ public class VirtualMethod extends VirtualType<VirtualMethod> {
             buff.append (parameters.get (i));
         }
         buff.append (")");
-        if (exceptions.size () > 0) {
+        if (!exceptions.isEmpty ()) {
             buff.append (" throws ");
             for (int i = 0; i < exceptions.size (); i ++) {
                 if (i != 0) buff.append (", ");

@@ -30,9 +30,9 @@ public class XMLResourceAdapter extends AbstractResourceAdapter {
     private static DocumentBuilder builder;
 
     private static final Logger logger = LoggerFactory.getLogger (XMLResourceAdapter.class);
-    private AbstractResourceManager manager;
+    private final AbstractResourceManager manager;
     private Set<XMLResourceAdapter> importedAdapters;
-    private Locale defaultLocale;
+    private final Locale defaultLocale;
 
     public XMLResourceAdapter (AbstractResourceManager manager, Locale defaultLocale, URL... resources) throws ParserConfigurationException, IOException, SAXException {
         this.manager = manager;
@@ -44,8 +44,8 @@ public class XMLResourceAdapter extends AbstractResourceAdapter {
             Element root = parse (url);
 
             NodeList list = root.getElementsByTagName ("import");
-            if (list != null && list.getLength () > 0) {
-                importedAdapters = new HashSet<XMLResourceAdapter> ();
+            if (list.getLength () > 0) {
+                importedAdapters = new HashSet<> ();
                 for (int i = 0; i < list.getLength (); i ++) {
                     Element e = (Element) list.item (i);
                     String location = e.getAttribute ("file");
@@ -128,7 +128,6 @@ public class XMLResourceAdapter extends AbstractResourceAdapter {
             path = FileInfo.getAbsolutePath (path, location);
             if (!path.endsWith (".xml"))
                 path += ".xml";
-//            String ext = FileInfo.getExtension (location);
             URL url = new URL (path);
             adapter = new XMLResourceAdapter (manager, defaultLocale, url);
             manager.mergeAdapter (baseName, adapter);

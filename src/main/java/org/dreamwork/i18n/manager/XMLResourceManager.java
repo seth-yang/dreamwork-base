@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import static org.dreamwork.util.CollectionHelper.isNotEmpty;
+
 /**
  * Created by IntelliJ IDEA.
  * User: seth.yang
@@ -22,8 +24,8 @@ import java.util.Set;
  * Time: 下午5:44
  */
 public class XMLResourceManager extends AbstractResourceManager {
-    private File base;
-    private Locale defaultLocale;
+    private final File base;
+    private final Locale defaultLocale;
 
     public XMLResourceManager (String baseDir, Locale defaultLocale) {
         this.defaultLocale = defaultLocale;
@@ -38,19 +40,25 @@ public class XMLResourceManager extends AbstractResourceManager {
 
     @Override
     protected IResourceAdapter createResourceAdapter (String baseName) {
-        Set<URL> set = new HashSet<URL> ();
+        Set<URL> set = new HashSet<> ();
         File[] files = base.listFiles (new NamedResourceFilter (baseName, true));
-        for (File file : files) {
-            try {
-                if (file.isFile () && file.canRead ()) set.add (file.toURI().toURL ());
-                else if (file.isDirectory ()) {
-                    File[] fs = file.listFiles (new NamedResourceFilter (baseName));
-                    for (File f : fs) {
-                        if (f.isFile () && f.canRead ()) set.add (f.toURI().toURL ());
+        if (isNotEmpty (files)) {
+            for (File file : files) {
+                try {
+                    if (file.isFile () && file.canRead ()) {
+                        set.add (file.toURI().toURL ());
                     }
+                    else if (file.isDirectory ()) {
+                        File[] fs = file.listFiles (new NamedResourceFilter (baseName));
+                        if (isNotEmpty (fs)) {
+                            for (File f : fs) {
+                                if (f.isFile () && f.canRead ()) set.add (f.toURI().toURL ());
+                            }
+                        }
+                    }
+                } catch (IOException ex) {
+                    // ignore
                 }
-            } catch (IOException ex) {
-                // ignore
             }
         }
         try {
@@ -62,8 +70,8 @@ public class XMLResourceManager extends AbstractResourceManager {
     }
 
     private static class NamedResourceFilter implements FileFilter {
-        private String baseName;
-        private boolean includeDirs;
+        private final String baseName;
+        private final boolean includeDirs;
 
         public NamedResourceFilter (String baseName) {
             this (baseName, false);

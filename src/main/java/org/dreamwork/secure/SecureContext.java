@@ -1,7 +1,5 @@
 package org.dreamwork.secure;
 
-import com.google.gson.annotations.Expose;
-
 import java.security.NoSuchAlgorithmException;
 
 /**
@@ -11,7 +9,6 @@ import java.security.NoSuchAlgorithmException;
  * Time: 14:26
  */
 public class SecureContext {
-    @Expose
     private AlgorithmMapping blockEncryption, keyTransport, mac, signature, messageDigest, symmetricKeyWrap;
     private IKeyFetcher fetcher;
 

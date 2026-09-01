@@ -9,6 +9,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.dreamwork.util.CollectionHelper.isNotEmpty;
+
 /**
  * Created by IntelliJ IDEA.
  * User: seth.yang
@@ -17,19 +19,19 @@ import java.util.regex.Pattern;
  */
 public class FileMatcher<T> {
     private FileFilter filter;
-    private File basedir;
+    private final File basedir;
     private String includes, excludes;
-    private Class<T> type;
+    private final Class<T> type;
 
-    private Map<String, Pattern> cache = new HashMap<String, Pattern> ();
+    private final Map<String, Pattern> cache = new HashMap<> ();
 
-    private static final Pattern P = Pattern.compile ("[,\\s;\\|]");
+    private static final Pattern P = Pattern.compile ("[,\\s;|]");
 
     public FileMatcher (File basedir, Class<T> type) {
         this.basedir = basedir;
 
         if (type != File.class && type != URL.class && type != URI.class)
-            throw new IllegalArgumentException ("Unspport type: " + type.getCanonicalName ());
+            throw new IllegalArgumentException ("Unsupported type: " + type.getCanonicalName ());
 
         this.type = type;
     }
@@ -59,14 +61,14 @@ public class FileMatcher<T> {
     }
 
     @SuppressWarnings ("unchecked")
-    public java.util.Collection<T> getMatcheFiles () throws IOException {
+    public java.util.Collection<T> getMatchFiles () throws IOException {
         if (!basedir.exists ()) return new java.util.HashSet<T> ();
         File[] files;
         if (filter == null) files = basedir.listFiles ();
         else files = basedir.listFiles (filter);
 
-        Set<String> includeNames = new HashSet<String> ();
-        Set<String> excludeNames = new HashSet<String> ();
+        Set<String> includeNames = new HashSet<> ();
+        Set<String> excludeNames = new HashSet<> ();
         if (!StringUtil.isEmpty (includes)) {
             String[] a = P.split (includes);
             includeNames.addAll (Arrays.asList (a));
@@ -76,44 +78,45 @@ public class FileMatcher<T> {
             excludeNames.addAll (Arrays.asList (a));
         }
 
-        Map<File, T> libs = new HashMap<File, T> ();
-        if (includeNames.size () == 0) { // 未指定 includes
-            Set<File> excludeFiles = new HashSet<File> ();
-            for (File jar : files) {
-                jar = jar.getCanonicalFile ();
-                if (type == URL.class)
-                    libs.put (jar, (T) jar.toURI ().toURL ());
-                else if (type == File.class)
-                    libs.put (jar, (T) jar);
-                else
-                    libs.put (jar, (T) jar.toURI ());
-                if (match (jar.getName (), excludeNames)) excludeFiles.add (jar);
-            }
-
-            if (excludeFiles.size () == 0) return libs.values ();
-            for (File jar : excludeFiles) if (libs.containsKey (jar))
-                libs.remove (jar);
-        } else {  // 指定 includes
-            Set<File> excludeFiles = new HashSet<File> ();
-            for (File jar : files) {
-                jar = jar.getCanonicalFile ();
-                String name = jar.getName ();
-                if (match (name, includeNames)) {
+        Map<File, T> libs = new HashMap<> ();
+        Set<File> excludeFiles = new HashSet<> ();
+        if (includeNames.isEmpty ()) { // 未指定 includes
+            if (isNotEmpty (files)) {
+                for (File jar : files) {
+                    jar = jar.getCanonicalFile ();
                     if (type == URL.class)
                         libs.put (jar, (T) jar.toURI ().toURL ());
                     else if (type == File.class)
                         libs.put (jar, (T) jar);
                     else
                         libs.put (jar, (T) jar.toURI ());
+                    if (match (jar.getName (), excludeNames)) excludeFiles.add (jar);
                 }
-                if (match (name, excludeNames))
-                    excludeFiles.add (jar);
             }
 
-            if (excludeFiles.size () == 0) return libs.values ();
+            if (excludeFiles.isEmpty ()) return libs.values ();
+            for (File jar : excludeFiles) libs.remove (jar);
+        } else {  // 指定 includes
+            if (isNotEmpty (files)) {
+                for (File jar : files) {
+                    jar = jar.getCanonicalFile ();
+                    String name = jar.getName ();
+                    if (match (name, includeNames)) {
+                        if (type == URL.class)
+                            libs.put (jar, (T) jar.toURI ().toURL ());
+                        else if (type == File.class)
+                            libs.put (jar, (T) jar);
+                        else
+                            libs.put (jar, (T) jar.toURI ());
+                    }
+                    if (match (name, excludeNames))
+                        excludeFiles.add (jar);
+                }
+            }
+
+            if (excludeFiles.isEmpty ()) return libs.values ();
             for (File jar : excludeFiles)
-                if (libs.containsKey (jar))
-                    libs.remove (jar);
+                libs.remove (jar);
         }
 
         return libs.values ();

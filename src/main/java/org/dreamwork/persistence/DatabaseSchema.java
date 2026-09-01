@@ -23,7 +23,7 @@ public abstract class DatabaseSchema {
         }
 
         try {
-            DatabaseSchema instance = schema.newInstance ();
+            DatabaseSchema instance = schema.getDeclaredConstructor ().newInstance ();
             MAP.put (schema, instance);
         } catch (Exception ex) {
             throw new RuntimeException (ex);
@@ -40,11 +40,12 @@ public abstract class DatabaseSchema {
         register (this);
     }
 
+    @SuppressWarnings ("unused")
     public String getInsertSQL () {
         StringBuilder builder = new StringBuilder ("INSERT INTO ").append (tableName).append (" (");
         StringBuilder clause  = new StringBuilder ();
         for (String field : fields) {
-            if (clause.length () != 0) {
+            if (!clause.isEmpty ()) {
                 builder.append (", ");
                 clause.append  (", ");
             }

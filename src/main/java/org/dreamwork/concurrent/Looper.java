@@ -3,12 +3,10 @@ package org.dreamwork.concurrent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 线程管理工具类.
@@ -44,16 +42,16 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 @SuppressWarnings ("all")
 public class Looper {
-    private static final Map<String, InternalLoop>     pool    = new HashMap<> ();
-    private static final Map<Long, ScheduledFuture<?>> futures = new HashMap<> ();
-    private static final Logger logger = LoggerFactory.getLogger (Looper.class);
-    private static final ReentrantReadWriteLock locker         = new ReentrantReadWriteLock ();
-    private static final AtomicInteger      namedTaskCount     = new AtomicInteger (0);
+    private static final Map<String, InternalLoop>     pool    = new ConcurrentHashMap<> ();
+    private static final Map<Long, ScheduledFuture<?>> futures = new ConcurrentHashMap<> ();
+    private static final Logger logger                         = LoggerFactory.getLogger (Looper.class);
+    private static final Object LOCK                           = new Object ();
+    private static final AtomicInteger namedTaskCount          = new AtomicInteger (0);
+    private static final AtomicLong taskIdCounter              = new AtomicLong (0);
 
-    private static ExecutorService          executor/*  = Executors.newFixedThreadPool (16)*/;
-    private static ExecutorService          namedExecutor/* = Executors.newCachedThreadPool ()*/;
-    //    private static ScheduledExecutorService monitor   = new ScheduledThreadPoolExecutor (1);
-    private static ScheduledExecutorService scheduler/* = new ScheduledThreadPoolExecutor (32)*/;
+    private static volatile ExecutorService          executor;
+    private static volatile ExecutorService          namedExecutor;
+    private static volatile ScheduledExecutorService scheduler;
 
     static {
         Runtime.getRuntime ().addShutdownHook (new Thread (() -> {
@@ -70,19 +68,8 @@ public class Looper {
      * @see #exists(String) exists
      * @see #destory(String) destory
      */
-    public synchronized static void create (String name, int size) {
+    public static void create (String name, int size) {
         create (name, size, 1);
-/*
-        if (pool.containsKey (name)) {
-            throw new IllegalArgumentException ("the looper: " + name + " already exists!");
-        }
-
-        InternalLoop loop = new InternalLoop (name, size);
-        synchronized (pool) {
-            pool.put (name, loop);
-            namedExecutor.execute (loop);
-        }
-*/
     }
 
     /**
@@ -94,18 +81,42 @@ public class Looper {
      * @see #exists(String) exists
      * @see #destory(String) destory
      */
-    public synchronized static void create (String name, int capcity, int threads) {
-        if (pool.containsKey (name)) {
-            throw new IllegalArgumentException ("the looper: " + name + " already exists!");
+    public static void create (String name, int capcity, int threads) {
+        if (name == null || name.trim ().isEmpty ()) {
+            throw new IllegalArgumentException ("the looper name must not be null or empty!");
+        }
+        if (capcity <= 0) {
+            throw new IllegalArgumentException ("the looper capacity must be positive!");
+        }
+        if (threads <= 0) {
+            throw new IllegalArgumentException ("the looper threads must be positive!");
         }
 
         InternalLoop loop = new InternalLoop (name, capcity, threads);
-        synchronized (pool) {
-            if (namedExecutor == null) {
-                namedExecutor = Executors.newCachedThreadPool ();
+        InternalLoop old = pool.putIfAbsent (name, loop);
+        if (old != null) {
+            throw new IllegalArgumentException ("the looper: " + name + " already exists!");
+        }
+
+        synchronized (LOCK) {
+            if (namedExecutor == null || namedExecutor.isShutdown ()) {
+                namedExecutor = Executors.newCachedThreadPool (r -> {
+                    Thread thread = new Thread (r, "Looper.Named-" + name);
+                    thread.setDaemon (true);
+                    return thread;
+                });
             }
-            pool.put (name, loop);
-            namedExecutor.execute (loop);
+            try {
+                namedExecutor.execute (loop);
+            } catch (RejectedExecutionException ex) {
+                // namedExecutor 刚被其它线程关闭，重建后重试
+                namedExecutor = Executors.newCachedThreadPool (r -> {
+                    Thread thread = new Thread (r, "Looper.Named-" + name);
+                    thread.setDaemon (true);
+                    return thread;
+                });
+                namedExecutor.execute (loop);
+            }
             namedTaskCount.incrementAndGet ();
         }
     }
@@ -118,17 +129,25 @@ public class Looper {
      * @see #runInLoop(String, Runnable) runInLoop
      * @see #exists(String) exists
      */
-    public synchronized static void destory (String name) {
-        if (pool.containsKey (name)) {
-            InternalLoop loop = pool.get (name);
+    public static void destory (String name) {
+        InternalLoop loop = pool.remove (name);
+        if (loop != null) {
             loop.cancel ();
-
-            pool.remove (name);
+            // 等待 loop 线程真正退出，避免"销毁后立即重建同名 loop"时旧线程误删新实例
+            try {
+                loop.latch.await ();
+            } catch (InterruptedException e) {
+                Thread.currentThread ().interrupt ();
+            }
             int count = namedTaskCount.decrementAndGet ();
             if (count <= 0) {
-                namedExecutor.shutdownNow ();
-                namedExecutor = null;
-                namedTaskCount.set (0);
+                synchronized (LOCK) {
+                    if (namedExecutor != null) {
+                        namedExecutor.shutdownNow ();
+                        namedExecutor = null;
+                    }
+                    namedTaskCount.set (0);
+                }
             }
         }
     }
@@ -142,26 +161,26 @@ public class Looper {
      * @see #destory(String) destory
      */
     public static void runInLoop (String name, Runnable runner) {
-        if (!pool.containsKey (name)) {
+        if (runner == null) {
+            throw new NullPointerException ("runner must not be null!");
+        }
+        InternalLoop looper = pool.get (name);
+        if (looper == null) {
             throw new IllegalArgumentException ("The looper: " + name + " does not exist!");
         }
 
         if (logger.isTraceEnabled ()) {
             logger.trace ("submitting a new job to loop [" + name + ']');
+            logger.trace ("trying to put a new job into queue, before put, size = {}", looper.queue.size ());
         }
-        synchronized (pool) {
-            InternalLoop looper = pool.get (name);
-            try {
-                if (logger.isTraceEnabled ()) {
-                    logger.trace ("trying to put a new job into queue, before put, size = {}", looper.queue.size ());
-                }
-                looper.queue.put (runner);
-                if (logger.isTraceEnabled ()) {
-                    logger.trace ("after put, size = {}", looper.queue.size ());
-                }
-            } catch (InterruptedException ex) {
-                logger.warn (ex.getMessage (), ex);
-            }
+        try {
+            looper.queue.put (runner);
+        } catch (InterruptedException ex) {
+            Thread.currentThread ().interrupt ();
+            logger.warn (ex.getMessage (), ex);
+        }
+        if (logger.isTraceEnabled ()) {
+            logger.trace ("after put, size = {}", looper.queue.size ());
         }
     }
 
@@ -170,7 +189,7 @@ public class Looper {
      * @param name 线程队列名称
      * @return 若存在，返回 <code>true</code>，否则 <code>false</code>
      */
-    public synchronized static boolean exists (String name) {
+    public static boolean exists (String name) {
         return pool.containsKey (name);
     }
 
@@ -181,7 +200,6 @@ public class Looper {
      */
     @Deprecated
     public static void runInOtherLoop (Runnable runner) {
-//        executor.execute (runner);
         invokeLater (runner);
     }
 
@@ -189,15 +207,21 @@ public class Looper {
      * 立即执行一项异步任务
      * @param runner 任务
      */
-    public synchronized static void invokeLater (Runnable runner) {
-        if (executor == null || executor.isShutdown () || executor.isTerminated ()) {
-            executor = Executors.newFixedThreadPool (16);
-        }
-        if (logger.isTraceEnabled ()) {
-            logger.trace ("submitting a new job to non-named loop...");
+    public static void invokeLater (Runnable runner) {
+        if (runner == null) {
+            throw new NullPointerException ("runner must not be null!");
         }
         InternalRunner ir = new InternalRunner (runner);
-        InternalRunner.map.put (ir.index, executor.submit (ir));
+        synchronized (LOCK) {
+            if (executor == null || executor.isShutdown () || executor.isTerminated ()) {
+                executor = Executors.newFixedThreadPool (16, r -> {
+                    Thread thread = new Thread (r, "Looper.InternalExecutor");
+                    thread.setDaemon (true);
+                    return thread;
+                });
+            }
+            InternalRunner.map.put (ir.index, executor.submit (ir));
+        }
     }
 
     /**
@@ -233,7 +257,7 @@ public class Looper {
      * 这种实现的任务，且被 {@link #invokeLater(Runnable) invokeLater} 提交，将不能被该方法终止。因为该方法是 <i>"等待所有任务完成”</i>；很显然，这个
      * 任务自己不会结束。
      * <p>
-     * 若您确实需要执行一个“永不终止”的任务，有希望在适当
+     * 若您确实需要执行一个"永不终止"的任务，又希望在适当
      * 的时刻将其终止（典型的场景是一个全局的周期性的监视器，一旦启动，就不会关闭，直到上层容器的生命周期结束，比如 ServletContainer 甚至 JVM 退出)的情况，
      * 您可以通过调用 <code>{@link #schedule(Runnable, long, TimeUnit)}</code>，传入适当的延迟，比如 1ms。
      * <pre>
@@ -285,60 +309,51 @@ public class Looper {
         }
 
         if (timeout < 0) {
-            if (executor != null)
-                executor.shutdown ();
-//            monitor.shutdown ();
-            if (scheduler != null)
-                scheduler.shutdown ();
-            if (namedExecutor != null)
-                namedExecutor.shutdown ();
-
-/*
-            while (!pool.isEmpty ()) {
-                for (InternalLoop loop : pool.values ()) {
-                    if (loop.queue.isEmpty ()) {
-                        loop.cancel ();
-                    }
-                }
-                try {
-                    Thread.sleep (1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace ();
-                }
-            }
-*/
+            ExecutorService e = executor;
+            if (e != null) e.shutdown ();
+            ScheduledExecutorService s = scheduler;
+            if (s != null) s.shutdown ();
+            ExecutorService n = namedExecutor;
+            if (n != null) n.shutdown ();
         } else {
             if (timeout > 0 && unit != null) {
-                synchronized (pool) {
-                    try {
-                        pool.wait (unit.toMillis (timeout));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace ();
-                    }
+                try {
+                    Thread.sleep (unit.toMillis (timeout));
+                } catch (InterruptedException e) {
+                    Thread.currentThread ().interrupt ();
                 }
             }
 
             for (ScheduledFuture<?> sf : futures.values ()) {
                 sf.cancel (true);
             }
+            futures.clear ();
 
             for (Future<?> future : InternalRunner.map.values ()) {
                 future.cancel (true);
             }
+            InternalRunner.map.clear ();
 
             for (InternalLoop loop : pool.values ()) {
                 loop.cancel ();
             }
+            pool.clear ();
 
-            if (executor != null)
-                executor.shutdownNow ();
-//            monitor.shutdownNow ();
-            if (scheduler != null)
-                scheduler.shutdownNow ();
-            if (namedExecutor != null)
-                namedExecutor.shutdownNow ();
+            ExecutorService e = executor;
+            if (e != null) e.shutdownNow ();
+            ScheduledExecutorService s = scheduler;
+            if (s != null) s.shutdownNow ();
+            ExecutorService n = namedExecutor;
+            if (n != null) n.shutdownNow ();
         }
 
+        // 无论哪种分支，都把池引用置空，保证之后可以重新创建新的池
+        synchronized (LOCK) {
+            executor = null;
+            scheduler = null;
+            namedExecutor = null;
+            namedTaskCount.set (0);
+        }
         pool.clear ();
         futures.clear ();
     }
@@ -358,17 +373,20 @@ public class Looper {
         if (runner == null) {
             throw new NullPointerException ();
         }
-
         if (unit == null) {
             unit = TimeUnit.MILLISECONDS;
         }
 
-        long taskId = (((long) runner.hashCode ()) << 32) ^ System.currentTimeMillis ();
+        long taskId = taskIdCounter.incrementAndGet ();
         ScheduleWorker worker = new ScheduleWorker (runner);
         worker.taskId = taskId;
-        synchronized (futures) {
-            if (scheduler == null) {
-                scheduler = new ScheduledThreadPoolExecutor (32);
+        synchronized (LOCK) {
+            if (scheduler == null || scheduler.isShutdown ()) {
+                scheduler = new ScheduledThreadPoolExecutor (32, r -> {
+                    Thread thread = new Thread (r, "Looper.Scheduler");
+                    thread.setDaemon (true);
+                    return thread;
+                });
             }
             futures.put (taskId, scheduler.schedule (worker, delay, unit));
             if (logger.isTraceEnabled ()) {
@@ -385,30 +403,27 @@ public class Looper {
      * @see #schedule(Runnable, long, TimeUnit)
      */
     public static void cancel (long taskId) {
-        synchronized (futures) {
-            if (futures.containsKey (taskId)) {
-                futures.get (taskId).cancel (true);
-                futures.remove (taskId);
-                if (logger.isTraceEnabled ()) {
-                    logger.trace ("task [" + taskId + "] canceled.");
-                }
+        ScheduledFuture<?> future = futures.remove (taskId);
+        if (future != null) {
+            future.cancel (true);
+            if (logger.isTraceEnabled ()) {
+                logger.trace ("task [" + taskId + "] canceled.");
             }
-            if (futures.isEmpty ()) {
+        }
+        synchronized (LOCK) {
+            if (futures.isEmpty () && scheduler != null) {
                 scheduler.shutdownNow ();
                 scheduler = null;
             }
         }
     }
 
-//    private static final AtomicLong counter = new AtomicLong (0);
-
     private static final class InternalRunner implements Runnable {
-        private Runnable runner;
+        private final Runnable runner;
         private static final AtomicLong count = new AtomicLong (0);
-        private static final Object LOCKER = new byte [0];
-        private static final Map<Long, Future<?>> map = new HashMap<> ();
+        private static final Map<Long, Future<?>> map = new ConcurrentHashMap<> ();
 
-        long index;
+        final long index;
 
         InternalRunner (Runnable runner) {
             this.runner = runner;
@@ -420,9 +435,10 @@ public class Looper {
             Thread.currentThread ().setName ("Looper.InternalRunner." + index);
             try {
                 runner.run ();
+            } catch (Throwable t) {
+                logger.warn (t.getMessage (), t);
             } finally {
                 map.remove (index);
-                count.decrementAndGet ();
                 if (logger.isTraceEnabled ())
                     logger.trace ("task done.");
             }
@@ -430,18 +446,18 @@ public class Looper {
     }
 
     private static final class InternalLoop implements Runnable {
-        static final Object FINISH = new byte [0];
+        static final Object FINISH = new Object ();
         private final BlockingQueue<Object> queue;
-
-        private String name;
-        private boolean running = true;
-        private long timeout;
-        private TimeUnit unit;
-        private ExecutorService service;
-        private ThreadGroup group;
-        private AtomicInteger counter = new AtomicInteger (1);
-
+        private final CountDownLatch latch = new CountDownLatch (1);
+        private final String name;
         private final int threads;
+        private final ThreadGroup group;
+        private final AtomicInteger counter = new AtomicInteger (1);
+        private final ExecutorService service;
+
+        private volatile boolean running = true;
+        private volatile long timeout;
+        private volatile TimeUnit unit;
 
         private InternalLoop (String name, int size) {
             this (name, size, 1);
@@ -480,54 +496,62 @@ public class Looper {
             Thread.currentThread ().setName (name);
             if (logger.isTraceEnabled ())
                 logger.trace (">>>>>>> Internal Loop run <<<<<<<<<");
-            while (running) {
-                try {
+            try {
+                while (running) {
                     Object o;
-                    if (timeout > 0 && unit != null) {
-                        o = queue.poll (timeout, unit);
-                    } else {
-                        o = queue.take ();
+                    try {
+                        if (timeout > 0 && unit != null) {
+                            o = queue.poll (timeout, unit);
+                        } else {
+                            o = queue.take ();
+                        }
+                    } catch (InterruptedException ex) {
+                        logger.warn ("i'm interrupted.");
+                        break;
                     }
                     if (o == FINISH) {
                         break;
                     } else if (o instanceof Runnable) {
-                        service.execute (() -> {
-                            if (logger.isTraceEnabled ()) {
-                                logger.trace ("executing the runner...");
-                            }
-                            try {
-                                ((Runnable) o).run ();
-                            } catch (Throwable t) {
-                                logger.warn (t.getMessage (), t);
-                            }
-                            if (logger.isTraceEnabled ()) {
-                                logger.trace ("the job done.");
-                            }
-                        });
+                        final Runnable task = (Runnable) o;
+                        try {
+                            service.execute (() -> runTask (task));
+                        } catch (RejectedExecutionException ex) {
+                            // service 已被关闭，说明本 loop 正在被销毁，丢弃剩余任务
+                            logger.warn ("the looper [" + name + "] is shutting down, drop the pending task.");
+                            break;
+                        }
                     }
-                } catch (InterruptedException ex) {
-                    logger.warn ("i'm interrupted.");
-                    break;
                 }
-            }
-
-            group.interrupt ();
-            while (!service.isTerminated ()) {
+            } finally {
+                running = false;
+                group.interrupt ();
+                service.shutdownNow ();
                 try {
-                    Thread.sleep (1);
+                    service.awaitTermination (Long.MAX_VALUE, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
-                    // ignore
+                    Thread.currentThread ().interrupt ();
+                }
+                // 仅当 pool 中对应 name 的值仍是本实例时才移除，避免误删"销毁后重建"的同名 looper
+                pool.remove (name, this);
+                latch.countDown ();
+                if (logger.isTraceEnabled ()) {
+                    logger.trace (name + " removed.");
+                    logger.trace (">>>>>>> Internal Loop done <<<<<<<<<");
                 }
             }
+        }
+
+        private static void runTask (Runnable task) {
             if (logger.isTraceEnabled ()) {
-                logger.trace ("service terminated.");
+                logger.trace ("executing the runner...");
             }
-
-            pool.remove (name);
-
+            try {
+                task.run ();
+            } catch (Throwable t) {
+                logger.warn (t.getMessage (), t);
+            }
             if (logger.isTraceEnabled ()) {
-                logger.trace (name + " removed.");
-                logger.trace (">>>>>>> Internal Loop done <<<<<<<<<");
+                logger.trace ("the job done.");
             }
         }
 
@@ -541,23 +565,21 @@ public class Looper {
     }
 
     private static final class ScheduleWorker implements Runnable {
-        Runnable runner;
+        final Runnable runner;
         long taskId;
-        private static volatile int count = 0;
+        private static final AtomicInteger count = new AtomicInteger (0);
 
         ScheduleWorker (Runnable runner) { this.runner = runner; }
 
         @Override
         public void run () {
-            Thread.currentThread ().setName ("Looper.ScheduleWorker." + (++ count));
+            Thread.currentThread ().setName ("Looper.ScheduleWorker." + (count.incrementAndGet ()));
             try {
                 runner.run ();
+            } catch (Throwable t) {
+                logger.warn (t.getMessage (), t);
             } finally {
-                synchronized (futures) {
-                    if (futures.containsKey (taskId)) {
-                        futures.remove (taskId);
-                    }
-                }
+                futures.remove (taskId);
             }
         }
     }

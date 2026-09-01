@@ -1,8 +1,6 @@
 package org.dreamwork.util;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -22,7 +20,7 @@ public class FileUrlFetcher implements IURLFetcher {
         fileName = URLDecoder.decode (fileName, ENCODING);
         File dir = new File (fileName);
         File[] files = dir.listFiles ();
-        List<Class<?>> list = new ArrayList<Class<?>> ();
+        List<Class<?>> list = new ArrayList<> ();
         if (files != null) for (File file : files) {
             String className = file.getName ();
             if (! className.endsWith (".class")) continue;
@@ -35,7 +33,7 @@ public class FileUrlFetcher implements IURLFetcher {
     }
 
     @Override
-    public File getPhysicalFile (URL url) throws IOException, URISyntaxException {
+    public File getPhysicalFile (URL url) {
         String path = url.getPath ();
         if (path.startsWith ("file:")) path = path.substring ("file:".length ());
         return new File (path);

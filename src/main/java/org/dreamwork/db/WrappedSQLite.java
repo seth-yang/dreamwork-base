@@ -4,6 +4,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+@SuppressWarnings ("unused")
 public class WrappedSQLite extends SQLite {
     private final DataSource ds;
     public WrappedSQLite (DataSource ds) {

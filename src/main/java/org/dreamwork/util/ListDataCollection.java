@@ -16,7 +16,7 @@ public class ListDataCollection<T> implements IDataCollection<T> {
     private int pageNo;
     private int totalRows;
 
-    private List<T> data = new ArrayList<T> ();
+    private final List<T> data = new ArrayList<T> ();
 
     public int getPageSize () {
         return pageSize;
@@ -89,7 +89,7 @@ public class ListDataCollection<T> implements IDataCollection<T> {
         return data.remove (o);
     }
 
-    public boolean containsAll (Collection<?> c) {
+    public boolean containsAll (Collection<T> c) {
         return data.containsAll (c);
     }
 
@@ -97,29 +97,15 @@ public class ListDataCollection<T> implements IDataCollection<T> {
         return data.addAll (c);
     }
 
-    public boolean removeAll (Collection<?> c) {
+    public boolean removeAll (Collection<? extends T> c) {
         return data.removeAll (c);
     }
 
-    public boolean retainAll (Collection<?> c) {
+    public boolean retainAll (Collection<? extends T> c) {
         return data.retainAll (c);
     }
 
     public void clear () {
         data.clear ();
     }
-
-/*
-    public static void main (String[] args) throws Exception {
-        IDataCollection<String> data = new ListDataCollection<String> ();
-        for (int i = 0; i < 10; i ++) {
-            data.add ("Item " + (i + 1));
-        }
-
-
-        for (String s : data) {
-            System.out.println (s);
-        }
-    }
-*/
 }

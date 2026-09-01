@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -15,17 +15,18 @@ import java.sql.Statement;
 /**
  * Created by game on 2017/4/19
  */
+@SuppressWarnings ("unused")
 public class SchemaFileExecutor {
     private static final Logger logger = LoggerFactory.getLogger (SchemaFileExecutor.class);
 
     public static void importSchema (IDatabase db, Path schemaFile) throws SQLException, IOException {
-        try (BufferedReader reader = Files.newBufferedReader (schemaFile, Charset.forName ("utf-8"))) {
+        try (BufferedReader reader = Files.newBufferedReader (schemaFile, StandardCharsets.UTF_8)) {
             StringBuilder builder = new StringBuilder ();
             String line;
             try (Connection conn = db.getConnection ()) {
                 while ((line = reader.readLine ()) != null) {
                     line = line.trim ();
-                    if (line.length () == 0) {
+                    if (line.isEmpty ()) {
                         continue;
                     }
                     builder.append (line);
@@ -35,7 +36,7 @@ public class SchemaFileExecutor {
 
                         Statement stmt = conn.createStatement ();
                         if (logger.isTraceEnabled ())
-                            logger.trace ("executing sql: " + sql);
+                            logger.trace ("executing sql: {}", sql);
                         stmt.execute (sql);
                         stmt.close ();
                         builder.setLength (0);

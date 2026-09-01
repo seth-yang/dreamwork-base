@@ -3,7 +3,8 @@ package org.dreamwork.db;
 /**
  * Created by seth.yang on 2019/3/6
  */
-public class Parameter {
+@SuppressWarnings ("unused")
+public record Parameter(String name, org.dreamwork.db.Parameter.Operator operator, Object value) {
     public enum Operator {
         EQ ("="),                           // =
         LT ("<"),                           // <
@@ -17,37 +18,9 @@ public class Parameter {
         ;
 
         public final String text;
+
         Operator (String text) {
             this.text = text;
         }
     }
-
-    public final String   name;
-    public final Operator operator;
-    public final Object   value;
-
-    public Parameter (String name, Operator operator, Object value) {
-        this.name = name;
-        this.operator = operator;
-        this.value = value;
-    }
-
-/*
-    @Override
-    public String toString () {
-        switch (operator) {
-            case EQ:
-                return name + " = ?";
-            case LT:
-                return name + " < ?";
-            case LE:
-                return name + " <= ?";
-            case GT:
-                return name + " > ?";
-            case GE:
-                return name + " >= ?";
-            case IN:
-        }
-    }
-*/
 }

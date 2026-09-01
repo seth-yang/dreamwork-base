@@ -7,8 +7,8 @@ package org.dreamwork.util;
  * Time: 23:53:43
  */
 public interface IConverter {
-    public<T> T cast (Class<T> type, String expression);
-    public String cast (Object value);
-    public String cast (Object value, String format);
-    public byte[] castToByteArray (Object value);
+    <T> T cast (Class<T> type, String expression);
+    String cast (Object value);
+    String cast (Object value, String format);
+    byte[] castToByteArray (Object value);
 }

@@ -36,8 +36,8 @@ public class Derby extends AbstractDatabase {
         return derby;
     }
 
-    private String path;
-    private boolean network;
+    private final String path;
+    private final boolean network;
 
     private Derby (String path) {
         this.path = path;
@@ -102,8 +102,8 @@ public class Derby extends AbstractDatabase {
         if (!network) {
             try {
                 DriverManager.getConnection ("jdbc:derby:" + path + ";shutdown=true");
-            } catch (SQLException e) {
-                e.printStackTrace ();
+            } catch (SQLException ex) {
+                logger.warn (ex.getMessage (), ex);
             }
         }
     }

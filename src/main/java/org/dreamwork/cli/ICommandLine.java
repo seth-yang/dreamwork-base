@@ -10,6 +10,7 @@ import static org.dreamwork.cli.CommandLineHelper.*;
 /**
  * Created by seth.yang on 2018/11/7
  */
+@SuppressWarnings ("unused")
 public interface ICommandLine extends Appendable {
     String CRLF = "\r\n";
 
@@ -73,12 +74,12 @@ public interface ICommandLine extends Appendable {
         String line = readString (prompt + "[" + defaultValue + "]");
         return StringUtil.isEmpty (line) ? defaultValue : line.trim ();
     }
-    default String readString (String promp, IValueGenerator<String> g) throws IOException {
+    default String readString (String prompt, IValueGenerator<String> g) throws IOException {
         if (g == null) {
-            return readString (promp);
+            return readString (prompt);
         }
 
-        String line = readString (promp + "[random]");
+        String line = readString (prompt + "[random]");
         return StringUtil.isEmpty (line) ? g.generate (null) : line;
     }
     default String readString (String prompt, List<String> options) throws IOException {

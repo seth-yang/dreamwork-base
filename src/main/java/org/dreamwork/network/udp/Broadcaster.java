@@ -78,7 +78,7 @@ public class Broadcaster {
             logger.trace ("binding the broadcaster...");
         }
         server = new MulticastSocket (port);
-        logger.info ("the broadcaster bound on {}:{}", server.getInterface ().getHostAddress (), port);
+        logger.info ("the broadcaster bound on {}:{}", server.getNetworkInterface ().getDisplayName (), port);
 
         if (magic == null) {
             logger.error ("magic data is not set");

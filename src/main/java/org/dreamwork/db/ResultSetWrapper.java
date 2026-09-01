@@ -12,8 +12,8 @@ import java.util.Map;
  * Created by game on 2017/7/4
  */
 public class ResultSetWrapper implements ResultSet {
-    private Connection conn;
-    private ResultSet rs;
+    private final Connection conn;
+    private final ResultSet rs;
 
     ResultSetWrapper (Connection conn, ResultSet rs) {
         this.conn = conn;
@@ -78,7 +78,7 @@ public class ResultSetWrapper implements ResultSet {
 
     @Override
     public BigDecimal getBigDecimal (int columnIndex, int scale) throws SQLException {
-        return rs.getBigDecimal (columnIndex, scale);
+        return rs.getBigDecimal (columnIndex);
     }
 
     @Override
@@ -107,6 +107,7 @@ public class ResultSetWrapper implements ResultSet {
     }
 
     @Override
+    @Deprecated
     public InputStream getUnicodeStream (int columnIndex) throws SQLException {
         return rs.getUnicodeStream (columnIndex);
     }
@@ -158,7 +159,7 @@ public class ResultSetWrapper implements ResultSet {
 
     @Override
     public BigDecimal getBigDecimal (String columnLabel, int scale) throws SQLException {
-        return rs.getBigDecimal (columnLabel, scale);
+        return getBigDecimal (columnLabel);
     }
 
     @Override
@@ -187,6 +188,7 @@ public class ResultSetWrapper implements ResultSet {
     }
 
     @Override
+    @Deprecated
     public InputStream getUnicodeStream (String columnLabel) throws SQLException {
         return rs.getUnicodeStream (columnLabel);
     }

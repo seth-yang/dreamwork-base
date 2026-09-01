@@ -17,28 +17,30 @@ import java.util.Collection;
  * Time: 下午2:59
  */
 public class ReferenceUtil {
-    private static WeakHashMap<Class<?>, WeakHashMap<String, WeakHashMap<String, AccessibleObject>>> map =
-            new WeakHashMap<Class<?>, WeakHashMap<String, WeakHashMap<String, AccessibleObject>>> ();
 
-    private static void cachetype (Class type) {
-        if (map.containsKey (type)) return;
-        WeakHashMap<String, WeakHashMap<String, AccessibleObject>> classMap =
-                new WeakHashMap<String, WeakHashMap<String, AccessibleObject>> ();
-        WeakHashMap<String, AccessibleObject> setterMap = new WeakHashMap<String, AccessibleObject> ();
-        WeakHashMap<String, AccessibleObject> getterMap = new WeakHashMap<String, AccessibleObject> ();
-        WeakHashMap<String, AccessibleObject> methodMap = new WeakHashMap<String, AccessibleObject> ();
-        WeakHashMap<String, AccessibleObject> fieldMap  = new WeakHashMap<String, AccessibleObject> ();
+    record ClassInfo (
+            WeakHashMap<String, AccessibleObject> setters,
+            WeakHashMap<String, AccessibleObject> getters,
+            WeakHashMap<String, AccessibleObject> methods,
+            WeakHashMap<String, AccessibleObject> fields
+    ) {}
 
-        map.put (type, classMap);
-        classMap.put ("setter", setterMap);
-        classMap.put ("getter", getterMap);
-        classMap.put ("method", methodMap);
-        classMap.put ("field", fieldMap);
+    private static final WeakHashMap<Class<?>, ClassInfo> classInfoMap = new WeakHashMap<> ();
+
+    private static void cacheType (Class<?> type) {
+        if (classInfoMap.containsKey (type)) return;
+        WeakHashMap<String, AccessibleObject> setterMap = new WeakHashMap<> ();
+        WeakHashMap<String, AccessibleObject> getterMap = new WeakHashMap<> ();
+        WeakHashMap<String, AccessibleObject> methodMap = new WeakHashMap<> ();
+        WeakHashMap<String, AccessibleObject> fieldMap  = new WeakHashMap<> ();
+        ClassInfo classInfo = new ClassInfo (setterMap, getterMap, methodMap, fieldMap);
+
+        classInfoMap.put (type, classInfo);
 
         Method[] methods = type.getMethods ();
         for (Method method : methods) {
             String name = method.getName ();
-            Class[] pts = method.getParameterTypes ();
+            Class<?>[] pts = method.getParameterTypes ();
             if (name.startsWith ("set") && pts.length == 1)
                 setterMap.put (name, method);
             else if (name.startsWith ("get") && !"getClass".equals (name) && pts.length == 0)
@@ -47,19 +49,18 @@ public class ReferenceUtil {
                 getterMap.put (name, method);
         }
 
-        Field[] fields = type.getDeclaredFields ();
+        Field[] fields = type.getFields ();
         for (Field field : fields) {
-            field.setAccessible (true);
             fieldMap.put (field.getName (), field);
         }
     }
 
-    public static Method getSetter (Class type, String name) {
+    public static Method getSetter (Class<?> type, String name) {
         String methodName = "set" + Character.toUpperCase (name.charAt (0)) + name.substring (1);
         return getMethod (type, methodName, "setter");
     }
 
-    public static Method getGetter (Class type, String name) {
+    public static Method getGetter (Class<?> type, String name) {
         String methodName = "get" + Character.toUpperCase (name.charAt (0)) + name.substring (1);
         Method method = getMethod (type, methodName, "getter");
         if (method != null) return method;
@@ -67,33 +68,31 @@ public class ReferenceUtil {
         return getMethod (type, methodName, "getter");
     }
 
-    public static Method getMethod (Class type, String name) {
+    public static Method getMethod (Class<?> type, String name) {
         return getMethod (type, name, "method");
     }
 
-    public static java.util.Collection<Field> getFields (Class type) {
-        cachetype (type);
-        WeakHashMap<String, WeakHashMap<String, AccessibleObject>> classMap = map.get (type);
-        WeakHashMap<String, AccessibleObject> fields = classMap.get ("field");
-        List<Field> list = new ArrayList<Field> (fields.size ());
-        for (AccessibleObject ao : fields.values ())
-            list.add ((Field) ao);
-        return list;
+    public static java.util.Collection<Field> getFields (Class<?> type) {
+        cacheType (type);
+        ClassInfo classInfo = classInfoMap.get (type);
+        if (classInfo != null) {
+            List<Field> list = new ArrayList<> (classInfo.fields ().size ());
+            for (AccessibleObject ao : classInfo.fields ().values ())
+                list.add ((Field) ao);
+            return list;
+        }
+        return Collections.emptyList ();
     }
 
     public static Object get (Object o, String property) throws InvocationTargetException, IllegalAccessException {
         if (o == null || StringUtil.isEmpty (property)) return null;
         Method method = getGetter (o.getClass (), property);
         if (method != null) {
-            if (!method.isAccessible ())
-                method.setAccessible (true);
             return method.invoke (o);
         }
 
         Field field = findField (o.getClass (), property);
         if (field != null) {
-            if (!field.isAccessible ())
-                field.setAccessible (true);
             return field.get (o);
         }
 
@@ -109,67 +108,63 @@ public class ReferenceUtil {
         else {
             Field field = findField (o.getClass (), property);
             if (field != null) {
-                if (field.isAccessible ())
-                    field.setAccessible (true);
                 field.set (o, value);
             }
         }
     }
 
-    public static Collection<String> getPropertyNames (Class type) {
-        cachetype (type);
-        WeakHashMap<String, WeakHashMap<String, AccessibleObject>> classMap = map.get (type);
-        WeakHashMap<String, AccessibleObject> getters = classMap.get ("getter");
-        WeakHashMap<String, AccessibleObject> fields = classMap.get ("field");
-
-        List<String> fieldNames = new ArrayList<String> ();
-        fieldNames.addAll (fields.keySet ());
-
-        for (String methodName : getters.keySet ()) {
-            String propName = getPropertyName (methodName);
-            if (fieldNames.indexOf (propName) == -1)
-                fieldNames.add (propName);
+    public static Collection<String> getPropertyNames (Class<?> type) {
+        cacheType (type);
+        ClassInfo info = classInfoMap.get (type);
+        if (info != null) {
+            Set<String> set = new HashSet<> (info.setters ().size () + info.getters ().size () + info.fields ().size ());
+            set.addAll (info.setters ().keySet ());
+            set.addAll (info.getters ().keySet ());
+            set.addAll (info.fields ().keySet ());
+            return set;
         }
-        return fieldNames;
+        return Collections.emptyList ();
     }
 
-    public static Field getField (Class type, String name) {
-        cachetype (type);
-        WeakHashMap<String, WeakHashMap<String, AccessibleObject>> classMap = map.get (type);
-        WeakHashMap<String, AccessibleObject> setterMap = classMap.get ("field");
-        return (Field) setterMap.get (name);
+    public static Field getField (Class<?> type, String name) {
+        cacheType (type);
+        ClassInfo info = classInfoMap.get (type);
+        if (info != null) {
+            return (Field) info.fields ().get (name);
+        }
+        return null;
     }
 
-    public static WeakHashMap<String, AccessibleObject> getGetters (Class type) {
+    public static WeakHashMap<String, AccessibleObject> getGetters (Class<?> type) {
         return getAccessibles (type, "getter");
     }
 
-    public static WeakHashMap<String, AccessibleObject> getSetters (Class type) {
+    public static WeakHashMap<String, AccessibleObject> getSetters (Class<?> type) {
         return getAccessibles (type, "setter");
     }
 
     @SuppressWarnings ("unchecked")
-    public static<T> T getAnnotation (Class<?> type, Class<? extends Annotation> annnotationType) {
-        return (T) type.getAnnotation (annnotationType);
+    public static<T> T getAnnotation (Class<?> type, Class<? extends Annotation> annotationType) {
+        return (T) type.getAnnotation (annotationType);
     }
 
     @SuppressWarnings ("unchecked")
-    public static<T> T getAnnotation (Class<?> type, Class<? extends Annotation> annnotationType, String fieldName) {
+    public static<T> T getAnnotation (Class<?> type, Class<? extends Annotation> annotationType, String fieldName) {
         String propertyName = getPropertyName (fieldName);
         Field field = getField (type, propertyName);
         T a = null;
         if (field != null)
-            a = (T) field.getAnnotation (annnotationType);
+            a = (T) field.getAnnotation (annotationType);
         if (a == null) {
             Method getter = getGetter (type, propertyName);
             if (getter != null)
-                a = (T) getter.getAnnotation (annnotationType);
+                a = (T) getter.getAnnotation (annotationType);
         }
 
         if (a == null) {
             Method setter = getSetter (type, propertyName);
             if (setter != null)
-                a = (T) setter.getAnnotation (annnotationType);
+                a = (T) setter.getAnnotation (annotationType);
         }
         return a;
     }
@@ -194,17 +189,31 @@ public class ReferenceUtil {
         return "set" + Character.toUpperCase (propName.charAt (0)) + propName.substring (1);
     }
 
-    private static WeakHashMap<String, AccessibleObject> getAccessibles (Class type, String methodType) {
-        cachetype (type);
-        WeakHashMap<String, WeakHashMap<String, AccessibleObject>> classMap = map.get (type);
-        return classMap.get (methodType);
+    private static WeakHashMap<String, AccessibleObject> getAccessibles (Class<?> type, String methodType) {
+        cacheType (type);
+        ClassInfo info = classInfoMap.get (type);
+        if (info != null) {
+            return switch (methodType) {
+                case "getter" -> info.getters ();
+                case "setter" -> info.setters ();
+                default -> new WeakHashMap<> ();
+            };
+        }
+        return new WeakHashMap<> ();
     }
 
-    private static Method getMethod (Class type, String methodName, String methodType) {
-        cachetype (type);
-        WeakHashMap<String, WeakHashMap<String, AccessibleObject>> classMap = map.get (type);
-        WeakHashMap<String, AccessibleObject> setterMap = classMap.get (methodType);
-        return (Method) setterMap.get (methodName);
+    private static Method getMethod (Class<?> type, String methodName, String methodType) {
+        cacheType (type);
+        ClassInfo info = classInfoMap.get (type);
+        if (info != null) {
+            return switch (methodType) {
+                case "getter" -> (Method) info.getters ().get (methodName);
+                case "setter" -> (Method) info.setters ().get (methodName);
+                case "method" -> (Method) info.methods ().get (methodName);
+                default -> null;
+            };
+        }
+        return null;
     }
 
     public static boolean isKnownType (Class<?> type) {
@@ -220,7 +229,9 @@ public class ReferenceUtil {
                 type == BigInteger.class;
     }
 
-    public static Field findField (Class c, String name) {
+    public static Field findField (Class<?> c, String name) {
+        if (c == Object.class || c == null) return null;
+
         Field f = null;
         try {
             f = c.getDeclaredField (name);
@@ -229,17 +240,15 @@ public class ReferenceUtil {
         }
         if (f != null) return f;
 
-        if (c == Object.class) return null;
-
         return findField (c.getSuperclass (), name);
     }
 
     @SuppressWarnings ("unchecked")
-    public static<T extends Enum> T parse (Class<T> type, String text) {
+    public static<T extends Enum<?>> T parse (Class<T> type, String text) {
         try {
             Method method = type.getMethod ("values");
-            Enum[] values = (Enum[]) method.invoke (null);
-            for (Enum e : values) {
+            Enum<?>[] values = (Enum<?>[]) method.invoke (null);
+            for (Enum<?> e : values) {
                 if (e.name ().equalsIgnoreCase (text))
                     return (T) e;
             }
@@ -250,11 +259,11 @@ public class ReferenceUtil {
     }
 
     @SuppressWarnings ("unchecked")
-    public static<T extends Enum> T parse (Class<T> type, int index) {
+    public static<T extends Enum<?>> T parse (Class<T> type, int index) {
         try {
             Method method = type.getMethod ("values");
-            Enum[] values = (Enum[]) method.invoke (null);
-            for (Enum e : values) {
+            Enum<?>[] values = (Enum<?>[]) method.invoke (null);
+            for (Enum<?> e : values) {
                 if (e.ordinal () == index)
                     return (T) e;
             }

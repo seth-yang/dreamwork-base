@@ -6,7 +6,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.NotDirectoryException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,11 +18,12 @@ import java.util.Set;
 /**
  * Created by seth.yang on 2017/4/17
  */
+@SuppressWarnings ("unused")
 public class FileWalker<T extends FileIndex> implements IFileMonitorListener {
-    private FileMonitor monitor;
-    private IFileIndexAdapter<T> adapter;
-    private Set<String> categories = new HashSet<> ();
-    private List<IFileWalkListener<T>> listeners = new ArrayList<> ();
+    private final FileMonitor monitor;
+    private final IFileIndexAdapter<T> adapter;
+    private final Set<String> categories = new HashSet<> ();
+    private final List<IFileWalkListener<T>> listeners = new ArrayList<> ();
 
     private static final Logger logger = LoggerFactory.getLogger (FileWalker.class);
 

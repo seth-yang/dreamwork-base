@@ -13,6 +13,7 @@ import java.util.List;
 /**
  * Created by game on 2017/7/28
  */
+@SuppressWarnings ("unused")
 public class ScriptParser extends TextParser {
     public ScriptParser () {
     }
@@ -93,7 +94,7 @@ public class ScriptParser extends TextParser {
                     break;
             }
         }
-        if (builder.length () > 0)
+        if (!builder.isEmpty ())
             list.add (builder.toString ());
 
         return list;

@@ -5,19 +5,11 @@ import java.util.Objects;
 /**
  * Created by game on 2017/9/25
  */
-public class Holiday {
-    public final int month, date;
-    public final String name;
-
-    public Holiday (int month, int date, String name) {
-        this.month = month;
-        this.date  = date;
-        this.name  = name;
-    }
+public record Holiday(int month, int date, String name) {
 
     public boolean equals (int month, int date) {
         return this.month == month &&
-               this.date  == date;
+                this.date == date;
     }
 
     @Override

@@ -12,15 +12,15 @@ import java.util.WeakHashMap;
  */
 public class SerialNumber {
     private long max;
-    private String prefix;
-    private boolean cycle;
-    private ISerialNumberSequence sequence;
+    private final String prefix;
+    private final boolean cycle;
+    private final ISerialNumberSequence sequence;
 
-    private DecimalFormat format;
+    private final DecimalFormat format;
 
     private final Object locker = new byte[0];
 
-    private static final Map<String, SerialNumber> cache = new WeakHashMap<String, SerialNumber> ();
+    private static final Map<String, SerialNumber> cache = new WeakHashMap<> ();
 
     public static SerialNumber newSerialNumber (String prefix, int length) {
         return newSerialNumber (prefix, length, 1);

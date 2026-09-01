@@ -225,8 +225,7 @@ class SimpleTransactionImpl implements ITransaction {
         public int executeUpdate (String sql, Object... args) {
             try {
                 if (logger.isTraceEnabled ()) {
-                    logger.trace ("\nexecuting sql: " + sql + "\n" +
-                            "parameters   : [" + Arrays.toString (args) + "]");
+                    logger.trace ("\nexecuting sql: {}\nparameters   : [{}]", sql, Arrays.toString (args));
                 }
                 return executeUpdate (conn, sql, args);
             } catch (SQLException ex) {
@@ -237,7 +236,7 @@ class SimpleTransactionImpl implements ITransaction {
         @Override
         public int executeUpdate (String sql) {
             try {
-                logger.debug ("executing sql: " + sql);
+                logger.debug ("executing sql: {}", sql);
                 PreparedStatement pstmt = conn.prepareStatement (sql);
                 if (logger.isTraceEnabled ()) {
                     logger.trace ("executing prepared statement: {}", pstmt);

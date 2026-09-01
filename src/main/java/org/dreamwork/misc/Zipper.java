@@ -25,14 +25,6 @@ public class Zipper {
         InflaterInputStream iis = new InflaterInputStream (bais);
         ByteArrayOutputStream baos = new ByteArrayOutputStream ();
         IOUtil.dump (iis, baos);
-/*
-        byte[] buff = new byte[1024];
-        int length;
-
-        while ((length = iis.read (buff)) != -1) {
-            baos.write (buff, 0, length);
-        }
-*/
         return baos.toByteArray ();
     }
 }

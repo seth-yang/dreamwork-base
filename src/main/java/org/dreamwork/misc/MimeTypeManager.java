@@ -10,7 +10,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,8 +18,8 @@ import java.util.concurrent.ConcurrentMap;
  * Time: 14:20:35
  */
 public class MimeTypeManager {
-    private static Map<String, MimeType> types = new ConcurrentHashMap<String, MimeType> ();
-    private static Map<String, MimeType> reverse = new ConcurrentHashMap<String, MimeType> ();
+    private static final Map<String, MimeType> types = new ConcurrentHashMap<> ();
+    private static final Map<String, MimeType> reverse = new ConcurrentHashMap<> ();
 
     static {
         URL url = MimeTypeManager.class.getResource ("MimeType.xml");

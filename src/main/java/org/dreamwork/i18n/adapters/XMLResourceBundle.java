@@ -16,7 +16,7 @@ import java.util.Map;
  * Time: 下午3:31
  */
 public class XMLResourceBundle implements IResourceBundle {
-    private Map<String, String> resource = new HashMap<String, String> ();
+    private final Map<String, String> resource = new HashMap<> ();
 
     public XMLResourceBundle (Node parent) {
         NodeList list = parent.getChildNodes ();
@@ -48,7 +48,7 @@ public class XMLResourceBundle implements IResourceBundle {
      * @return 资源
      */
     public String getString (String name, String defaultValue) {
-        return resource.containsKey (name) ? resource.get (name) : defaultValue;
+        return resource.getOrDefault (name, defaultValue);
     }
 
     public boolean isResourcePresent (String name) {

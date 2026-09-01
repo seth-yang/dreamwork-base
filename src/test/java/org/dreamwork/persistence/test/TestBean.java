@@ -3,7 +3,6 @@ package org.dreamwork.persistence.test;
 import org.dreamwork.persistence.ISchema;
 import org.dreamwork.persistence.ISchemaField;
 
-import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -11,19 +10,18 @@ import java.util.Date;
  */
 @ISchema (TestDatabaseSchema.class)
 public class TestBean extends BaseBean {
-    @ISchemaField (name = "f_name")
+    @ISchemaField ("f_name")
     private String name;
 
-    @ISchemaField (name = "f_int")
+    @ISchemaField ("f_int")
     private int intValue;
 
-    @ISchemaField (name = "f_long")
+    @ISchemaField ("f_long")
     private long longValue;
 
-    @ISchemaField (name = "f_ts")
+    @ISchemaField ("f_ts")
     private Date timestamp;
 
-    @ISchemaField (name = "f_txt")
     private String memo;
 
     public String getName () {
@@ -50,6 +48,7 @@ public class TestBean extends BaseBean {
         this.longValue = longValue;
     }
 
+
     public Date getTimestamp () {
         return timestamp;
     }
@@ -58,6 +57,7 @@ public class TestBean extends BaseBean {
         this.timestamp = timestamp;
     }
 
+    @ISchemaField ("f_txt")
     public String getMemo () {
         return memo;
     }

@@ -2,7 +2,6 @@ package org.dreamwork.compilation;
 
 /**
  * 虚拟参数
- *
  * Created by IntelliJ IDEA.
  * User: seth
  * Date: 2009-2-2

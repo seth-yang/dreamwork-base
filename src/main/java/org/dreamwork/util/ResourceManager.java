@@ -1,5 +1,6 @@
 package org.dreamwork.util;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -11,35 +12,24 @@ import java.util.regex.Matcher;
  * Time: 2:49:21
  */
 public class ResourceManager {
-    private static Map<Object, Object> pool =
-            Collections.synchronizedMap (new HashMap<Object, Object> ());
-
-//    private static ResourceManager defaultResourceManager;
-
+    private static final Map<Object, Object> pool = Collections.synchronizedMap (new HashMap<> ());
     private ResourceBundle res;
 
     @SuppressWarnings ("unchecked")
     public static ResourceManager instance (String baseName, Locale locale) {
-        Map map = (Map) pool.get (baseName);
-        if (map == null) {
-            map = new HashMap ();
-            pool.put (baseName, map);
-        }
+        Map<Serializable, ResourceManager> map =
+                (Map<Serializable, ResourceManager>) pool.computeIfAbsent (baseName, k -> new HashMap<> ());
 
-        ResourceManager drm = (ResourceManager) map.get ("default");
-        if (drm == null) {
-            drm = new ResourceManager ();
-            drm.res = ResourceBundle.getBundle (baseName);
-        }
+        ResourceManager drm = map.computeIfAbsent ("default", k -> {
+            ResourceManager rm = new ResourceManager ();
+            rm.res = ResourceBundle.getBundle (baseName);
+            return rm;
+        });
 
         ResourceManager rm = (ResourceManager) pool.get (locale);
         if (rm != null) return rm;
 
-        Set history = (Set) pool.get ("history");
-        if (history == null) {
-            history = new HashSet ();
-            pool.put ("history", history);
-        }
+        Set<Locale> history = (Set<Locale>) pool.computeIfAbsent ("history", k -> new HashSet<> ());
         if (history.contains (locale)) return drm;
 
         rm = new ResourceManager ();
@@ -63,7 +53,7 @@ public class ResourceManager {
         String value = getString (key);
         if (value == null) return null;
         for (int i = 0; i < patterns.length; i ++) {
-            value = value.replaceAll ("\\{" + i + "\\}", String.valueOf (patterns [i]));
+            value = value.replaceAll ("\\{" + i + "}", String.valueOf (patterns [i]));
         }
         return value;
     }
@@ -93,18 +83,14 @@ public class ResourceManager {
     public boolean getBoolean (String key, boolean defaultValue) {
         String value = getString (key);
         if (value == null) return defaultValue;
-        Matcher m = p_yes.matcher (value);
+        value = value.trim ();
+        Matcher m = TRUE.matcher (value);
         if (m.matches ()) return true;
-        m = p_true.matcher (value);
-        if (m.matches ()) return true;
-        try {
-            int i_value = Integer.parseInt (value);
-            return i_value != 0;
-        } catch (NumberFormatException ex) {
-            return defaultValue;
-        }
+        m = FALSE.matcher (value);
+        if (m.matches ()) return false;
+        return defaultValue;
     }
 
-    private static Pattern p_yes = Pattern.compile ("^\\s*y(es)?\\s*$", Pattern.CASE_INSENSITIVE);
-    private static Pattern p_true = Pattern.compile ("^\\s*t(rue)?\\s*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TRUE = Pattern.compile ("^yes|y|true|t|1|on$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern FALSE = Pattern.compile ("^no|n|false|f|0|off$", Pattern.CASE_INSENSITIVE);
 }

@@ -23,39 +23,33 @@ public class SecureUtil {
     public static final String KEY_SECURE_PROVIDER = "org.dreamwork.secure.provider";
     private static Provider provider;
 
-    private KeyGenerator g;
-    private SecureContext context;
+    private final KeyGenerator g;
+    private final SecureContext context;
 
     static {
         String u = System.getProperty (KEY_SECURE_PROVIDER);
         if (!StringUtil.isEmpty (u)) try {
-            provider = (Provider) Class.forName (u).newInstance ();
+            provider = (Provider) Class.forName (u).getDeclaredConstructor ().newInstance ();
         } catch (Exception ex) {
             //
         }
 
         if (provider == null) {
-            InputStream in = null;
             try {
                 Enumeration<URL> urls = SecureUtil.class.getClassLoader ().getResources ("META-INF/provider.properties");
                 while (urls.hasMoreElements ()) {
                     URL url = urls.nextElement ();
-                    in = url.openStream ();
-                    Properties props = new Properties ();
-                    props.load (in);
-                    String className = props.getProperty (KEY_SECURE_PROVIDER);
-                    if (className != null) {
-                        provider = (Provider) Class.forName (className).newInstance ();
+                    try (InputStream in = url.openStream ()) {
+                        Properties props = new Properties ();
+                        props.load (in);
+                        String className = props.getProperty (KEY_SECURE_PROVIDER);
+                        if (className != null) {
+                            provider = (Provider) Class.forName (className).getDeclaredConstructor ().newInstance ();
+                        }
                     }
                 }
             } catch (Exception ex) {
                 throw new RuntimeException (ex);
-            } finally {
-                if (in != null) try {
-                    in.close ();
-                } catch (IOException ex) {
-                    //
-                }
             }
         }
 

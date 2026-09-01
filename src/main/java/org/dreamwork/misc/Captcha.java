@@ -8,7 +8,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Random;
+import java.security.SecureRandom;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,7 +22,7 @@ public class Captcha {
     private char[] content;
     private boolean randomLines = true, rotateChars = true, scaleChars = true;
 
-    private Random random = new Random (System.currentTimeMillis ());
+    private final SecureRandom random = new SecureRandom ();
 
     public Captcha () {}
 
