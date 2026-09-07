@@ -1,5 +1,6 @@
 package org.dreamwork.persistence;
 
+import org.dreamwork.util.ReferenceUtil;
 import org.dreamwork.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,7 @@ public class ReflectUtil {
 
         Method method = readers.get (name);
         if (method != null) {
+            ReferenceUtil.checkAccessible (method, item);
             Object o = method.invoke (item);
             if (o != null) {
                 Class<?> clazz = o.getClass ();
@@ -271,8 +273,10 @@ public class ReflectUtil {
 
     public void setValue (DatabaseFieldDefinition def, Object item, Object value) throws InvocationTargetException, IllegalAccessException {
         if (def.field != null) {
+            ReferenceUtil.checkAccessible (def.field, item);
             def.field.set (item, value);
         } else if (def.setter != null) {
+            ReferenceUtil.checkAccessible (def.setter, item);
             def.setter.invoke (item, value);
         }
     }
@@ -280,8 +284,10 @@ public class ReflectUtil {
     public Object getValue (DatabaseFieldDefinition def, Object item) throws IllegalAccessException, InvocationTargetException {
         Object o = null;
         if (def.field != null) {
+            ReferenceUtil.checkAccessible (def.field, item);
             o = def.field.get (item);
         } else if (def.getter != null) {
+            ReferenceUtil.checkAccessible (def.getter, item);
             o = def.getter.invoke (item);
         }
 

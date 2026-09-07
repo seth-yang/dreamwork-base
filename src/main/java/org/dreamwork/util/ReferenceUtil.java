@@ -88,11 +88,13 @@ public class ReferenceUtil {
         if (o == null || StringUtil.isEmpty (property)) return null;
         Method method = getGetter (o.getClass (), property);
         if (method != null) {
+            checkAccessible (method, o);
             return method.invoke (o);
         }
 
         Field field = findField (o.getClass (), property);
         if (field != null) {
+            checkAccessible (field, o);
             return field.get (o);
         }
 
@@ -103,11 +105,13 @@ public class ReferenceUtil {
         if (o == null || StringUtil.isEmpty (property) || value == null) return;
 
         Method setter = getSetter (o.getClass (), property);
-        if (setter != null)
+        if (setter != null) {
+            checkAccessible (setter, o);
             setter.invoke (o, value);
-        else {
+        } else {
             Field field = findField (o.getClass (), property);
             if (field != null) {
+                checkAccessible (field, o);
                 field.set (o, value);
             }
         }
@@ -271,5 +275,29 @@ public class ReferenceUtil {
             //
         }
         return null;
+    }
+
+    public static String createAddModuleInfoMessage (AccessibleObject ao) {
+        final String pattern = "please add \"opens %s to %s\" to your module-info.java";
+        String packageName = "";
+        if (ao instanceof Method method) {
+            packageName = method.getDeclaringClass ().getPackageName ();
+        } else if (ao instanceof Field field) {
+            packageName = field.getDeclaringClass ().getPackageName ();
+        } else {
+            packageName = "<your-package-name>";
+        }
+        return String.format (pattern, packageName, ReferenceUtil.class.getModule ().getName ());
+    }
+
+    public static void checkAccessible (AccessibleObject ao, Object instance) {
+        if (ao == null || instance == null) return;
+        if (!ao.canAccess (instance)) {
+            try {
+                ao.setAccessible (true);
+            } catch (SecurityException e) {
+                throw new RuntimeException (createAddModuleInfoMessage (ao));
+            }
+        }
     }
 }
