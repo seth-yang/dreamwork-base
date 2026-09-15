@@ -23,7 +23,7 @@ public class TestMain {
         DatabaseSchema.register (new TestDatabaseSchema ());
         DatabaseSchema.register (PostBackLogSchema.class);
 
-        db = new PostgreSQL ("jdbc:postgresql://127.0.0.1/cemetery", "nb", "nb");
+        db = new PostgreSQL ("jdbc:postgresql://127.0.0.1/dreamwork", "test_user", "test_password");
         if (!db.isTablePresent (TestBean.class)) {
             db.createSchemas ();
         }
