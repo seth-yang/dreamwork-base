@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 /**
  * 循环数组队列
- * @param <T>
+ * @param <T> 队列元素的类型
  */
 public class CircleArrayQueue<T> {
     private final T[] data;

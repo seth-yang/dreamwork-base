@@ -274,7 +274,7 @@ public class ConnectionData {
      * retrieving environment variables to be passed
      * between shells.
      *
-     * @return a <tt>HashMap</tt> instance.
+     * @return a {@code HashMap} instance.
      */
     public Map<String, String> getEnvironment() {
         return m_Environment;
