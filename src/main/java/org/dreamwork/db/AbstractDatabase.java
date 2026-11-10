@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URL;
@@ -160,7 +159,7 @@ public abstract class AbstractDatabase implements IDatabase {
     }
 
     @Override
-    public int executeScale (String sql) {
+    public int executeScalar (String sql) {
         try (Connection conn = connect ()) {
             PreparedStatement pstmt = conn.prepareStatement (sql);
             ResultSet rs = pstmt.executeQuery ();
@@ -174,7 +173,13 @@ public abstract class AbstractDatabase implements IDatabase {
     }
 
     @Override
-    public int executeScale (String sql, Object... args) {
+    @Deprecated
+    public int executeScale (String sql) {
+        return executeScalar (sql);
+    }
+
+    @Override
+    public int executeScalar (String sql, Object... args) {
         try (Connection conn = connect ()) {
             PreparedStatement pstmt = conn.prepareStatement (sql);
             for (int i = 0; i < args.length; i ++) {
@@ -191,6 +196,12 @@ public abstract class AbstractDatabase implements IDatabase {
         } catch (SQLException ex) {
             throw new RuntimeException (ex);
         }
+    }
+
+    @Override
+    @Deprecated
+    public int executeScale (String sql, Object... args) {
+        return executeScalar (sql, args);
     }
 
     @Override
@@ -875,30 +886,40 @@ public abstract class AbstractDatabase implements IDatabase {
     }
 
     @Override
-    public void runInTransaction (Consumer<ITransaction> consumer) {
+    public void runInTransaction (Consumer<ITransaction> consumer) throws SQLException {
         ITransaction tx = null;
         try {
             tx = beginTransaction ();
             consumer.accept (tx);
             tx.commit ();
+        } catch (SQLException ex) {
+            logger.warn (ex.getMessage (), ex);
+            rollback (tx);
+            throw ex;
         } catch (Exception ex) {
             logger.warn (ex.getMessage (), ex);
             rollback (tx);
+            throw new RuntimeException (ex);
         } finally {
             close (tx);
         }
     }
 
     @Override
-    public void runInTransaction (int timeout, TimeUnit unit, Consumer<ITransaction> consumer) {
+    public void runInTransaction (int timeout, TimeUnit unit, Consumer<ITransaction> consumer) throws SQLException {
         ITransaction tx = null;
         try {
             tx = beginTransaction (timeout, unit);
             consumer.accept (tx);
             tx.commit ();
+        } catch (SQLException ex) {
+            logger.warn (ex.getMessage (), ex);
+            rollback (tx);
+            throw ex;
         } catch (Exception ex) {
             logger.warn (ex.getMessage (), ex);
             rollback (tx);
+            throw new RuntimeException (ex);
         } finally {
             close (tx);
         }

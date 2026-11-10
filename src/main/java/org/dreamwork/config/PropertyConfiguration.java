@@ -4,12 +4,14 @@ import org.dreamwork.cli.text.Alignment;
 import org.dreamwork.cli.text.TextFormatter;
 import org.dreamwork.util.StringUtil;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings ("unused")
-public class PropertyConfiguration implements IConfiguration {
+public class PropertyConfiguration implements IAppendableConfiguration {
     private final Properties props;
     private final Map<String, Integer> int_cache   = new HashMap<> ();
     private final Map<String, Long> long_cache     = new HashMap<> ();
@@ -32,15 +34,16 @@ public class PropertyConfiguration implements IConfiguration {
     private String rawProperty (String key) {
         String value = System.getProperty (key);
         if (null == value) {
-            value = props.getProperty (key);
+            value = System.getenv (key);
         }
         if (null == value) {
-            value = System.getenv (key);
+            value = props.getProperty (key);
         }
 
         return value;
     }
 
+    @Override
     public void setRawProperty (String key, String value) {
         if (value != null) {
             props.setProperty (key, value);
@@ -106,7 +109,6 @@ public class PropertyConfiguration implements IConfiguration {
         Integer i = checkDefaultValue (key, int_cache, defaultValue);
         if (i == null) {
             String value = rawProperty (key);
-//            String value = props.getProperty (key).trim ();
             try {
                 int i_value = Integer.parseInt (value.trim ());
                 int_cache.put (key, i_value);
@@ -195,6 +197,55 @@ public class PropertyConfiguration implements IConfiguration {
         }
     }
 
+    @Override
+    @SuppressWarnings ("unchecked")
+    public <T> T[] getArray (String key, Class<T> typeOfElement) {
+        // 不知道如何做一级缓存，这个接口就不做一级缓存了
+        var raw = getString (key);
+        if (StringUtil.isEmpty (raw)) {
+            return null;
+        }
+        raw = raw.trim ();
+        if (raw.charAt (0) == '[') {
+            raw = raw.substring (1);
+        }
+        if (raw.endsWith ("]")) {
+            raw = raw.substring (0, raw.length () - 1);
+        }
+        raw = raw.trim ();
+        String[] array = raw.split (",");
+        if (typeOfElement == String.class || typeOfElement == Object.class) {
+            return (T[]) array;
+        }
+
+        T[] tmp = (T[]) java.lang.reflect.Array.newInstance (typeOfElement, array.length);
+        for (int i = 0; i < array.length; i ++) {
+            String item = array[i].trim ();
+            if (typeOfElement == byte.class || typeOfElement == Byte.class) {
+                tmp[i] = (T) Byte.valueOf (item);
+            } else if (typeOfElement == int.class || typeOfElement == Integer.class) {
+                tmp[i] = (T) Integer.valueOf (item);
+            } else if (typeOfElement == short.class || typeOfElement == Short.class) {
+                tmp[i] = (T) Short.valueOf (item);
+            } else if (typeOfElement == long.class || typeOfElement == Long.class) {
+                tmp[i] = (T) Long.valueOf (item);
+            } else if (typeOfElement == float.class || typeOfElement == Float.class) {
+                tmp[i] = (T) Float.valueOf (item);
+            } else if (typeOfElement == double.class || typeOfElement == Double.class) {
+                tmp[i] = (T) Double.valueOf (item);
+            } else if (typeOfElement == boolean.class || typeOfElement == Boolean.class) {
+                tmp[i] = (T) ((Boolean) toBoolean (item));
+            } else if (typeOfElement == BigDecimal.class) {
+                tmp[i] = (T) new BigDecimal (item);
+            } else if (typeOfElement == BigInteger.class) {
+                tmp[i] = (T) new BigInteger (item);
+            } else {
+                throw new IllegalArgumentException ("unsupported array item type: " + typeOfElement);
+            }
+        }
+        return tmp;
+    }
+
     public void prettyShow () {
         System.out.println ("=============== PropertyConfiguration =============");
         String[][] values = new String[props.size ()][2];
@@ -239,5 +290,12 @@ public class PropertyConfiguration implements IConfiguration {
             }
         }
         System.out.println ("===================================================");
+    }
+
+    private boolean toBoolean (String expr) {
+        if (expr == null) {
+            return false;
+        }
+        return PATTERN_TRUE.matcher (expr).matches ();
     }
 }

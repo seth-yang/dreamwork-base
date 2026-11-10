@@ -34,6 +34,9 @@ public interface IDatabase extends IUpdatable {
      * @param sql sql 语句
      * @return 标量值
      */
+    int executeScalar (String sql);
+
+    @Deprecated
     int executeScale (String sql);
 
     /**
@@ -42,6 +45,9 @@ public interface IDatabase extends IUpdatable {
      * @param args sql语句的值
      * @return 标量值
      */
+    int executeScalar (String sql, Object... args);
+
+    @Deprecated
     int executeScale (String sql, Object... args);
 
     <T> boolean exists (Class<T> type, Object pk);
@@ -100,7 +106,7 @@ public interface IDatabase extends IUpdatable {
      * @see #runInTransaction(int, TimeUnit, Consumer)
      * @since 3.1.4
      */
-    void runInTransaction (Consumer<ITransaction> consumer);
+    void runInTransaction (Consumer<ITransaction> consumer) throws SQLException;
 
     /**
      * java8 风格的事务调用
@@ -111,5 +117,5 @@ public interface IDatabase extends IUpdatable {
      * @see #runInTransaction(Consumer)
      * @since 3.1.4
      */
-    void runInTransaction (int timeout, TimeUnit unit, Consumer<ITransaction> consumer);
+    void runInTransaction (int timeout, TimeUnit unit, Consumer<ITransaction> consumer) throws SQLException;
 }

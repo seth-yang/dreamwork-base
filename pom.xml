@@ -4,7 +4,7 @@
 
     <groupId>io.github.seth-yang</groupId>
     <artifactId>dreamwork-base</artifactId>
-    <version>4.0.0</version>
+    <version>4.0.1</version>
     <packaging>jar</packaging>
     <description><![CDATA[ 升级适配 java 17 ]]></description>
 

@@ -11,6 +11,7 @@ public interface IConfiguration {
      *     <li>当前配置配置文件</li>
      *     <li>System.getEnv (String)</li>
      * </ol>
+     * 若 {@code params} 参数非空，尝试使用 String.format 来格式化最终结果
      * @param key    参数名
      * @param params 可能的参数值
      * @return 字符串类型的参数值
@@ -23,9 +24,9 @@ public interface IConfiguration {
      * 格式化字符串中允许出现 <code>${prop.name}</code> 格式的占位符，其搜索优先级如下：
      * <ol>
      *     <li>在提供的<code>params</code>中搜索</li>
+     *     <li>在 <code>{@link System#getProperties()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在 <code>{@link System#getenv()}</code> 中搜索，key为 prop.name</li>
      *     <li>在当前 <code>IConfiguration</code> 实例中 <i>通过调用</i> {@link #getString(String, Object...) getString(String)} 搜索</li>
-     *     <li>在 <code>{@link System#getProperties()}</code> 中搜索</li>
-     *     <li>在 <code>{@link System#getenv()}</code></li>
      *     <li>原样输出</li>
      * </ol>
      * @param key    参数名
@@ -35,15 +36,31 @@ public interface IConfiguration {
     String getString (String key, KeyValuePair<?>... params);
 
     /**
-     * 获取指定的int类型的参数
+     * 获取指定的int类型的参数，支持递归.
+     * <p>若 {@code key} 对应的原始配置值为变量 {@code ${prop.name}}，应展开这个变量，其搜索顺序为：
+     * <ol>
+     *     <li>在 <code>{@link System#getProperties()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在 <code>{@link System#getenv()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在当前 <code>IConfiguration</code> 实例中 <i>通过调用</i> {@link #getString(String, Object...) getString(String)} 搜索</li>
+     *     <li>若未找到名称的资源，或资源不是{@code int}类型或不能转成{@code int}类型时，返回的默认值</li>
+     * </ol>
+     * </p>
      * @param key          参数名
-     * @param defaultValue 若为找到名称的资源，或资源不是int类型时，返回的默认值
+     * @param defaultValue 若未找到名称的资源，或资源不是int类型时，返回的默认值
      * @return 参数值
      */
     int getInt (String key, int defaultValue);
 
     /**
      * 获取指定的 long 类型的参数
+     * <p>若 {@code key} 对应的原始配置值为变量 {@code ${prop.name}}，应展开这个变量，其搜索顺序为：
+     * <ol>
+     *     <li>在 <code>{@link System#getProperties()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在 <code>{@link System#getenv()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在当前 <code>IConfiguration</code> 实例中 <i>通过调用</i> {@link #getString(String, Object...) getString(String)} 搜索</li>
+     *     <li>若未找到名称的资源，或资源不是{@code long}类型或不能转成{@code long}类型时，返回的默认值</li>
+     * </ol>
+     * </p>
      * @param key          参数名
      * @param defaultValue 若为找到名称的资源，或资源不是 long 类型时，返回的默认值
      * @return 参数值
@@ -52,6 +69,14 @@ public interface IConfiguration {
 
     /**
      * 获取指定的 double 类型的参数
+     * <p>若 {@code key} 对应的原始配置值为变量 {@code ${prop.name}}，应展开这个变量，其搜索顺序为：
+     * <ol>
+     *     <li>在 <code>{@link System#getProperties()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在 <code>{@link System#getenv()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在当前 <code>IConfiguration</code> 实例中 <i>通过调用</i> {@link #getString(String, Object...) getString(String)} 搜索</li>
+     *     <li>若未找到名称的资源，或资源不是{@code double}类型或不能转成{@code double}时，返回的默认值</li>
+     * </ol>
+     * </p>
      * @param key          参数名
      * @param defaultValue 若为找到名称的资源，或资源不是 double 类型时，返回的默认值
      * @return 参数值
@@ -60,9 +85,27 @@ public interface IConfiguration {
 
     /**
      * 获取指定的 boolean 类型的参数
+     * <p>若 {@code key} 对应的原始配置值为变量 {@code ${prop.name}}，应展开这个变量，其搜索顺序为：
+     * <ol>
+     *     <li>在 <code>{@link System#getProperties()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在 <code>{@link System#getenv()}</code> 中搜索，key为 prop.name</li>
+     *     <li>在当前 <code>IConfiguration</code> 实例中 <i>通过调用</i> {@link #getString(String, Object...) getString(String)} 搜索</li>
+     *     <li>若未找到名称的资源，或资源不是{@code boolean}类型或不能转成{@code boolean}类型时，返回的默认值。
+     *     boolean的转换规则： {@code /^\s*(true|t|1|on|yes|y)\s*$/i} 识别为真，
+     *          {@code /^\s*(false|f|0|off|no|n)\s*$/i} 识别为假
+     *     </li>
+     * </ol>
+     * </p>
      * @param key          参数名
      * @param defaultValue 若为找到名称的资源，或资源不是 boolean 类型时，返回的默认值
      * @return 参数值
      */
     boolean getBoolean (String key, boolean defaultValue);
+
+    /**
+     * 获取指定的数组
+     * @param key 数组名称
+     * @return 指定的数组
+     */
+    <T> T[] getArray (String key, Class<T> typeOfElement);
 }
